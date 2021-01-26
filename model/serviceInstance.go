@@ -60,17 +60,20 @@ type UpdateInstanceResponse struct {
 type InstanceOperationPollResponse struct {
 	//*
 	//does binding:"required" count in both directions?
-	State            string `json:"state" binding:"required"`
-	Description      string `json:"description"`
-	InstanceUsable   bool   `json:"instance_usable"`
-	UpdateRepeatable bool   `json:"update_repeatable"`
+	//NO, BUT I CAN CHECK BEFORE CONVERTING TO JSON
+	//REQUIRED
+	State string `json:"state"`
+
+	Description      string `json:"description,omitempty"`
+	InstanceUsable   bool   `json:"instance_usable,omitempty"`
+	UpdateRepeatable bool   `json:"update_repeatable,omitempty"`
 }
 
 type ServiceInstanceMetadata struct {
-	Labels     interface{} `json:"labels"`
-	Attributes interface{} `json:"attributes"`
+	Labels     interface{} `json:"labels,omitempty"`
+	Attributes interface{} `json:"attributes,omitempty"`
 }
 
 type DeleteServiceResponse struct {
-	Operation string `json:"operation"`
+	Operation string `json:"operation,omitempty"`
 }

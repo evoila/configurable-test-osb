@@ -8,20 +8,23 @@ type ServicePlan struct {
 		(no matter what Service Broker uses it) will always refer to this Service Plan and for the same Service Offering.
 		MUST be a non-empty string. Using a GUID is RECOMMENDED.
 	*/
-	Id string `json:"id" binding:"required"`
+	//REQUIRED
+	Id string `json:"id"`
 
 	//*
 	/*
 		The name of the Service Plan. MUST be unique within the Service Offering. MUST be a non-empty string.
 		Using a CLI-friendly name is RECOMMENDED.
 	*/
-	Name string `json:"name" binding:"required"`
+	//REQUIRED
+	Name string `json:"name"`
 
 	//*
 	/*
 		A short description of the Service Plan. MUST be a non-empty string.
 	*/
-	Description string `json:"description" binding:"required"`
+	//REQUIRED
+	Description string `json:"description"`
 
 	Metadata               interface{}      `json:"metadata,omitempty"`
 	Free                   bool             `json:"free,omitempty"`

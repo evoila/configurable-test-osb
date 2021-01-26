@@ -10,7 +10,10 @@ import (
 //FUNCTIONS FOR HANDLING ENDPOINT REQUESTS GO HERE
 
 func Hello(context *gin.Context) {
-	context.JSON(http.StatusOK, gin.H{"message": "Hello"})
+	test := model.InstanceOperationPollResponse{
+		Description: "Renate",
+	}
+	context.JSON(http.StatusOK, test)
 }
 func TestBind(context *gin.Context) {
 	var offering model.ServiceOffering

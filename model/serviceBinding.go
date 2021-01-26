@@ -25,19 +25,17 @@ type CreateRotateBindingOkCreatedResponse struct {
 }
 
 type BindingOperationPollResponse struct {
-	//*
 	//Valid values are in progress, succeeded, and failed
-	State string `json:"state" binding:"required"`
+	//REQUIRED
+	State string `json:"state"`
 
 	Description string `json:"description,omitempty"`
 }
 
-//request
 type RotateBindingRequest struct {
 	PredecessorBindingId string `json:"predecessor_binding_id" binding:"required"`
 }
 
-//response
 type FetchingBindingResponse struct {
 	Metadata        *BindingMetadata `json:"metadata,omitempty"`
 	Credentials     interface{}      `json:"credentials,omitempty"`
@@ -59,22 +57,29 @@ type BindingMetadata struct {
 }
 
 type VolumeMount struct {
-	Driver       string  `json:"driver" binding:"required"`
-	ContainerDir string  `json:"container_dir" binding:"required"`
-	Mode         string  `json:"mode" binding:"required"`
-	DeviceType   string  `json:"device_type" binding:"required"`
-	Device       *Device `json:"device" binding:"required"`
+	//REQUIRED
+	Driver string `json:"driver"`
+	//REQUIRED
+	ContainerDir string `json:"container_dir"`
+	//REQUIRED
+	Mode string `json:"mode"`
+	//REQUIRED
+	DeviceType string `json:"device_type"`
+	//REQUIRED
+	Device *Device `json:"device"`
 }
 
 type Device struct {
-	VolumeId    string      `json:"volume_id" binding:"required"`
+	//REQUIRED
+	VolumeId string `json:"volume_id"`
+
 	MountConfig interface{} `json:"mount_config,omitempty"`
 }
 
 type Endpoint struct {
-	//*
-	Host string `json:"host" binding:"required"`
-	//*
-	Ports    []string `json:"ports" binding:"required"`
+	//REQUIRED
+	Host string `json:"host"`
+	//REQUIRED
+	Ports    []string `json:"ports"`
 	Protocol string   `json:"protocol,omitempty"`
 }
