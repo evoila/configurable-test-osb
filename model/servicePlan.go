@@ -8,43 +8,43 @@ type ServicePlan struct {
 		(no matter what Service Broker uses it) will always refer to this Service Plan and for the same Service Offering.
 		MUST be a non-empty string. Using a GUID is RECOMMENDED.
 	*/
-	Id string
+	Id string `json:"id" binding:"required"`
 
 	//*
 	/*
 		The name of the Service Plan. MUST be unique within the Service Offering. MUST be a non-empty string.
 		Using a CLI-friendly name is RECOMMENDED.
 	*/
-	Name string
+	Name string `json:"name" binding:"required"`
 
 	//*
 	/*
 		A short description of the Service Plan. MUST be a non-empty string.
 	*/
-	Description string
+	Description string `json:"description" binding:"required"`
 
-	Metadata interface{}
-	Free bool
-	Bindable bool
-	BindingRotatable bool
-	PlanUpdateable bool
-	Schemas Schemas
-	MaximumPollingDuration int
-	MaintenanceInfo MaintenanceInfo
+	Metadata               interface{}      `json:"metadata,omitempty"`
+	Free                   bool             `json:"free,omitempty"`
+	Bindable               bool             `json:"bindable,omitempty"`
+	BindingRotatable       bool             `json:"binding_rotatable,omitempty"`
+	PlanUpdateable         bool             `json:"plan_updateable,omitempty"`
+	Schemas                *Schemas         `json:"schemas,omitempty"`
+	MaximumPollingDuration int              `json:"maximum_polling_duration,omitempty"`
+	MaintenanceInfo        *MaintenanceInfo `json:"maintenance_info,omitempty"`
 }
 
 type Schemas struct {
-	ServiceInstance ServiceInstanceSchema
-	ServiceBinding ServiceBindingSchema
+	ServiceInstance *ServiceInstanceSchema `json:"service_instance,omitempty"`
+	ServiceBinding  *ServiceBindingSchema  `json:"service_binding,omitempty"`
 }
 
 type ServiceInstanceSchema struct {
-	Create InputParametersSchema
-	Update InputParametersSchema
+	Create *InputParametersSchema `json:"create,omitempty"`
+	Update *InputParametersSchema `json:"update,omitempty"`
 }
 
 type ServiceBindingSchema struct {
-	Create InputParametersSchema
+	Create *InputParametersSchema `json:"create,omitempty"`
 }
 
 type InputParametersSchema struct {
@@ -57,7 +57,7 @@ type MaintenanceInfo struct {
 		This MUST be a string conforming to a semantic version 2.0. The Platform MAY use this field to determine
 		whether a maintenance update is available for a Service Instance.
 	*/
-	Version string
+	Version string `json:"version,omitempty"`
 
 	//*
 	/*
@@ -65,5 +65,5 @@ type MaintenanceInfo struct {
 		configuration changes, default value changes, etc. The Platform MAY present this information to the user before
 		they trigger the maintenance update.
 	*/
-	Description string
+	Description string `json:"description,omitempty"`
 }

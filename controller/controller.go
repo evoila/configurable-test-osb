@@ -1,9 +1,9 @@
 package controller
 
 import (
-	"fmt"
 	"github.com/MaxFuhrich/serviceBrokerDummy/model"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 )
 
@@ -12,10 +12,20 @@ import (
 func Hello(context *gin.Context) {
 	context.JSON(http.StatusOK, gin.H{"message": "Hello"})
 }
+func TestBind(context *gin.Context) {
+	var offering model.ServiceOffering
+	if err := context.ShouldBindJSON(&offering); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"Couldn't bind service offering! error": err.Error()})
+		log.Println("Couldn't bind service offering! error: " + err.Error())
+		return
+	}
+	context.JSON(http.StatusOK, offering)
+}
 
-func GetCatalog(context *gin.Context) {
+/*func GetCatalog(context *gin.Context) {
 
 }
+/*
 //GET /v2/service_instances/:instance_id/last_operation
 func LastOpServiceInstance(context *gin.Context)  {
 	var uriParams model.UriParams
@@ -123,3 +133,4 @@ func Deprovide(context *gin.Context) {
 	}
 	context.String(http.StatusOK, "InstanceID: " + uriParams.InstanceId)
 }
+*/

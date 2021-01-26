@@ -4,7 +4,7 @@ package model
 
 type RequestHeader struct {
 	//SETTABLE
-	APIVersionHeader string `header:"X-Broker-API-Version"`
+	APIVersionHeader string `header:"X-Broker-API-Version" binding:"omitempty"`
 
 	/*
 		-For any OSBAPI request that is the result of an action taken by a Platform's user,
@@ -17,7 +17,7 @@ type RequestHeader struct {
 		-Form X-Broker-API-Originating-Identity: Platform value(base64encoded)
 		-ex X-Broker-API-Originating-Identity: kubernetes 1234
 	*/
-	UserId string `header:"X-Broker-API-Originating-Identity"`
+	UserId string `header:"X-Broker-API-Originating-Identity" binding:"omitempty"`
 
 	/*
 		-Wenn vorhanden
@@ -27,17 +27,17 @@ type RequestHeader struct {
 		-value MUST be a non-empty string indicating the identity of the request being sent. The specific value MAY
 		be unique for each request sent to the broker. Using a GUID is RECOMMENDED.
 	*/
-	RequestId string `header:"X-Broker-API-Request-Identity "`
+	RequestId string `header:"X-Broker-API-Request-Identity" binding:"omitempty"`
 }
 
 type UriProperties struct {
-	//Validators fuer binding
+	//Validators for binding
 	//Values of type uppercase and lowercase letters, decimal digits, hyphen, period, underscore and tilde
-	ServiceId  string `form:"service_id"`
-	PlanId     string `form:"plan_id"`
-	InstanceId string `form:"instance_id"` //binding:"-"`
-	BindingId  string `form:"binding_id"`
-	Operation  string `form:"operation"`
-	//Check later if place is still approptiate:
-	AcceptsIncomplete bool `form:"accepts_incomplete"`
+	ServiceId  string `form:"service_id" binding:"omitempty"`
+	PlanId     string `form:"plan_id" binding:"omitempty"`
+	InstanceId string `form:"instance_id" binding:"omitempty"` //binding:"-"`
+	BindingId  string `form:"binding_id" binding:"omitempty"`
+	Operation  string `form:"operation" binding:"omitempty"`
+	//Check later if place is still appropriate:
+	AcceptsIncomplete bool `form:"accepts_incomplete" binding:"omitempty"`
 }

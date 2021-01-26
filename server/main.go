@@ -12,7 +12,7 @@ TO DO
 -Securing via TLS?
 	-Spec: "This specification does not specify how Platform and Service Brokers agree on other
 	methods of authentication"
- */
+*/
 
 func main() {
 
@@ -24,40 +24,41 @@ func main() {
 
 	//Test
 	r.GET("/", controller.Hello)
+	r.POST("/", controller.TestBind)
+	/*
+		//Catalog
+		r.GET("/v2/catalog", controller.GetCatalog)
 
-	//Catalog
-	r.GET("/v2/catalog", controller.GetCatalog)
+		//Polling last operation for service instances
+		r.GET("/v2/service_instances/:instance_id/last_operation", controller.LastOpServiceInstance)
 
-	//Polling last operation for service instances
-	r.GET("/v2/service_instances/:instance_id/last_operation", controller.LastOpServiceInstance)
+		//Polling last operation for service binding
+		r.GET("/v2/service_instances/:instance_id/service_bindings/:binding_id/last_operation", controller.LastOpServiceBinding)
 
-	//Polling last operation for service binding
-	r.GET("/v2/service_instances/:instance_id/service_bindings/:binding_id/last_operation", controller.LastOpServiceBinding)
+		//Provisioning (of service)
+		r.PUT("/v2/service_instances/:instance_id", controller.ProvideService)
 
-	//Provisioning (of service)
-	r.PUT("/v2/service_instances/:instance_id", controller.ProvideService)
+		//Fetching service instance
+		r.GET("/v2/service_instances/:instance_id", controller.FetchServiceInstance)
 
-	//Fetching service instance
-	r.GET("/v2/service_instances/:instance_id", controller.FetchServiceInstance)
+		//Updating service instance
+		r.PATCH("/v2/service_instances/:instance_id", controller.UpdateServiceInstance)
 
-	//Updating service instance
-	r.PATCH("/v2/service_instances/:instance_id", controller.UpdateServiceInstance)
+		//Request (creating service binding)
+		r.PUT("/v2/service_instances/:instance_id/service_bindings/:binding_id", controller.CreateServiceBinding)
 
-	//Request (creating service binding)
-	r.PUT("/v2/service_instances/:instance_id/service_bindings/:binding_id", controller.CreateServiceBinding)
+		//Request (rotating service binding)
+		r.PUT("/v2/service_instances/:instance_id/service_bindings/:binding_id", controller.RotateServiceBinding)
 
-	//Request (rotating service binding)
-	r.PUT("/v2/service_instances/:instance_id/service_bindings/:binding_id", controller.RotateServiceBinding)
+		//Fetching service binding
+		r.GET("/v2/service_instances/:instance_id/service_bindings/:binding_id", controller.FetchServiceBinding)
 
-	//Fetching service binding
-	r.GET("/v2/service_instances/:instance_id/service_bindings/:binding_id", controller.FetchServiceBinding)
+		//Unbinding
+		r.DELETE("/v2/service_instances/:instance_id/service_bindings/:binding_id", controller.Unbind)
 
-	//Unbinding
-	r.DELETE("/v2/service_instances/:instance_id/service_bindings/:binding_id", controller.Unbind)
-
-	//Deprovisioning
-	r.DELETE("/v2/service_instances/:instance_id", controller.Deprovide)
-
+		//Deprovisioning
+		r.DELETE("/v2/service_instances/:instance_id", controller.Deprovide)
+	*/
 	err := r.Run()
 	if err != nil {
 		log.Println("Error: " + err.Error())

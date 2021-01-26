@@ -1,71 +1,76 @@
 package model
 
 //request (only request????)
-type Service struct {
+type ProvideServiceInstanceRequest struct {
 	//NEEDED
-	ServiceId string
+	ServiceId string `json:"service_id" binding:"required"`
 	//NEEDER
-	PlanId string
-	Context interface{}
+	PlanId  string      `json:"plan_id" binding:"required"`
+	Context interface{} `json:"context"`
 	//NEEDED
-	OrganizationGuid string
+	OrganizationGuid string `json:"organization_guid" binding:"required"`
 	//NEEDER
-	SpaceGuid string
-	Parameters interface{}
-	MaintenanceInfo MaintenanceInfo
+	SpaceGuid       string           `json:"space_guid" binding:"required"`
+	Parameters      interface{}      `json:"parameters"`
+	MaintenanceInfo *MaintenanceInfo `json:"maintenance_info"`
 }
 
-type ProvisionResponse struct {
-	DashboardUrl string
-	Operation string
-	Metadata ServiceInstanceMetadata
+//Provision and Update have the same response form
+type ProvideUpdateServiceInstanceResponse struct {
+	DashboardUrl string                   `json:"dashboard_url,omitempty"`
+	Operation    string                   `json:"operation,omitempty"`
+	Metadata     *ServiceInstanceMetadata `json:"metadata,omitempty"`
 }
 
-type FetchingServiceResponse struct {
-	ServiceId string
-	PlanId string
-	DashboardUrl string
-	Parameters interface{}
-	MaintenanceInfo MaintenanceInfo
-	Metadata ServiceInstanceMetadata
+type FetchingServiceInstanceResponse struct {
+	ServiceId       string                   `json:"service_id,omitempty"`
+	PlanId          string                   `json:"plan_id,omitempty"`
+	DashboardUrl    string                   `json:"dashboard_url,omitempty"`
+	Parameters      interface{}              `json:"parameters,omitempty"`
+	MaintenanceInfo *MaintenanceInfo         `json:"maintenance_info,omitempty"`
+	Metadata        *ServiceInstanceMetadata `json:"metadata,omitempty"`
 }
 
-type UpdateInstanceRequest struct {
-	Context interface{}
-	PlanId string
-	Parameters interface{}
-	PreviousValues PreviousValues
-	MaintenanceInfo MaintenanceInfo
+type UpdateServiceInstanceRequest struct {
+	Context         interface{}      `json:"context"`
+	ServiceId       string           `json:"service_id" binding:"required"`
+	PlanId          string           `json:"plan_id"`
+	Parameters      interface{}      `json:"parameters"`
+	PreviousValues  *PreviousValues  `json:"previous_values"`
+	MaintenanceInfo *MaintenanceInfo `json:"maintenance_info"`
 }
 
 type PreviousValues struct {
-	ServiceId string
-	PlanId string
-	OrganizationId string
-	SpaceId string
-	MaintenanceInfo MaintenanceInfo
+	ServiceId       string           `json:"service_id"`
+	PlanId          string           `json:"plan_id"`
+	OrganizationId  string           `json:"organization_id"`
+	SpaceId         string           `json:"space_id"`
+	MaintenanceInfo *MaintenanceInfo `json:"maintenance_info"`
 }
 
 //SAME AS PROVISION RESPONSE
+/*
 type UpdateInstanceResponse struct {
 	DashboardUrl string
 	Operation string
 	Metadata ServiceInstanceMetadata
 }
+*/
 
 type InstanceOperationPollResponse struct {
 	//*
-	State string
-	Description string
-	InstanceUsable bool
-	UpdateRepeatable bool
+	//does binding:"required" count in both directions?
+	State            string `json:"state" binding:"required"`
+	Description      string `json:"description"`
+	InstanceUsable   bool   `json:"instance_usable"`
+	UpdateRepeatable bool   `json:"update_repeatable"`
 }
 
 type ServiceInstanceMetadata struct {
-	Labels interface{}
-	Attributes interface{}
+	Labels     interface{} `json:"labels"`
+	Attributes interface{} `json:"attributes"`
 }
 
-type ServiceInstanceDeleted struct {
-	Operation string
+type DeleteServiceResponse struct {
+	Operation string `json:"operation"`
 }
