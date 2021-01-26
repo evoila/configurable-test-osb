@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-type catalogSettings struct {
+type CatalogSettings struct {
 	//These are the settings for service offerings and the fields it uses
 
 	//amount > 0
@@ -44,8 +44,8 @@ type catalogSettings struct {
 }
 
 //Generates Catalog from file
-func GenerateCatalog() (catalog *model.Catalog, err error) {
-	var catalogSettings catalogSettings
+func New() (*CatalogSettings, error) {
+	var catalogSettings CatalogSettings
 	catalogSettingsJson, err := os.Open("settings/catalogSettings.json")
 	if err != nil {
 		log.Println("Error while opening settings/catalogSettings.json! error: " + err.Error())
@@ -62,5 +62,10 @@ func GenerateCatalog() (catalog *model.Catalog, err error) {
 		}
 	}
 
-	return catalog, err
+	return &catalogSettings, err
+}
+
+func (catalogSettings *CatalogSettings) GenerateCatalog() *model.Catalog {
+	var catalog model.Catalog
+	return &catalog
 }

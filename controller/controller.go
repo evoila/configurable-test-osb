@@ -164,11 +164,12 @@ func Deprovide(context *gin.Context) {
 
 func (controller *Controller) GenerateCatalog(context *gin.Context) {
 	//Generate new catalog according to settings
-	newCatalog, err := generator.GenerateCatalog()
+	catalogSettings, err := generator.New()
+	//newCatalog, err := generator.GenerateCatalog()
 	if err != nil {
-		log.Println("Unable to generate new catalog! error: " + err.Error())
+		log.Println("Unable to load settings! error: " + err.Error())
 	} else {
-		controller.catalog = *newCatalog
+		controller.catalog = *catalogSettings.GenerateCatalog()
 	}
 	context.String(http.StatusOK, "New catalog generated and loaded!")
 }
