@@ -1,0 +1,7 @@
+TO DO
+-function for wiping whole catalog/instances/bindings?
+-rfc3986Validator logic
+-DashboardClient struct in serviceOffering.go
+-pointer for interface{} necessary?
+-move catalog.json somewhere else?
+-generate catalog from catalogSettings.json
