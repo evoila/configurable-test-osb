@@ -1,21 +1,44 @@
 package controller
 
 import (
+	"encoding/json"
 	"github.com/MaxFuhrich/serviceBrokerDummy/model"
 	"github.com/gin-gonic/gin"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
+
+type Controller struct {
+	catalog model.Catalog
+}
+
+func New() *Controller {
+	var controller Controller
+	catalogJson, err := os.Open("catalog/catalog.json")
+	if err != nil {
+		log.Println("Error while opening catalog file! error: " + err.Error())
+	} else {
+		byteVal, err := ioutil.ReadAll(catalogJson)
+		if err != nil {
+			log.Println("Error reading from catalog file! error: " + err.Error())
+		} else {
+			err = json.Unmarshal(byteVal, &controller.catalog)
+			if err != nil {
+				log.Println("Error unmarshalling the catalog file to the catalog struct! error: " + err.Error())
+			}
+		}
+	}
+	return &controller
+}
 
 //FUNCTIONS FOR HANDLING ENDPOINT REQUESTS GO HERE
 
-func Hello(context *gin.Context) {
-	test := model.InstanceOperationPollResponse{
-		Description: "Renate",
-	}
-	context.JSON(http.StatusOK, test)
+func (controller *Controller) Hello(context *gin.Context) {
+	context.JSON(http.StatusOK, controller.catalog)
 }
-func TestBind(context *gin.Context) {
+func (controller *Controller) TestBind(context *gin.Context) {
 	var offering model.ServiceOffering
 	if err := context.ShouldBindJSON(&offering); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"Couldn't bind service offering! error": err.Error()})

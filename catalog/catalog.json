@@ -1,0 +1,17 @@
+{
+    "services":[
+        {
+            "name":"Karl",
+            "id":"Spross",
+            "description":"Cool",
+            "bindable": false,
+            "plans":[
+                {
+                    "id":"Sandtmann",
+                    "name":"Ivo",
+                    "description":"TheMaster"
+                }
+            ]
+        }
+    ]
+}
