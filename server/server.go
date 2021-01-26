@@ -59,6 +59,8 @@ func Run() {
 		//Deprovisioning
 		r.DELETE("/v2/service_instances/:instance_id", brokerController.Deprovide)
 	*/
+	//Generating new random catalog from catalogSettings.json
+	r.GET("/generate_catalog", brokerController.GenerateCatalog)
 	err := r.Run()
 	if err != nil {
 		log.Println("Error: " + err.Error())

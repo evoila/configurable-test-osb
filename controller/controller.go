@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"github.com/MaxFuhrich/serviceBrokerDummy/generator"
 	"github.com/MaxFuhrich/serviceBrokerDummy/model"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
@@ -160,3 +161,14 @@ func Deprovide(context *gin.Context) {
 	context.String(http.StatusOK, "InstanceID: " + uriParams.InstanceId)
 }
 */
+
+func (controller *Controller) GenerateCatalog(context *gin.Context) {
+	//Generate new catalog according to settings
+	newCatalog, err := generator.GenerateCatalog()
+	if err != nil {
+		log.Println("Unable to generate new catalog! error: " + err.Error())
+	} else {
+		controller.catalog = *newCatalog
+	}
+	context.String(http.StatusOK, "New catalog generated and loaded!")
+}
