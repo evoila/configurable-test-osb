@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"github.com/MaxFuhrich/serviceBrokerDummy/controller"
+	_ "github.com/MaxFuhrich/serviceBrokerDummy/validators"
 	"github.com/gin-gonic/gin"
 	"log"
 )

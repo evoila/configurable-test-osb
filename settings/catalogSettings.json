@@ -5,7 +5,7 @@
   "tags_max": 0,
   "requires_min": 0,
   "requires_max": 0,
-  "offering_bindable": "random",
+  "offering_bindable": "never",
   "instances_retrievable": "random",
   "bindings_retrievable": "random",
   "allow_context_updates": "random",
