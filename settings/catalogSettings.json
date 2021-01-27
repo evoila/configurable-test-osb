@@ -1,11 +1,11 @@
 {
   "comment": "These are the settings for service offerings and the fields it uses",
-  "amount": 1,
+  "amount": 4,
   "tags_min": 0,
   "tags_max": 0,
   "requires_min": 0,
   "requires_max": 0,
-  "offering_bindable": "never",
+  "offering_bindable": "random",
   "instances_retrievable": "random",
   "bindings_retrievable": "random",
   "allow_context_updates": "random",
