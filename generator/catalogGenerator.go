@@ -62,10 +62,19 @@ func generateCatalog(catalogSettings *model.CatalogSettings) (*model.Catalog, er
 			Name:        randomString(5),
 			Id:          randomString(8) + "-XXXX-XXXX-XXXX-" + randomString(12),
 			Description: randomString(6),
-			//REST OF SETTINGS
-			Tags: selectRandomTags(tags, catalogSettings.TagsMin, catalogSettings.TagsMax),
-			//Requires:
-			Bindable: returnBoolean(catalogSettings.OfferingBindable),
+			Tags:        selectRandomTags(tags, catalogSettings.TagsMin, catalogSettings.TagsMax),
+			Requires:    randomRequires(catalogSettings.Requires, catalogSettings.RequiresMin),
+			Bindable:    returnBoolean(catalogSettings.OfferingBindable),
+			InstancesRetrievable: returnFieldByBoolean(returnBoolean(catalogSettings.InstancesRetrievableExists),
+				catalogSettings.InstancesRetrievable), //returnBoolean(catalogSettings.InstancesRetrievable),
+			BindingsRetrievable: returnFieldByBoolean(returnBoolean(catalogSettings.BindingsRetrievableExists),
+				catalogSettings.BindingsRetrievable), //returnBoolean(catalogSettings.BindingsRetrievable),
+			AllowContextUpdates: returnFieldByBoolean(returnBoolean(catalogSettings.AllowContextUpdatesExists),
+				catalogSettings.AllowContextUpdates), //AllowContextUpdates: returnBoolean(catalogSettings.AllowContextUpdates),
+			Metadata: metadataByBool(returnBoolean(catalogSettings.OfferingMetadata)), //Metadata: metadataByBool(returnBoolean(catalogSettings.OfferingMetadata )),
+			//DashboardClient:
+			PlanUpdateable: returnFieldByBoolean(returnBoolean(catalogSettings.PlanUpdateableExists), catalogSettings.PlanUpdateable), //PlanUpdateable: returnBoolean(catalogSettings.PlanUpdateable),
+			//Plans:
 		})
 	}
 	return &catalog, nil
@@ -80,16 +89,25 @@ func randomString(n int) string {
 	return string(randomCharSequence)
 }
 
-func returnBoolean(frequency string) bool {
+func returnBoolean(frequency string) *bool {
+	booleanValue := false
 	if frequency == "always" {
-		return true
+		booleanValue = true
+		return &booleanValue
 	}
 	if frequency == "random" {
 		if rand.Intn(2) == 1 {
-			return true
+			booleanValue = true
+			return &booleanValue
 		}
 	}
-	return false
+	return &booleanValue
+}
+func returnFieldByBoolean(boolean *bool, frequency string) *bool {
+	if *boolean {
+		return returnBoolean(frequency)
+	}
+	return nil
 }
 
 func containsString(strings []string, element string) bool {
@@ -115,6 +133,25 @@ func selectRandomTags(tags []string, min int, max int) []string {
 	return result
 }
 
-/*func randomRequires(min int, max int)  {
-	requires := [3]string{"syslog_drain", "route_forwarding", "volume_mount"}
-}*/
+func randomRequires(requires []string, min int) []string {
+	//requires := [3]string{"syslog_drain", "route_forwarding", "volume_mount"}
+	amount := rand.Intn(len(requires)+1-min) + min
+	var result []string
+	for i := 0; i < amount; i++ {
+		value := requires[rand.Int63()%int64(len(requires))]
+		if containsString(result, value) {
+			i--
+		} else {
+			result = append(result, value)
+		}
+	}
+	return result
+
+}
+
+func metadataByBool(b *bool) interface{} {
+	if *b {
+		return "metadata"
+	}
+	return nil
+}

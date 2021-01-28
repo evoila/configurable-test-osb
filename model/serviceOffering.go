@@ -12,11 +12,11 @@ type ServiceOffering struct {
 	Requires []string `json:"requires,omitempty"`
 
 	//REQUIRED
-	Bindable bool `json:"bindable"`
+	Bindable *bool `json:"bindable"`
 
-	InstancesRetrievable bool        `json:"instances_retrievable,omitempty"`
-	BindingsRetrievable  bool        `json:"bindings_retrievable,omitempty"`
-	AllowContextUpdates  bool        `json:"allow_context_updates,omitempty"`
+	InstancesRetrievable *bool       `json:"instances_retrievable,omitempty"`
+	BindingsRetrievable  *bool       `json:"bindings_retrievable,omitempty"`
+	AllowContextUpdates  *bool       `json:"allow_context_updates,omitempty"`
 	Metadata             interface{} `json:"metadata,omitempty"`
 
 	//A Cloud Foundry extension described in Catalog Extensions. Contains the data necessary to activate
@@ -24,7 +24,7 @@ type ServiceOffering struct {
 	DashboardClient *DashboardClient `json:"dashboard_client,omitempty"`
 
 	//misspelling kept by osbapi
-	PlanUpdateable bool `json:"plan_updateable,omitempty"`
+	PlanUpdateable *bool `json:"plan_updateable,omitempty"`
 
 	//REQUIRED
 	Plans []ServicePlan `json:"plans"`
