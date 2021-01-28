@@ -7,7 +7,6 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -58,111 +57,9 @@ func generateCatalog(catalogSettings *model.CatalogSettings) (*model.Catalog, er
 		//append(tags, randomString(4))
 	}
 	for i := 0; i < catalogSettings.Amount; i++ {
-		catalog.ServiceOfferings = append(catalog.ServiceOfferings, model.ServiceOffering{
-			//MUST BE UNIQUE
-			Name:        randomString(5),
-			Id:          randomString(8) + "-XXXX-XXXX-XXXX-" + randomString(12),
-			Description: randomString(6),
-			Tags:        selectRandomTags(tags, catalogSettings.TagsMin, catalogSettings.TagsMax),
-			Requires:    randomRequires(catalogSettings.Requires, catalogSettings.RequiresMin),
-			Bindable:    returnBoolean(catalogSettings.OfferingBindable),
-			InstancesRetrievable: returnFieldByBoolean(returnBoolean(catalogSettings.InstancesRetrievableExists),
-				catalogSettings.InstancesRetrievable), //returnBoolean(catalogSettings.InstancesRetrievable),
-			BindingsRetrievable: returnFieldByBoolean(returnBoolean(catalogSettings.BindingsRetrievableExists),
-				catalogSettings.BindingsRetrievable), //returnBoolean(catalogSettings.BindingsRetrievable),
-			AllowContextUpdates: returnFieldByBoolean(returnBoolean(catalogSettings.AllowContextUpdatesExists),
-				catalogSettings.AllowContextUpdates), //AllowContextUpdates: returnBoolean(catalogSettings.AllowContextUpdates),
-			Metadata:        metadataByBool(returnBoolean(catalogSettings.OfferingMetadata)),                                           //Metadata: metadataByBool(returnBoolean(catalogSettings.OfferingMetadata )),
-			DashboardClient: returnDashboardClient(catalogSettings),                                                                    //DashboardClient:
-			PlanUpdateable:  returnFieldByBoolean(returnBoolean(catalogSettings.PlanUpdateableExists), catalogSettings.PlanUpdateable), //PlanUpdateable: returnBoolean(catalogSettings.PlanUpdateable),
-			//Plans:
-		})
+		catalog.ServiceOfferings = append(catalog.ServiceOfferings, *returnServiceOffering(catalogSettings, tags))
 	}
 	return &catalog, nil
-}
-
-func randomString(n int) string {
-	const characters = "abcdefghijklmnopqrstuvxyz0123456789"
-	randomCharSequence := make([]byte, n)
-	for i := range randomCharSequence {
-		randomCharSequence[i] = characters[rand.Int63()%int64(len(characters))]
-	}
-	return string(randomCharSequence)
-}
-
-func returnBoolean(frequency string) *bool {
-	booleanValue := false
-	if frequency == "always" {
-		booleanValue = true
-		return &booleanValue
-	}
-	if frequency == "random" {
-		if rand.Intn(2) == 1 {
-			booleanValue = true
-			return &booleanValue
-		}
-	}
-	return &booleanValue
-}
-func returnFieldByBoolean(boolean *bool, frequency string) *bool {
-	if *boolean {
-		return returnBoolean(frequency)
-	}
-	return nil
-}
-
-func containsString(strings []string, element string) bool {
-	for _, val := range strings {
-		if val == element {
-			return true
-		}
-	}
-	return false
-}
-
-func selectRandomTags(tags []string, min int, max int) []string {
-	amount := rand.Intn(max+1-min) + min
-	var result []string
-	for i := 0; i < amount; i++ {
-		tag := tags[rand.Int63()%int64(len(tags))]
-		if containsString(result, tag) {
-			i--
-		} else {
-			result = append(result, tag)
-		}
-	}
-	return result
-}
-
-func randomRequires(requires []string, min int) []string {
-	//requires := [3]string{"syslog_drain", "route_forwarding", "volume_mount"}
-	amount := rand.Intn(len(requires)+1-min) + min
-	var result []string
-	for i := 0; i < amount; i++ {
-		value := requires[rand.Int63()%int64(len(requires))]
-		if containsString(result, value) {
-			i--
-		} else {
-			result = append(result, value)
-		}
-	}
-	return result
-
-}
-
-func metadataByBool(b *bool) interface{} {
-	if *b {
-		return "metadata"
-	}
-	return nil
-}
-
-func randomUriByFrequency(frequency string, length int) *string {
-	var result string
-	if *returnBoolean(frequency) {
-		result = "http://" + randomString(length) + ":" + strconv.Itoa(rand.Intn(9999+1-80)+80)
-	}
-	return &result
 }
 
 //func returnServicePlans(catalogSettins *model.CatalogSettings) []model.ServicePlan
