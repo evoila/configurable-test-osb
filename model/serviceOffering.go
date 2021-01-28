@@ -32,11 +32,11 @@ type ServiceOffering struct {
 
 type DashboardClient struct {
 	//*The id of the OAuth client that the dashboard will use. If present, MUST be a non-empty string.
-	Id string `json:"id,omitempty"`
+	Id string `json:"id"`
 
 	//*A secret for the dashboard client. If present, MUST be a non-empty string.
-	Secret string `json:"secret,omitempty"`
+	Secret string `json:"secret"`
 
 	//A URI for the service dashboard. Validated by the OAuth token server when the dashboard requests a token.
-	RedirectUri string `json:"redirect_uri,omitempty"`
+	RedirectUri *string `json:"redirect_uri,omitempty"`
 }

@@ -115,10 +115,7 @@ func invalidFrequency(frequency *string) bool {
 }
 
 func invalidRequires(requires []string) bool {
-	fmt.Println("Calling invalidRequires")
-	fmt.Println(requires)
 	for _, val := range requires {
-		fmt.Println(val)
 		if val != "syslog_drain" && val != "route_forwarding" && val != "volume_mount" {
 			return true
 		}

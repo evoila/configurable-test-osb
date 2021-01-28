@@ -7,6 +7,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -71,9 +72,9 @@ func generateCatalog(catalogSettings *model.CatalogSettings) (*model.Catalog, er
 				catalogSettings.BindingsRetrievable), //returnBoolean(catalogSettings.BindingsRetrievable),
 			AllowContextUpdates: returnFieldByBoolean(returnBoolean(catalogSettings.AllowContextUpdatesExists),
 				catalogSettings.AllowContextUpdates), //AllowContextUpdates: returnBoolean(catalogSettings.AllowContextUpdates),
-			Metadata: metadataByBool(returnBoolean(catalogSettings.OfferingMetadata)), //Metadata: metadataByBool(returnBoolean(catalogSettings.OfferingMetadata )),
-			//DashboardClient:
-			PlanUpdateable: returnFieldByBoolean(returnBoolean(catalogSettings.PlanUpdateableExists), catalogSettings.PlanUpdateable), //PlanUpdateable: returnBoolean(catalogSettings.PlanUpdateable),
+			Metadata:        metadataByBool(returnBoolean(catalogSettings.OfferingMetadata)),                                           //Metadata: metadataByBool(returnBoolean(catalogSettings.OfferingMetadata )),
+			DashboardClient: returnDashboardClient(catalogSettings),                                                                    //DashboardClient:
+			PlanUpdateable:  returnFieldByBoolean(returnBoolean(catalogSettings.PlanUpdateableExists), catalogSettings.PlanUpdateable), //PlanUpdateable: returnBoolean(catalogSettings.PlanUpdateable),
 			//Plans:
 		})
 	}
@@ -155,3 +156,13 @@ func metadataByBool(b *bool) interface{} {
 	}
 	return nil
 }
+
+func randomUriByFrequency(frequency string, length int) *string {
+	var result string
+	if *returnBoolean(frequency) {
+		result = "http://" + randomString(length) + ":" + strconv.Itoa(rand.Intn(9999+1-80)+80)
+	}
+	return &result
+}
+
+//func returnServicePlans(catalogSettins *model.CatalogSettings) []model.ServicePlan

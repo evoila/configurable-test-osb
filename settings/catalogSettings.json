@@ -14,8 +14,8 @@
   "bindings_retrievable": "random",
   "allow_context_updates_exists": "always",
   "allow_context_updates": "random",
-  "offering_metadata": "never",
-  "dashboard_client": "never",
+  "offering_metadata": "always",
+  "dashboard_client": "always",
   "offering_plan_updateable_exists": "always",
   "offering_plan_updateable": "always",
   "plans_min": 1,
@@ -36,5 +36,6 @@
   "max_polling_duration_max": 500,
   "maintenance_info": "never",
   "maintenance_info_version": "always",
-  "maintenance_info_description": "never"
+  "maintenance_info_description": "never",
+  "dashboard_redirect_uri": "always"
 }

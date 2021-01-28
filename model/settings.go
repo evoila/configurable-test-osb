@@ -62,4 +62,5 @@ type CatalogSettings struct {
 	MaintenanceInfo            string `json:"maintenance_info" binding:"required"`
 	MaintenanceInfoVersion     string `json:"maintenance_info_version" binding:"required"`
 	MaintenanceInfoDescription string `json:"maintenance_info_description" binding:"required"`
+	DashboardRedirectUri       string `json:"dashboard_redirect_uri" binding:"required"`
 }
