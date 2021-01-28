@@ -26,11 +26,20 @@ func ValidateCatalogSettings(settings *model.CatalogSettings) error {
 	if settings.TagsMax < settings.TagsMin {
 		return errors.New("tags_max must be >= tags_min")
 	}
+	if len(settings.Requires) > 3 {
+		return errors.New("there can't be more than 3 requires as there are only 3 values")
+	}
+	if invalidRequires(settings.Requires) {
+		return errors.New("invalid value in requires")
+	}
+	if numberOfDuplicates(settings.Requires) > 0 {
+		return errors.New("duplicate fields in requires")
+	}
 	if settings.RequiresMin < 0 {
 		return errors.New("requires_min min must be >= 0")
 	}
-	if settings.RequiresMax < settings.RequiresMin {
-		return errors.New("requires_max must be >= requires_min")
+	if len(settings.Requires) < settings.RequiresMin {
+		return errors.New("len(requires) must be >= requires_min")
 	}
 	/*if invalidFrequency(&settings.OfferingBindable) {
 		return errors.New("invalid value for offering_bindable")
@@ -103,6 +112,30 @@ func invalidFrequency(frequency *string) bool {
 		return true
 	}
 	return false
+}
+
+func invalidRequires(requires []string) bool {
+	fmt.Println("Calling invalidRequires")
+	fmt.Println(requires)
+	for _, val := range requires {
+		fmt.Println(val)
+		if val != "syslog_drain" && val != "route_forwarding" && val != "volume_mount" {
+			return true
+		}
+	}
+	return false
+}
+
+func numberOfDuplicates(elements []string) int {
+	result := 0
+	for _, valA := range elements {
+		for _, valB := range elements {
+			if valA == valB {
+				result++
+			}
+		}
+	}
+	return result - len(elements)
 }
 
 /*

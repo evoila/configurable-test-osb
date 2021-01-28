@@ -1,8 +1,17 @@
 package model
 
+/*
+NOTE
+Service Brokers and Platforms MAY support the ETag and If-Modified-Since HTTP headers to enable caching of the catalog.
+(See RFC 7232 for details.)
+Etag ressourcen identifizieren
+
+*/
+
 //STRUCTS FOR REQUEST FIELDS HERE
 
-type RequestHeader struct {
+//REQUEST AND RESPONSE???
+type Header struct {
 	//SETTABLE
 	APIVersionHeader string `header:"X-Broker-API-Version" binding:"omitempty"`
 
@@ -28,6 +37,11 @@ type RequestHeader struct {
 		be unique for each request sent to the broker. Using a GUID is RECOMMENDED.
 	*/
 	RequestId string `header:"X-Broker-API-Request-Identity" binding:"omitempty"`
+
+	//for "get catalog" responses
+	ETag string
+	//ifmodifiedsince time in format Mon, 02 Jan 2006 15:04:05 MST -> RFC 1123
+	IfModifiedSince string
 }
 
 type UriProperties struct {

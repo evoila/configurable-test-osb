@@ -8,11 +8,12 @@ type CatalogSettings struct {
 		will be created for providing catalogSettings in a request body
 	*/
 	//amount > 0
-	Amount                 int    `json:"amount" binding:"required"`
-	TagsMin                int    `json:"tags_min" binding:"required"`
-	TagsMax                int    `json:"tags_max" binding:"required"`
-	RequiresMin            int    `json:"requires_min" binding:"required"`
-	RequiresMax            int    `json:"requires_max" binding:"required"`
+	Amount      int      `json:"amount" binding:"required"`
+	TagsMin     int      `json:"tags_min" binding:"required"`
+	TagsMax     int      `json:"tags_max" binding:"required"`
+	Requires    []string `json:"requires" binding:"required"`
+	RequiresMin int      `json:"requires_min" binding:"required"`
+	//RequiresMax            int    `json:"requires_max" binding:"required"`
 	OfferingBindable       string `json:"offering_bindable" binding:"required"`
 	InstancesRetrievable   string `json:"instances_retrievable" binding:"required"`
 	BindingsRetrievable    string `json:"bindings_retrievable" binding:"required"`

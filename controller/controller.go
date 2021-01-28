@@ -12,7 +12,7 @@ import (
 )
 
 type Controller struct {
-	catalog model.Catalog
+	catalog *model.Catalog
 }
 
 func New() *Controller {
@@ -31,6 +31,7 @@ func New() *Controller {
 			}
 		}
 	}
+	controller.logCatalog()
 	return &controller
 }
 
@@ -169,7 +170,23 @@ func (controller *Controller) GenerateCatalog(context *gin.Context) {
 	if err != nil {
 		log.Println("Unable to load settings! error: " + err.Error())
 	} else {
-		//controller.catalog = *catalogSettings.GenerateCatalog()
+		controller.catalog = catalog
+		controller.logCatalog()
 	}
-	context.JSON(http.StatusOK, catalog)
+	if context != nil {
+		context.JSON(http.StatusOK, catalog)
+	}
+
+}
+
+/*func (controller *Controller) PrintCatalog()  {
+	s, _ := json.MarshalIndent(controller.catalog, "", "\t");
+	fmt.Print(string(s))
+}
+
+*/
+
+func (controller *Controller) logCatalog() {
+	s, _ := json.MarshalIndent(controller.catalog, "", "\t")
+	log.Print(string(s))
 }

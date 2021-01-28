@@ -7,6 +7,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"time"
 )
 
 /*
@@ -30,8 +31,12 @@ func GenerateCatalog() (*model.Catalog, error) {
 		return nil, err
 	}
 	log.Println("Catalog settings validated!")
-	log.Println(catalogSettings)
+
+	s, _ := json.MarshalIndent(catalogSettings, "", "\t")
+	log.Print(string(s))
+
 	catalog, err := generateCatalog(&catalogSettings)
+	//log.Println(catalog)
 
 	return catalog, err
 }
@@ -40,6 +45,17 @@ func GenerateCatalog() (*model.Catalog, error) {
 func generateCatalog(catalogSettings *model.CatalogSettings) (*model.Catalog, error) {
 	var catalog model.Catalog
 	//var err error
+	//create tags
+	rand.Seed(time.Now().UnixNano())
+	var tags []string
+	for i := 0; i < catalogSettings.TagsMax; i++ {
+		tag := randomString(4)
+		for containsString(tags, tag) {
+			tag = randomString(4)
+		}
+		tags = append(tags, tag)
+		//append(tags, randomString(4))
+	}
 	for i := 0; i < catalogSettings.Amount; i++ {
 		catalog.ServiceOfferings = append(catalog.ServiceOfferings, model.ServiceOffering{
 			//MUST BE UNIQUE
@@ -47,6 +63,8 @@ func generateCatalog(catalogSettings *model.CatalogSettings) (*model.Catalog, er
 			Id:          randomString(8) + "-XXXX-XXXX-XXXX-" + randomString(12),
 			Description: randomString(6),
 			//REST OF SETTINGS
+			Tags: selectRandomTags(tags, catalogSettings.TagsMin, catalogSettings.TagsMax),
+			//Requires:
 			Bindable: returnBoolean(catalogSettings.OfferingBindable),
 		})
 	}
@@ -73,3 +91,30 @@ func returnBoolean(frequency string) bool {
 	}
 	return false
 }
+
+func containsString(strings []string, element string) bool {
+	for _, val := range strings {
+		if val == element {
+			return true
+		}
+	}
+	return false
+}
+
+func selectRandomTags(tags []string, min int, max int) []string {
+	amount := rand.Intn(max+1-min) + min
+	var result []string
+	for i := 0; i < amount; i++ {
+		tag := tags[rand.Int63()%int64(len(tags))]
+		if containsString(result, tag) {
+			i--
+		} else {
+			result = append(result, tag)
+		}
+	}
+	return result
+}
+
+/*func randomRequires(min int, max int)  {
+	requires := [3]string{"syslog_drain", "route_forwarding", "volume_mount"}
+}*/
