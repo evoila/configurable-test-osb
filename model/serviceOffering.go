@@ -1,7 +1,5 @@
 package model
 
-import "github.com/MaxFuhrich/serviceBrokerDummy/generator"
-
 type ServiceOffering struct {
 	//REQUIRED
 	Name string `json:"name"`
@@ -32,35 +30,24 @@ type ServiceOffering struct {
 	Plans []ServicePlan `json:"plans"`
 }
 
-type DashboardClient struct {
-	//*The id of the OAuth client that the dashboard will use. If present, MUST be a non-empty string.
-	Id string `json:"id"`
-
-	//*A secret for the dashboard client. If present, MUST be a non-empty string.
-	Secret string `json:"secret"`
-
-	//A URI for the service dashboard. Validated by the OAuth token server when the dashboard requests a token.
-	RedirectUri *string `json:"redirect_uri,omitempty"`
-}
-
 func newServiceOffering(catalogSettings *CatalogSettings, tags []string) *ServiceOffering {
 	offering := ServiceOffering{
 		//MUST BE UNIQUE
-		Name:        generator.RandomString(5),
-		Id:          generator.RandomString(8) + "-XXXX-XXXX-XXXX-" + generator.RandomString(12),
-		Description: generator.RandomString(6),
-		Tags:        generator.SelectRandomTags(tags, catalogSettings.TagsMin, catalogSettings.TagsMax),
-		Requires:    generator.RandomRequires(catalogSettings.Requires, catalogSettings.RequiresMin),
-		Bindable:    generator.ReturnBoolean(catalogSettings.OfferingBindable),
-		InstancesRetrievable: generator.ReturnFieldByBoolean(generator.ReturnBoolean(catalogSettings.InstancesRetrievableExists),
+		Name:        RandomString(5),
+		Id:          RandomString(8) + "-XXXX-XXXX-XXXX-" + RandomString(12),
+		Description: RandomString(6),
+		Tags:        SelectRandomTags(tags, catalogSettings.TagsMin, catalogSettings.TagsMax),
+		Requires:    RandomRequires(catalogSettings.Requires, catalogSettings.RequiresMin),
+		Bindable:    ReturnBoolean(catalogSettings.OfferingBindable),
+		InstancesRetrievable: ReturnFieldByBoolean(ReturnBoolean(catalogSettings.InstancesRetrievableExists),
 			catalogSettings.InstancesRetrievable), //returnBoolean(catalogSettings.InstancesRetrievable),
-		BindingsRetrievable: generator.ReturnFieldByBoolean(generator.ReturnBoolean(catalogSettings.BindingsRetrievableExists),
+		BindingsRetrievable: ReturnFieldByBoolean(ReturnBoolean(catalogSettings.BindingsRetrievableExists),
 			catalogSettings.BindingsRetrievable), //returnBoolean(catalogSettings.BindingsRetrievable),
-		AllowContextUpdates: generator.ReturnFieldByBoolean(generator.ReturnBoolean(catalogSettings.AllowContextUpdatesExists),
+		AllowContextUpdates: ReturnFieldByBoolean(ReturnBoolean(catalogSettings.AllowContextUpdatesExists),
 			catalogSettings.AllowContextUpdates), //AllowContextUpdates: returnBoolean(catalogSettings.AllowContextUpdates),
-		Metadata:        generator.MetadataByBool(generator.ReturnBoolean(catalogSettings.OfferingMetadata)),                                           //Metadata: metadataByBool(returnBoolean(catalogSettings.OfferingMetadata )),
-		DashboardClient: generator.ReturnDashboardClient(catalogSettings),                                                                              //DashboardClient:
-		PlanUpdateable:  generator.ReturnFieldByBoolean(generator.ReturnBoolean(catalogSettings.PlanUpdateableExists), catalogSettings.PlanUpdateable), //PlanUpdateable: returnBoolean(catalogSettings.PlanUpdateable),
+		Metadata:        MetadataByBool(ReturnBoolean(catalogSettings.OfferingMetadata)),                                           //Metadata: metadataByBool(returnBoolean(catalogSettings.OfferingMetadata )),
+		DashboardClient: NewDashboardClient(catalogSettings),                                                                       //DashboardClient:
+		PlanUpdateable:  ReturnFieldByBoolean(ReturnBoolean(catalogSettings.PlanUpdateableExists), catalogSettings.PlanUpdateable), //PlanUpdateable: returnBoolean(catalogSettings.PlanUpdateable),
 		//Plans:
 	}
 	return &offering

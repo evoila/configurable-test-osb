@@ -2,7 +2,6 @@ package controller
 
 import (
 	"encoding/json"
-	"github.com/MaxFuhrich/serviceBrokerDummy/generator"
 	"github.com/MaxFuhrich/serviceBrokerDummy/model"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
@@ -12,7 +11,8 @@ import (
 )
 
 type Controller struct {
-	catalog *model.Catalog
+	catalog         *model.Catalog
+	catalogSettings *model.CatalogSettings
 }
 
 func New() *Controller {
@@ -165,7 +165,8 @@ func Deprovide(context *gin.Context) {
 
 func (controller *Controller) GenerateCatalog(context *gin.Context) {
 	//Generate new catalog according to settings
-	catalog, err := generator.GenerateCatalog()
+	controller.catalogSettings, _ = model.NewCatalogSettings()
+	catalog, err := model.NewCatalog(controller.catalogSettings) //generator.GenerateCatalog()
 	//newCatalog, err := generator.GenerateCatalog()
 	if err != nil {
 		log.Println("Unable to load settings! error: " + err.Error())

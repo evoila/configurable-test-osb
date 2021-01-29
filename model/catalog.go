@@ -1,7 +1,6 @@
 package model
 
 import (
-	"github.com/MaxFuhrich/serviceBrokerDummy/generator"
 	"math/rand"
 	"time"
 )
@@ -18,9 +17,9 @@ func NewCatalog(catalogSettings *CatalogSettings) (*Catalog, error) {
 	rand.Seed(time.Now().UnixNano())
 	var tags []string
 	for i := 0; i < catalogSettings.TagsMax; i++ {
-		tag := generator.RandomString(4)
-		for generator.ContainsString(tags, tag) {
-			tag = generator.RandomString(4)
+		tag := RandomString(4)
+		for ContainsString(tags, tag) {
+			tag = RandomString(4)
 		}
 		tags = append(tags, tag)
 		//append(tags, RandomString(4))

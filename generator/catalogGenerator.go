@@ -1,22 +1,12 @@
 package generator
 
-import (
-	"encoding/json"
-	"github.com/MaxFuhrich/serviceBrokerDummy/model"
-	"github.com/MaxFuhrich/serviceBrokerDummy/validators"
-	"log"
-	"math/rand"
-	"os"
-	"time"
-)
-
 /*
 This file generates a random catalog (catalog with random services and offerings) from the file catalogSettings.json, so
 that it doesn't need to be created by hand.
 */
 
 //Generates Catalog from file
-func GenerateCatalog() (*model.Catalog, error) {
+/*func GenerateCatalog() (*model.Catalog, error) {
 	var catalogSettings model.CatalogSettings
 	catalogSettingsJson, err := os.Open("settings/catalogSettings.json")
 	if err != nil {
@@ -61,5 +51,7 @@ func generateCatalog(catalogSettings *model.CatalogSettings) (*model.Catalog, er
 	}
 	return &catalog, nil
 }
+
+*/
 
 //func returnServicePlans(catalogSettins *model.CatalogSettings) []model.ServicePlan
