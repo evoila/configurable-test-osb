@@ -1,5 +1,10 @@
 package model
 
+import (
+	"github.com/MaxFuhrich/serviceBrokerDummy/generator"
+	"math/rand"
+)
+
 type ServiceOffering struct {
 	//REQUIRED
 	Name string `json:"name"`
@@ -30,25 +35,51 @@ type ServiceOffering struct {
 	Plans []ServicePlan `json:"plans"`
 }
 
-func newServiceOffering(catalogSettings *CatalogSettings, tags []string) *ServiceOffering {
+func newServiceOffering(catalogSettings *CatalogSettings, catalog *Catalog, tags []string) *ServiceOffering {
 	offering := ServiceOffering{
 		//MUST BE UNIQUE
-		Name:        RandomString(5),
-		Id:          RandomString(8) + "-XXXX-XXXX-XXXX-" + RandomString(12),
-		Description: RandomString(6),
-		Tags:        SelectRandomTags(tags, catalogSettings.TagsMin, catalogSettings.TagsMax),
-		Requires:    RandomRequires(catalogSettings.Requires, catalogSettings.RequiresMin),
-		Bindable:    ReturnBoolean(catalogSettings.OfferingBindable),
-		InstancesRetrievable: ReturnFieldByBoolean(ReturnBoolean(catalogSettings.InstancesRetrievableExists),
+		Name:        catalog.createUniqueName(5), //generator.RandomString(5),
+		Id:          catalog.createUniqueId(),    //generator.RandomString(8) + "-XXXX-XXXX-XXXX-" + generator.RandomString(12),
+		Description: generator.RandomString(6),
+		Tags:        generator.SelectRandomTags(tags, catalogSettings.TagsMin, catalogSettings.TagsMax),
+		Requires:    generator.RandomRequires(catalogSettings.Requires, catalogSettings.RequiresMin),
+		Bindable:    generator.ReturnBoolean(catalogSettings.OfferingBindable),
+		InstancesRetrievable: generator.ReturnFieldByBoolean(generator.ReturnBoolean(catalogSettings.InstancesRetrievableExists),
 			catalogSettings.InstancesRetrievable), //returnBoolean(catalogSettings.InstancesRetrievable),
-		BindingsRetrievable: ReturnFieldByBoolean(ReturnBoolean(catalogSettings.BindingsRetrievableExists),
+		BindingsRetrievable: generator.ReturnFieldByBoolean(generator.ReturnBoolean(catalogSettings.BindingsRetrievableExists),
 			catalogSettings.BindingsRetrievable), //returnBoolean(catalogSettings.BindingsRetrievable),
-		AllowContextUpdates: ReturnFieldByBoolean(ReturnBoolean(catalogSettings.AllowContextUpdatesExists),
+		AllowContextUpdates: generator.ReturnFieldByBoolean(generator.ReturnBoolean(catalogSettings.AllowContextUpdatesExists),
 			catalogSettings.AllowContextUpdates), //AllowContextUpdates: returnBoolean(catalogSettings.AllowContextUpdates),
-		Metadata:        MetadataByBool(ReturnBoolean(catalogSettings.OfferingMetadata)),                                           //Metadata: metadataByBool(returnBoolean(catalogSettings.OfferingMetadata )),
-		DashboardClient: NewDashboardClient(catalogSettings),                                                                       //DashboardClient:
-		PlanUpdateable:  ReturnFieldByBoolean(ReturnBoolean(catalogSettings.PlanUpdateableExists), catalogSettings.PlanUpdateable), //PlanUpdateable: returnBoolean(catalogSettings.PlanUpdateable),
-		//Plans:
+		Metadata:        generator.MetadataByBool(generator.ReturnBoolean(catalogSettings.OfferingMetadata)),                                           //Metadata: metadataByBool(returnBoolean(catalogSettings.OfferingMetadata )),
+		DashboardClient: NewDashboardClient(catalogSettings),                                                                                           //DashboardClient:
+		PlanUpdateable:  generator.ReturnFieldByBoolean(generator.ReturnBoolean(catalogSettings.PlanUpdateableExists), catalogSettings.PlanUpdateable), //PlanUpdateable: returnBoolean(catalogSettings.PlanUpdateable),
+		Plans:           makePlans(catalogSettings, catalog),
 	}
 	return &offering
+}
+
+func (catalog *Catalog) createUniqueName(n int) string {
+	name := generator.RandomString(n)
+	for catalog.nameExists(name) {
+		name = generator.RandomString(n)
+	}
+	return name
+}
+
+func (catalog *Catalog) createUniqueId() string {
+	id := generator.RandomString(8) + "-XXXX-XXXX-XXXX-" + generator.RandomString(12)
+	for catalog.GetServiceOfferingById(id) != nil {
+		id = generator.RandomString(8) + "-XXXX-XXXX-XXXX-" + generator.RandomString(12)
+	}
+	return id
+}
+
+func makePlans(catalogSettings *CatalogSettings, catalog *Catalog) []ServicePlan {
+	var servicePlans []ServicePlan
+	numberOfPlans := rand.Intn(catalogSettings.PlansMax-catalogSettings.PlansMin+1) + catalogSettings.PlansMin
+	for i := 0; i < numberOfPlans; i++ {
+		//pointer ok?????
+		servicePlans = append(servicePlans, *newServicePlan(catalogSettings, catalog))
+	}
+	return servicePlans
 }

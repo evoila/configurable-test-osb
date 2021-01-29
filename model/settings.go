@@ -124,46 +124,12 @@ func ValidateCatalogSettings(settings *CatalogSettings) error {
 	if len(settings.Requires) < settings.RequiresMin {
 		return errors.New("len(requires) must be >= requires_min")
 	}
-	/*if invalidFrequency(&settings.OfferingBindable) {
-		return errors.New("invalid value for offering_bindable")
-	}
-	if invalidFrequency(&settings.InstancesRetrievable) {
-		return errors.New("invalid value for instances_retrievable")
-	}
-	if invalidFrequency(&settings.BindingsRetrievable) {
-		return errors.New("invalid value for bindings_retrievable")
-	}
-	if invalidFrequency(&settings.AllowContextUpdates) {
-		return errors.New("invalid value for allow_context_updates")
-	}
-	if invalidFrequency(&settings.OfferingMetadata) {
-		return errors.New("invalid value for offering_metadata")
-	}
-	if invalidFrequency(&settings.DashboardClient) {
-		return errors.New("invalid value for dashboard_client")
-	}
-	if invalidFrequency(&settings.OfferingPlanUpdateable) {
-		return errors.New("invalid value for offering_plan_updateable")
-	}
 	if settings.PlansMin < 1 {
 		return errors.New("plans_min must be > 0")
 	}
 	if settings.PlansMax < settings.PlansMin {
 		return errors.New("plans_max must be >= plans_min")
 	}
-	if invalidFrequency(&settings.PlanMetadata) {
-		return errors.New("invalid value for plan_metadata")
-	}
-	if invalidFrequency(&settings.Free) {
-		return errors.New("invalid value for free")
-	}
-	if invalidFrequency(&settings.PlanBindable) {
-		return errors.New("invalid value for plan_bindable")
-	}
-	if invalidFrequency(&settings.BindingRotatable) {
-		return errors.New("invalid value for binding_rotatable")
-	}
-	*/
 	if settings.MaxPollingDurationMin < 0 {
 		return errors.New("max_polling_duration_min must be >= 0")
 	}

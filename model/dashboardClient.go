@@ -1,5 +1,7 @@
 package model
 
+import "github.com/MaxFuhrich/serviceBrokerDummy/generator"
+
 type DashboardClient struct {
 	//*The id of the OAuth client that the dashboard will use. If present, MUST be a non-empty string.
 	Id string `json:"id"`
@@ -13,11 +15,11 @@ type DashboardClient struct {
 
 func NewDashboardClient(catalogSettings *CatalogSettings) *DashboardClient {
 	var dashBoardClient DashboardClient
-	if *ReturnBoolean(catalogSettings.DashboardClient) {
+	if *generator.ReturnBoolean(catalogSettings.DashboardClient) {
 		dashBoardClient = DashboardClient{
-			Id:          RandomString(8) + "-XXXX-XXXX-XXXX-" + RandomString(12),
-			Secret:      RandomString(8) + "-XXXX-XXXX-XXXX-" + RandomString(12),
-			RedirectUri: RandomUriByFrequency(catalogSettings.DashboardRedirectUri, 5),
+			Id:          generator.RandomString(8) + "-XXXX-XXXX-XXXX-" + generator.RandomString(12),
+			Secret:      generator.RandomString(8) + "-XXXX-XXXX-XXXX-" + generator.RandomString(12),
+			RedirectUri: generator.RandomUriByFrequency(catalogSettings.DashboardRedirectUri, 5),
 		}
 	}
 	return &dashBoardClient

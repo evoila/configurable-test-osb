@@ -1,5 +1,10 @@
 package model
 
+import (
+	"github.com/MaxFuhrich/serviceBrokerDummy/generator"
+	"math/rand"
+)
+
 type ServicePlan struct {
 	//*
 	/*
@@ -27,10 +32,10 @@ type ServicePlan struct {
 	Description string `json:"description"`
 
 	Metadata               interface{}      `json:"metadata,omitempty"`
-	Free                   bool             `json:"free,omitempty"`
-	Bindable               bool             `json:"bindable,omitempty"`
-	BindingRotatable       bool             `json:"binding_rotatable,omitempty"`
-	PlanUpdateable         bool             `json:"plan_updateable,omitempty"`
+	Free                   *bool            `json:"free,omitempty"`
+	Bindable               *bool            `json:"bindable,omitempty"`
+	BindingRotatable       *bool            `json:"binding_rotatable,omitempty"`
+	PlanUpdateable         *bool            `json:"plan_updateable,omitempty"`
 	Schemas                *Schemas         `json:"schemas,omitempty"`
 	MaximumPollingDuration int              `json:"maximum_polling_duration,omitempty"`
 	MaintenanceInfo        *MaintenanceInfo `json:"maintenance_info,omitempty"`
@@ -52,6 +57,7 @@ type ServiceBindingSchema struct {
 
 type InputParametersSchema struct {
 	//Parameters JSON schema object???
+	Parameters interface{}
 }
 
 type MaintenanceInfo struct {
@@ -69,4 +75,58 @@ type MaintenanceInfo struct {
 		they trigger the maintenance update.
 	*/
 	Description string `json:"description,omitempty"`
+}
+
+func newServicePlan(catalogSettings *CatalogSettings, catalog *Catalog) *ServicePlan {
+	servicePlan := ServicePlan{
+		Id:          catalog.createUniqueId(),
+		Name:        catalog.createUniqueName(5),
+		Description: generator.RandomString(8),
+		Metadata:    generator.MetadataByBool(generator.ReturnBoolean(catalogSettings.PlanMetadata)),
+		Free: generator.ReturnFieldByBoolean(generator.ReturnBoolean(catalogSettings.FreeExists),
+			catalogSettings.Free),
+		Bindable: generator.ReturnFieldByBoolean(generator.ReturnBoolean(catalogSettings.PlanBindableExists),
+			catalogSettings.PlanBindable),
+		BindingRotatable: generator.ReturnFieldByBoolean(generator.ReturnBoolean(catalogSettings.BindingRotatableExists),
+			catalogSettings.BindingRotatable),
+		PlanUpdateable: generator.ReturnFieldByBoolean(generator.ReturnBoolean(catalogSettings.PlanUpdateableExists),
+			catalogSettings.PlanUpdateable),
+		Schemas: newSchema(catalogSettings),
+		MaximumPollingDuration: rand.Intn(catalogSettings.MaxPollingDurationMax-catalogSettings.MaxPollingDurationMin+1) +
+			catalogSettings.MaxPollingDurationMin,
+		MaintenanceInfo: nil,
+	}
+	return &servicePlan
+}
+
+//TO DO
+
+func newSchema(catalogSettings *CatalogSettings) *Schemas {
+	if *generator.ReturnBoolean(catalogSettings.Schemas) {
+		schemas := Schemas{
+			ServiceInstance: newServiceInstanceSchema(catalogSettings),
+			ServiceBinding:  newServiceBindingSchema(catalogSettings),
+		}
+		return &schemas
+	}
+	return nil
+}
+
+func newServiceInstanceSchema(catalogSettings *CatalogSettings) *ServiceInstanceSchema {
+	if *generator.ReturnBoolean(catalogSettings.ServiceInstanceSchema) {
+		serviceInstanceSchema := ServiceInstanceSchema{
+			Create: nil,
+			Update: nil,
+		}
+		return &serviceInstanceSchema
+	}
+	return nil
+}
+
+func newServiceBindingSchema(catalogSettings *CatalogSettings) *ServiceBindingSchema {
+	if *generator.ReturnBoolean(catalogSettings.ServiceBindingSchema) {
+		serviceBindingSchema := ServiceBindingSchema{Create: nil}
+		return &serviceBindingSchema
+	}
+	return nil
 }

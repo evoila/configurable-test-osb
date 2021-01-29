@@ -1,8 +1,8 @@
 {
   "comment": "These are the settings for service offerings and the fields it uses",
   "amount": 5,
-  "tags_min": 1,
-  "tags_max": 5,
+  "tags_min": 0,
+  "tags_max": 4,
   "requires": [
     "syslog_drain"
   ],

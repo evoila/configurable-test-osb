@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/MaxFuhrich/serviceBrokerDummy/generator"
 	"math/rand"
 	"time"
 )
@@ -17,21 +18,17 @@ func NewCatalog(catalogSettings *CatalogSettings) (*Catalog, error) {
 	rand.Seed(time.Now().UnixNano())
 	var tags []string
 	for i := 0; i < catalogSettings.TagsMax; i++ {
-		tag := RandomString(4)
-		for ContainsString(tags, tag) {
-			tag = RandomString(4)
+		tag := generator.RandomString(4)
+		for generator.ContainsString(tags, tag) {
+			tag = generator.RandomString(4)
 		}
 		tags = append(tags, tag)
 		//append(tags, RandomString(4))
 	}
 	for i := 0; i < catalogSettings.Amount; i++ {
-		catalog.ServiceOfferings = append(catalog.ServiceOfferings, *newServiceOffering(catalogSettings, tags))
+		catalog.ServiceOfferings = append(catalog.ServiceOfferings, *newServiceOffering(catalogSettings, &catalog, tags))
 	}
 	return &catalog, nil
-}
-
-func (catalog *Catalog) CreateAddServiceOffering() {
-
 }
 
 func (catalog *Catalog) GetServiceOfferingById(id string) *ServiceOffering {
@@ -50,4 +47,18 @@ func (catalog *Catalog) GetServiceOfferingByName(name string) *ServiceOffering {
 		}
 	}
 	return nil
+}
+
+func (catalog *Catalog) nameExists(name string) bool {
+	for _, offering := range catalog.ServiceOfferings {
+		if name == offering.Name {
+			return true
+		}
+		for _, plan := range offering.Plans {
+			if name == plan.Name {
+				return true
+			}
+		}
+	}
+	return false
 }
