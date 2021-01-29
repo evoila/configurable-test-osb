@@ -1,5 +1,7 @@
 package model
 
+import "github.com/MaxFuhrich/serviceBrokerDummy/generator"
+
 type ServiceOffering struct {
 	//REQUIRED
 	Name string `json:"name"`
@@ -39,4 +41,27 @@ type DashboardClient struct {
 
 	//A URI for the service dashboard. Validated by the OAuth token server when the dashboard requests a token.
 	RedirectUri *string `json:"redirect_uri,omitempty"`
+}
+
+func newServiceOffering(catalogSettings *CatalogSettings, tags []string) *ServiceOffering {
+	offering := ServiceOffering{
+		//MUST BE UNIQUE
+		Name:        generator.RandomString(5),
+		Id:          generator.RandomString(8) + "-XXXX-XXXX-XXXX-" + generator.RandomString(12),
+		Description: generator.RandomString(6),
+		Tags:        generator.SelectRandomTags(tags, catalogSettings.TagsMin, catalogSettings.TagsMax),
+		Requires:    generator.RandomRequires(catalogSettings.Requires, catalogSettings.RequiresMin),
+		Bindable:    generator.ReturnBoolean(catalogSettings.OfferingBindable),
+		InstancesRetrievable: generator.ReturnFieldByBoolean(generator.ReturnBoolean(catalogSettings.InstancesRetrievableExists),
+			catalogSettings.InstancesRetrievable), //returnBoolean(catalogSettings.InstancesRetrievable),
+		BindingsRetrievable: generator.ReturnFieldByBoolean(generator.ReturnBoolean(catalogSettings.BindingsRetrievableExists),
+			catalogSettings.BindingsRetrievable), //returnBoolean(catalogSettings.BindingsRetrievable),
+		AllowContextUpdates: generator.ReturnFieldByBoolean(generator.ReturnBoolean(catalogSettings.AllowContextUpdatesExists),
+			catalogSettings.AllowContextUpdates), //AllowContextUpdates: returnBoolean(catalogSettings.AllowContextUpdates),
+		Metadata:        generator.MetadataByBool(generator.ReturnBoolean(catalogSettings.OfferingMetadata)),                                           //Metadata: metadataByBool(returnBoolean(catalogSettings.OfferingMetadata )),
+		DashboardClient: generator.ReturnDashboardClient(catalogSettings),                                                                              //DashboardClient:
+		PlanUpdateable:  generator.ReturnFieldByBoolean(generator.ReturnBoolean(catalogSettings.PlanUpdateableExists), catalogSettings.PlanUpdateable), //PlanUpdateable: returnBoolean(catalogSettings.PlanUpdateable),
+		//Plans:
+	}
+	return &offering
 }

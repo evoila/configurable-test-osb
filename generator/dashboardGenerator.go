@@ -2,13 +2,13 @@ package generator
 
 import "github.com/MaxFuhrich/serviceBrokerDummy/model"
 
-func returnDashboardClient(catalogSettings *model.CatalogSettings) *model.DashboardClient {
+func ReturnDashboardClient(catalogSettings *model.CatalogSettings) *model.DashboardClient {
 	var dashBoardClient model.DashboardClient
-	if *returnBoolean(catalogSettings.DashboardClient) {
+	if *ReturnBoolean(catalogSettings.DashboardClient) {
 		dashBoardClient = model.DashboardClient{
-			Id:          randomString(8) + "-XXXX-XXXX-XXXX-" + randomString(12),
-			Secret:      randomString(8) + "-XXXX-XXXX-XXXX-" + randomString(12),
-			RedirectUri: randomUriByFrequency(catalogSettings.DashboardRedirectUri, 5),
+			Id:          RandomString(8) + "-XXXX-XXXX-XXXX-" + RandomString(12),
+			Secret:      RandomString(8) + "-XXXX-XXXX-XXXX-" + RandomString(12),
+			RedirectUri: RandomUriByFrequency(catalogSettings.DashboardRedirectUri, 5),
 		}
 	}
 	return &dashBoardClient

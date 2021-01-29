@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-func randomString(n int) string {
+func RandomString(n int) string {
 	const characters = "abcdefghijklmnopqrstuvxyz0123456789"
 	randomCharSequence := make([]byte, n)
 	for i := range randomCharSequence {
@@ -14,7 +14,7 @@ func randomString(n int) string {
 	return string(randomCharSequence)
 }
 
-func returnBoolean(frequency string) *bool {
+func ReturnBoolean(frequency string) *bool {
 	booleanValue := false
 	if frequency == "always" {
 		booleanValue = true
@@ -28,14 +28,14 @@ func returnBoolean(frequency string) *bool {
 	}
 	return &booleanValue
 }
-func returnFieldByBoolean(boolean *bool, frequency string) *bool {
+func ReturnFieldByBoolean(boolean *bool, frequency string) *bool {
 	if *boolean {
-		return returnBoolean(frequency)
+		return ReturnBoolean(frequency)
 	}
 	return nil
 }
 
-func containsString(strings []string, element string) bool {
+func ContainsString(strings []string, element string) bool {
 	for _, val := range strings {
 		if val == element {
 			return true
@@ -44,12 +44,12 @@ func containsString(strings []string, element string) bool {
 	return false
 }
 
-func selectRandomTags(tags []string, min int, max int) []string {
+func SelectRandomTags(tags []string, min int, max int) []string {
 	amount := rand.Intn(max+1-min) + min
 	var result []string
 	for i := 0; i < amount; i++ {
 		tag := tags[rand.Int63()%int64(len(tags))]
-		if containsString(result, tag) {
+		if ContainsString(result, tag) {
 			i--
 		} else {
 			result = append(result, tag)
@@ -58,13 +58,13 @@ func selectRandomTags(tags []string, min int, max int) []string {
 	return result
 }
 
-func randomRequires(requires []string, min int) []string {
+func RandomRequires(requires []string, min int) []string {
 	//requires := [3]string{"syslog_drain", "route_forwarding", "volume_mount"}
 	amount := rand.Intn(len(requires)+1-min) + min
 	var result []string
 	for i := 0; i < amount; i++ {
 		value := requires[rand.Int63()%int64(len(requires))]
-		if containsString(result, value) {
+		if ContainsString(result, value) {
 			i--
 		} else {
 			result = append(result, value)
@@ -74,17 +74,17 @@ func randomRequires(requires []string, min int) []string {
 
 }
 
-func metadataByBool(b *bool) interface{} {
+func MetadataByBool(b *bool) interface{} {
 	if *b {
 		return "metadata"
 	}
 	return nil
 }
 
-func randomUriByFrequency(frequency string, length int) *string {
+func RandomUriByFrequency(frequency string, length int) *string {
 	var result string
-	if *returnBoolean(frequency) {
-		result = "http://" + randomString(length) + ":" + strconv.Itoa(rand.Intn(9999+1-80)+80)
+	if *ReturnBoolean(frequency) {
+		result = "http://" + RandomString(length) + ":" + strconv.Itoa(rand.Intn(9999+1-80)+80)
 	}
 	return &result
 }

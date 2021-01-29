@@ -1,5 +1,12 @@
 package model
 
+import (
+	"encoding/json"
+	"github.com/MaxFuhrich/serviceBrokerDummy/validators"
+	"log"
+	"os"
+)
+
 type CatalogSettings struct {
 	//These are the settings for service offerings and the fields it uses
 
@@ -63,4 +70,29 @@ type CatalogSettings struct {
 	MaintenanceInfoVersion     string `json:"maintenance_info_version" binding:"required"`
 	MaintenanceInfoDescription string `json:"maintenance_info_description" binding:"required"`
 	DashboardRedirectUri       string `json:"dashboard_redirect_uri" binding:"required"`
+}
+
+func NewCatalogSettings() (*CatalogSettings, error) {
+	var catalogSettings CatalogSettings
+	catalogSettingsJson, err := os.Open("settings/catalogSettings.json")
+	if err != nil {
+		log.Println("Error while opening settings/catalogSettings.json! error: " + err.Error())
+		return nil, err
+	}
+	decoder := json.NewDecoder(catalogSettingsJson)
+	if err = decoder.Decode(&catalogSettings); err != nil {
+		return nil, err
+	}
+	if err = validators.ValidateCatalogSettings(&catalogSettings); err != nil {
+		return nil, err
+	}
+	log.Println("Catalog settings validated!")
+
+	s, _ := json.MarshalIndent(catalogSettings, "", "\t")
+	log.Print(string(s))
+	return &catalogSettings, nil
+	//catalog, err := generateCatalog(&catalogSettings)
+	//log.Println(catalog)
+
+	//return catalog, err
 }

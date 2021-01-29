@@ -49,12 +49,12 @@ func generateCatalog(catalogSettings *model.CatalogSettings) (*model.Catalog, er
 	rand.Seed(time.Now().UnixNano())
 	var tags []string
 	for i := 0; i < catalogSettings.TagsMax; i++ {
-		tag := randomString(4)
-		for containsString(tags, tag) {
-			tag = randomString(4)
+		tag := RandomString(4)
+		for ContainsString(tags, tag) {
+			tag = RandomString(4)
 		}
 		tags = append(tags, tag)
-		//append(tags, randomString(4))
+		//append(tags, RandomString(4))
 	}
 	for i := 0; i < catalogSettings.Amount; i++ {
 		catalog.ServiceOfferings = append(catalog.ServiceOfferings, *returnServiceOffering(catalogSettings, tags))
