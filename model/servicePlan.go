@@ -57,7 +57,7 @@ type ServiceBindingSchema struct {
 
 type InputParametersSchema struct {
 	//Parameters JSON schema object???
-	Parameters interface{}
+	Parameters interface{} `json:"parameters,omitempty"`
 }
 
 type MaintenanceInfo struct {

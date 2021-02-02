@@ -39,9 +39,9 @@ type Header struct {
 	RequestId string `header:"X-Broker-API-Request-Identity" binding:"omitempty"`
 
 	//for "get catalog" responses
-	ETag string
+	ETag string `header:"ETag" binding:"omitempty"`
 	//ifmodifiedsince time in format Mon, 02 Jan 2006 15:04:05 MST -> RFC 1123
-	IfModifiedSince string
+	IfModifiedSince string `header:"If-Modified-Since" binding:"omitempty"`
 }
 
 type UriProperties struct {

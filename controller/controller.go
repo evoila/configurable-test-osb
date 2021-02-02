@@ -17,7 +17,9 @@ type Controller struct {
 
 func New() *Controller {
 	var controller Controller
-	catalogJson, err := os.Open("catalog/catalog.json")
+	//THIS IS THE ONE, COMMENTED OUT FOR TESTING
+	//catalogJson, err := os.Open("catalog/catalog.json")
+	catalogJson, err := os.Open("catalog.json")
 	if err != nil {
 		log.Println("Error while opening catalog file! error: " + err.Error())
 	} else {
@@ -31,14 +33,15 @@ func New() *Controller {
 			}
 		}
 	}
-	controller.logCatalog()
+	//controller.logCatalog()
 	return &controller
 }
 
 //FUNCTIONS FOR HANDLING ENDPOINT REQUESTS GO HERE
 
 func (controller *Controller) Hello(context *gin.Context) {
-	context.JSON(http.StatusOK, controller.catalog)
+	context.JSON(http.StatusOK, "HI!")
+	//fmt.Println("HI")
 }
 func (controller *Controller) TestBind(context *gin.Context) {
 	var offering model.ServiceOffering
@@ -50,9 +53,16 @@ func (controller *Controller) TestBind(context *gin.Context) {
 	context.JSON(http.StatusOK, offering)
 }
 
-/*func GetCatalog(context *gin.Context) {
+func (controller *Controller) GetCatalog(context *gin.Context) {
+	err := bindAndCheckHeader(context)
+	if err != nil {
+		//context.json here or in bindAndCheck?
+	} else {
+		context.JSON(http.StatusOK, controller.catalog)
+	}
 
 }
+
 /*
 //GET /v2/service_instances/:instance_id/last_operation
 func LastOpServiceInstance(context *gin.Context)  {
@@ -65,6 +75,8 @@ func LastOpServiceInstance(context *gin.Context)  {
 	//VORERST
 	context.String(http.StatusOK, uriParams.InstanceId)
 }
+
+/*
 //GET /v2/service_instances/:instance_id/service_bindings/:binding_id/last_operation
 func LastOpServiceBinding(context *gin.Context) {
 	var uriParams model.UriParams
@@ -190,4 +202,29 @@ func (controller *Controller) GenerateCatalog(context *gin.Context) {
 func (controller *Controller) logCatalog() {
 	s, _ := json.MarshalIndent(controller.catalog, "", "\t")
 	log.Print(string(s))
+}
+
+func bindAndCheckHeader(context *gin.Context) error {
+	//is the bound header NEEDED by caller of this function?
+	var header model.Header
+	err := context.ShouldBindHeader(&header)
+	if err != nil {
+		//only return or already response here?
+	}
+	/*
+		if no checks are done this is not needed
+		userId := strings.Split(header.UserId, " ")
+
+		for _, val := range userId {
+			fmt.Println(val)
+		}
+
+	*/
+	s, _ := json.MarshalIndent(header, "", "\t")
+	log.Println(string(s))
+	return nil
+}
+
+func (controller *Controller) ReturnCatalog() *model.Catalog {
+	return controller.catalog
 }

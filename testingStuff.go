@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/json"
-	"github.com/MaxFuhrich/serviceBrokerDummy/model"
-	"log"
+	"github.com/MaxFuhrich/serviceBrokerDummy/controller"
 )
 
 /*
@@ -27,12 +25,14 @@ func main() {
 
 	// Displaying the results
 
-	//myController := controller.New()
+	myController := controller.New()
+	myController.Hello(nil)
+	//myController := myController.New()
 	//myController.GenerateCatalog(nil)
-	settings, _ := model.NewCatalogSettings()
+	/*settings, _ := model.NewCatalogSettings()
 	catalog, _ := model.NewCatalog(settings)
 	s, _ := json.MarshalIndent(catalog, "", "\t")
-	log.Print(string(s))
+	log.Print(string(s))*/
 	//value := false
 	//var wau bla
 	//s, _ := json.MarshalIndent(wau, "", "\t")

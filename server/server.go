@@ -26,10 +26,10 @@ func Run() {
 	//Test
 	r.GET("/", brokerController.Hello)
 	r.POST("/", brokerController.TestBind)
-	/*
-		//Catalog
-		r.GET("/v2/catalog", brokerController.GetCatalog)
 
+	//Catalog
+	r.GET("/v2/catalog", brokerController.GetCatalog)
+	/*
 		//Polling last operation for service instances
 		r.GET("/v2/service_instances/:instance_id/last_operation", brokerController.LastOpServiceInstance)
 
