@@ -4,36 +4,16 @@ import (
 	"encoding/json"
 	"github.com/MaxFuhrich/serviceBrokerDummy/model"
 	"github.com/gin-gonic/gin"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 )
 
 type Controller struct {
-	catalog         *model.Catalog
-	catalogSettings *model.CatalogSettings
 }
 
 func New() *Controller {
 	var controller Controller
-	//THIS IS THE ONE, COMMENTED OUT FOR TESTING
-	//catalogJson, err := os.Open("catalog/catalog.json")
-	catalogJson, err := os.Open("catalog.json")
-	if err != nil {
-		log.Println("Error while opening catalog file! error: " + err.Error())
-	} else {
-		byteVal, err := ioutil.ReadAll(catalogJson)
-		if err != nil {
-			log.Println("Error reading from catalog file! error: " + err.Error())
-		} else {
-			err = json.Unmarshal(byteVal, &controller.catalog)
-			if err != nil {
-				log.Println("Error unmarshalling the catalog file to the catalog struct! error: " + err.Error())
-			}
-		}
-	}
-	//controller.logCatalog()
+
 	return &controller
 }
 
@@ -51,16 +31,6 @@ func (controller *Controller) TestBind(context *gin.Context) {
 		return
 	}
 	context.JSON(http.StatusOK, offering)
-}
-
-func (controller *Controller) GetCatalog(context *gin.Context) {
-	err := bindAndCheckHeader(context)
-	if err != nil {
-		//context.json here or in bindAndCheck?
-	} else {
-		context.JSON(http.StatusOK, controller.catalog)
-	}
-
 }
 
 /*
@@ -175,23 +145,6 @@ func Deprovide(context *gin.Context) {
 }
 */
 
-func (controller *Controller) GenerateCatalog(context *gin.Context) {
-	//Generate new catalog according to settings
-	controller.catalogSettings, _ = model.NewCatalogSettings()
-	catalog, err := model.NewCatalog(controller.catalogSettings) //generator.GenerateCatalog()
-	//newCatalog, err := generator.GenerateCatalog()
-	if err != nil {
-		log.Println("Unable to load settings! error: " + err.Error())
-	} else {
-		controller.catalog = catalog
-		controller.logCatalog()
-	}
-	if context != nil {
-		context.JSON(http.StatusOK, catalog)
-	}
-
-}
-
 /*func (controller *Controller) PrintCatalog()  {
 	s, _ := json.MarshalIndent(controller.catalog, "", "\t");
 	fmt.Print(string(s))
@@ -199,11 +152,7 @@ func (controller *Controller) GenerateCatalog(context *gin.Context) {
 
 */
 
-func (controller *Controller) logCatalog() {
-	s, _ := json.MarshalIndent(controller.catalog, "", "\t")
-	log.Print(string(s))
-}
-
+//should header struct be returned?
 func bindAndCheckHeader(context *gin.Context) error {
 	//is the bound header NEEDED by caller of this function?
 	var header model.Header
@@ -223,8 +172,4 @@ func bindAndCheckHeader(context *gin.Context) error {
 	s, _ := json.MarshalIndent(header, "", "\t")
 	log.Println(string(s))
 	return nil
-}
-
-func (controller *Controller) ReturnCatalog() *model.Catalog {
-	return controller.catalog
 }
