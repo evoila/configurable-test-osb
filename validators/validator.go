@@ -41,43 +41,43 @@ func ValidateCatalogSettings(settings *model.CatalogSettings) error {
 	if len(settings.Requires) < settings.RequiresMin {
 		return errors.New("len(requires) must be >= requires_min")
 	}
-	/*if invalidFrequency(&settings.OfferingBindable) {
+	/*if invalidFrequency(&config.OfferingBindable) {
 		return errors.New("invalid value for offering_bindable")
 	}
-	if invalidFrequency(&settings.InstancesRetrievable) {
+	if invalidFrequency(&config.InstancesRetrievable) {
 		return errors.New("invalid value for instances_retrievable")
 	}
-	if invalidFrequency(&settings.BindingsRetrievable) {
+	if invalidFrequency(&config.BindingsRetrievable) {
 		return errors.New("invalid value for bindings_retrievable")
 	}
-	if invalidFrequency(&settings.AllowContextUpdates) {
+	if invalidFrequency(&config.AllowContextUpdates) {
 		return errors.New("invalid value for allow_context_updates")
 	}
-	if invalidFrequency(&settings.OfferingMetadata) {
+	if invalidFrequency(&config.OfferingMetadata) {
 		return errors.New("invalid value for offering_metadata")
 	}
-	if invalidFrequency(&settings.DashboardClient) {
+	if invalidFrequency(&config.DashboardClient) {
 		return errors.New("invalid value for dashboard_client")
 	}
-	if invalidFrequency(&settings.OfferingPlanUpdateable) {
+	if invalidFrequency(&config.OfferingPlanUpdateable) {
 		return errors.New("invalid value for offering_plan_updateable")
 	}
-	if settings.PlansMin < 1 {
+	if config.PlansMin < 1 {
 		return errors.New("plans_min must be > 0")
 	}
-	if settings.PlansMax < settings.PlansMin {
+	if config.PlansMax < config.PlansMin {
 		return errors.New("plans_max must be >= plans_min")
 	}
-	if invalidFrequency(&settings.PlanMetadata) {
+	if invalidFrequency(&config.PlanMetadata) {
 		return errors.New("invalid value for plan_metadata")
 	}
-	if invalidFrequency(&settings.Free) {
+	if invalidFrequency(&config.Free) {
 		return errors.New("invalid value for free")
 	}
-	if invalidFrequency(&settings.PlanBindable) {
+	if invalidFrequency(&config.PlanBindable) {
 		return errors.New("invalid value for plan_bindable")
 	}
-	if invalidFrequency(&settings.BindingRotatable) {
+	if invalidFrequency(&config.BindingRotatable) {
 		return errors.New("invalid value for binding_rotatable")
 	}
 	*/

@@ -153,7 +153,7 @@ func Deprovide(context *gin.Context) {
 */
 
 //should header struct be returned?
-func bindAndCheckHeader(context *gin.Context) error {
+func bindAndCheckHeader(context *gin.Context, settings *model.Settings) (*model.Header, error) {
 	//is the bound header NEEDED by caller of this function?
 	var header model.Header
 	err := context.ShouldBindHeader(&header)
@@ -169,7 +169,11 @@ func bindAndCheckHeader(context *gin.Context) error {
 		}
 
 	*/
+
 	s, _ := json.MarshalIndent(header, "", "\t")
 	log.Println(string(s))
-	return nil
+	log.Println("Header settings:")
+	s, _ = json.MarshalIndent(settings, "", "\t")
+	log.Println(string(s))
+	return &header, nil
 }

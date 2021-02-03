@@ -10,7 +10,7 @@ import (
 )
 
 type CatalogSettings struct {
-	//These are the settings for service offerings and the fields it uses
+	//These are the config for service offerings and the fields it uses
 
 	/*
 		The tag binding:"required" has no effect for decoding json files to structs but is here in case an endpoint
@@ -76,9 +76,9 @@ type CatalogSettings struct {
 
 func NewCatalogSettings() (*CatalogSettings, error) {
 	var catalogSettings CatalogSettings
-	catalogSettingsJson, err := os.Open("settings/catalogSettings.json")
+	catalogSettingsJson, err := os.Open("config/catalogSettings.json")
 	if err != nil {
-		log.Println("Error while opening settings/catalogSettings.json! error: " + err.Error())
+		log.Println("Error while opening config/catalogSettings.json! error: " + err.Error())
 		return nil, err
 	}
 	decoder := json.NewDecoder(catalogSettingsJson)
@@ -88,7 +88,7 @@ func NewCatalogSettings() (*CatalogSettings, error) {
 	if err = ValidateCatalogSettings(&catalogSettings); err != nil {
 		return nil, err
 	}
-	log.Println("Catalog settings validated!")
+	log.Println("Catalog config validated!")
 
 	s, _ := json.MarshalIndent(catalogSettings, "", "\t")
 	log.Print(string(s))

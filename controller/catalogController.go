@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/MaxFuhrich/serviceBrokerDummy/model"
 	"github.com/MaxFuhrich/serviceBrokerDummy/service"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -8,14 +9,18 @@ import (
 
 type CatalogController struct {
 	catalogService *service.CatalogService
+	settings       *model.Settings
 }
 
-func NewCatalogController(catalogService *service.CatalogService) CatalogController {
-	return CatalogController{catalogService: catalogService}
+func NewCatalogController(catalogService *service.CatalogService, settings *model.Settings) CatalogController {
+	return CatalogController{
+		catalogService: catalogService,
+		settings:       settings,
+	}
 }
 
 func (catalogController *CatalogController) GetCatalog(context *gin.Context) {
-	err := bindAndCheckHeader(context)
+	_, err := bindAndCheckHeader(context, catalogController.settings)
 	if err != nil {
 		//context.json here or in bindAndCheck?
 	} else {

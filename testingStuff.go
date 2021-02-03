@@ -29,8 +29,8 @@ func main() {
 	myController.Hello(nil)
 	//myController := myController.New()
 	//myController.GenerateCatalog(nil)
-	/*settings, _ := model.NewCatalogSettings()
-	catalog, _ := model.NewCatalog(settings)
+	/*config, _ := model.NewCatalogSettings()
+	catalog, _ := model.NewCatalog(config)
 	s, _ := json.MarshalIndent(catalog, "", "\t")
 	log.Print(string(s))*/
 	//value := false
@@ -49,9 +49,9 @@ func main() {
 
 	*/
 	/*var catalogSettings generator.CatalogSettings
-	catalogSettingsJson, err := os.Open("settings/catalogSettings.json")
+	catalogSettingsJson, err := os.Open("config/catalogSettings.json")
 	if err != nil {
-		log.Println("Error while opening settings/catalogSettings.json! error: " + err.Error())
+		log.Println("Error while opening config/catalogSettings.json! error: " + err.Error())
 	} else {
 		decoder := json.NewDecoder(catalogSettingsJson)
 		decoder.Decode(&catalogSettings)
