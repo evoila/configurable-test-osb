@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/MaxFuhrich/serviceBrokerDummy/model"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -154,20 +155,39 @@ func Deprovide(context *gin.Context) {
 
 //should header struct be returned?
 func bindAndCheckHeader(context *gin.Context, settings *model.Settings) (*model.Header, error) {
-	//is the bound header NEEDED by caller of this function?
+	//is the bound header NEEDED by caller of this function? YES
 	var header model.Header
 	err := context.ShouldBindHeader(&header)
 	if err != nil {
 		//only return or already response here?
+		context.JSON(http.StatusBadRequest, err.Error())
+		return nil, err
 	}
-	/*
-		if no checks are done this is not needed
-		userId := strings.Split(header.UserId, " ")
-
-		for _, val := range userId {
-			fmt.Println(val)
+	if settings.HeaderSettings.RejectEmptyAPIVersion {
+		if header.APIVersionHeader == nil {
+			context.String(http.StatusBadRequest, "the header \"X-Broker-API-Version\" is required but missing")
+			return nil, errors.New("the header \"X-Broker-API-Version\" is required but missing")
 		}
+	}
+	if settings.HeaderSettings.RejectWrongAPIVersion {
+		if settings.HeaderSettings.BrokerVersion != *header.APIVersionHeader {
+			context.String(http.StatusPreconditionFailed, "header \"X-Broker-API-Version\" is uses the wrong version")
+			return nil, errors.New("header \"X-Broker-API-Version\" is uses the wrong version")
+		}
+	}
+	if settings.HeaderSettings.OriginIDValMustMatchProfile {
+		//MORE COMPLEX TO DO
+	}
+	if settings.HeaderSettings.LogRequestID {
+		//LOG REQUEST ID HERE OR SOMEWHERE ELSE? TO DO
+	}
 
+	/*
+		TO DO
+		"origin_id_val_must_match_profile": true,
+		"log_request_id": true,
+		"request_id_in_response": true,
+		"etag_if_modified_since_in_response": false
 	*/
 
 	s, _ := json.MarshalIndent(header, "", "\t")

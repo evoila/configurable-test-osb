@@ -12,8 +12,9 @@ Etag ressourcen identifizieren
 
 //REQUEST AND RESPONSE???
 type Header struct {
+	//omitempty has no effect, probably because `header...` and not `json`is used
 	//SETTABLE
-	APIVersionHeader string `header:"X-Broker-API-Version" binding:"omitempty"`
+	APIVersionHeader *string `header:"X-Broker-API-Version"`
 
 	/*
 		-For any OSBAPI request that is the result of an action taken by a Platform's user,
@@ -26,7 +27,7 @@ type Header struct {
 		-Form X-Broker-API-Originating-Identity: Platform value(base64encoded)
 		-ex X-Broker-API-Originating-Identity: kubernetes 1234
 	*/
-	UserId string `header:"X-Broker-API-Originating-Identity" binding:"omitempty"`
+	UserId *string `header:"X-Broker-API-Originating-Identity"`
 
 	/*
 		-Wenn vorhanden
@@ -36,12 +37,12 @@ type Header struct {
 		-value MUST be a non-empty string indicating the identity of the request being sent. The specific value MAY
 		be unique for each request sent to the broker. Using a GUID is RECOMMENDED.
 	*/
-	RequestId string `header:"X-Broker-API-Request-Identity" binding:"omitempty"`
+	RequestId *string `header:"X-Broker-API-Request-Identity"`
 
 	//for "get catalog" responses
-	ETag string `header:"ETag" binding:"omitempty"`
+	ETag *string `header:"ETag"`
 	//ifmodifiedsince time in format Mon, 02 Jan 2006 15:04:05 MST -> RFC 1123
-	IfModifiedSince string `header:"If-Modified-Since" binding:"omitempty"`
+	IfModifiedSince *string `header:"If-Modified-Since"`
 }
 
 type UriProperties struct {

@@ -22,7 +22,7 @@ func NewCatalogController(catalogService *service.CatalogService, settings *mode
 func (catalogController *CatalogController) GetCatalog(context *gin.Context) {
 	_, err := bindAndCheckHeader(context, catalogController.settings)
 	if err != nil {
-		//context.json here or in bindAndCheck?
+		//POSSIBLE LOGGING
 	} else {
 		context.JSON(http.StatusOK, catalogController.catalogService.GetCatalog())
 	}

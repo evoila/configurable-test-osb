@@ -94,7 +94,6 @@ func Run() {
 		}
 
 	}
-
 }
 
 func makeCatalog() (*model.Catalog, error) {
