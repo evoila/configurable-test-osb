@@ -27,7 +27,7 @@ type Header struct {
 		-Form X-Broker-API-Originating-Identity: Platform value(base64encoded)
 		-ex X-Broker-API-Originating-Identity: kubernetes 1234
 	*/
-	UserId *string `header:"X-Broker-API-Originating-Identity"`
+	OriginID *string `header:"X-Broker-API-Originating-Identity"`
 
 	/*
 		-Wenn vorhanden
@@ -37,7 +37,7 @@ type Header struct {
 		-value MUST be a non-empty string indicating the identity of the request being sent. The specific value MAY
 		be unique for each request sent to the broker. Using a GUID is RECOMMENDED.
 	*/
-	RequestId *string `header:"X-Broker-API-Request-Identity"`
+	RequestID *string `header:"X-Broker-API-Request-Identity"`
 
 	//for "get catalog" responses
 	ETag *string `header:"ETag"`

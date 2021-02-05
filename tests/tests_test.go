@@ -3,7 +3,6 @@ package tests
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/MaxFuhrich/serviceBrokerDummy/controller"
 	"github.com/MaxFuhrich/serviceBrokerDummy/model"
 	"io/ioutil"
 	"log"
@@ -29,9 +28,9 @@ func TestCatalog(t *testing.T) {
 				log.Println("Error unmarshalling the catalog file to the catalog struct! error: " + err.Error())
 				t.Error(err.Error())
 			} else {
-				brokerController := controller.New()
+				//brokerController := controller.New()
 				var brokerCatalog model.Catalog
-				brokerCatalog = *brokerController.ReturnCatalog()
+				//brokerCatalog = *brokerController.ReturnCatalog()
 				marshalledJson, err := json.Marshal(brokerCatalog)
 				if err != nil {
 					t.Error(err.Error())

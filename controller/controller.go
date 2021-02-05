@@ -1,8 +1,6 @@
 package controller
 
 import (
-	"encoding/json"
-	"errors"
 	"github.com/MaxFuhrich/serviceBrokerDummy/model"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -154,6 +152,7 @@ func Deprovide(context *gin.Context) {
 */
 
 //should header struct be returned?
+/*
 func bindAndCheckHeader(context *gin.Context, settings *model.Settings) (*model.Header, error) {
 	//is the bound header NEEDED by caller of this function? YES
 	var header model.Header
@@ -188,7 +187,7 @@ func bindAndCheckHeader(context *gin.Context, settings *model.Settings) (*model.
 		"log_request_id": true,
 		"request_id_in_response": true,
 		"etag_if_modified_since_in_response": false
-	*/
+
 
 	s, _ := json.MarshalIndent(header, "", "\t")
 	log.Println(string(s))
@@ -197,3 +196,4 @@ func bindAndCheckHeader(context *gin.Context, settings *model.Settings) (*model.
 	log.Println(string(s))
 	return &header, nil
 }
+*/

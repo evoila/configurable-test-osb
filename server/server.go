@@ -38,10 +38,18 @@ func Run() {
 			log.Println()
 			catalogService := service.NewCatalogService(catalog)
 			catalogController := controller.NewCatalogController(&catalogService, settings)
+			middleware := controller.NewMiddleware(settings)
 			//PUT THIS TO A DIFFERENT PLACE
 			//Default router, should be changed?
 			r := gin.Default()
-
+			if settings.HeaderSettings.RequestIDRequired && settings.HeaderSettings.LogRequestID {
+				r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
+					return fmt.Sprintf("%s\n",
+						param.Request.Header.Values("X-Broker-API-Request-Identity"),
+					)
+				}))
+			}
+			r.Use(middleware.BindAndCheckHeader)
 			//ENDPOINTS HERE
 
 			//Test
