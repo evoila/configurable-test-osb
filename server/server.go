@@ -35,9 +35,13 @@ func Run() {
 		if err != nil {
 			log.Println("There has been an error while creating the settings!", err.Error())
 		} else {
-			log.Println()
+			//log.Println()
+			var serviceInstances map[string]model.ServiceDeployment
 			catalogService := service.NewCatalogService(catalog)
 			catalogController := controller.NewCatalogController(&catalogService, settings)
+			deploymentService := service.NewDeploymentService(catalog, &serviceInstances)
+			deploymentController := controller.NewDeploymentController(deploymentService, settings)
+
 			middleware := controller.NewMiddleware(settings)
 			//PUT THIS TO A DIFFERENT PLACE
 			//Default router, should be changed?
@@ -58,6 +62,8 @@ func Run() {
 			//new endpoints with new controllers
 			r.GET("/v2/catalog", catalogController.GetCatalog)
 
+			//Provisioning (of service)
+			r.PUT("/v2/service_instances/:instance_id", deploymentController.Provision)
 			//Replace when new controllers are implemented?
 			//Catalog
 			//r.GET("/v2/catalog", testController.GetCatalog)
@@ -68,8 +74,7 @@ func Run() {
 				//Polling last operation for service binding
 				r.GET("/v2/service_instances/:instance_id/service_bindings/:binding_id/last_operation", testController.LastOpServiceBinding)
 
-				//Provisioning (of service)
-				r.PUT("/v2/service_instances/:instance_id", testController.ProvideService)
+
 
 				//Fetching service instance
 				r.GET("/v2/service_instances/:instance_id", testController.FetchServiceInstance)

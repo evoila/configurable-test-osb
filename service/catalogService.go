@@ -8,7 +8,6 @@ import (
 
 type CatalogService struct {
 	catalog *model.Catalog
-	//catalogSettings *model.CatalogSettings
 }
 
 func NewCatalogService(catalog *model.Catalog) CatalogService {
