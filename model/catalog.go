@@ -11,6 +11,7 @@ type Catalog struct {
 	ServiceOfferings []ServiceOffering `json:"services"` //check if correct
 }
 
+//Used for generation of catalog
 func NewCatalog(catalogSettings *CatalogSettings) (*Catalog, error) {
 	var catalog Catalog
 	//var err error
@@ -31,13 +32,13 @@ func NewCatalog(catalogSettings *CatalogSettings) (*Catalog, error) {
 	return &catalog, nil
 }
 
-func (catalog *Catalog) GetServiceOfferingById(id string) *ServiceOffering {
+func (catalog *Catalog) GetServiceOfferingById(id string) (*ServiceOffering, bool) {
 	for _, offering := range catalog.ServiceOfferings {
 		if id == offering.Id {
-			return &offering
+			return &offering, true
 		}
 	}
-	return nil
+	return nil, false
 }
 
 func (catalog *Catalog) GetServiceOfferingByName(name string) *ServiceOffering {

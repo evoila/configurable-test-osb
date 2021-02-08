@@ -14,7 +14,7 @@ type ServicePlan struct {
 		MUST be a non-empty string. Using a GUID is RECOMMENDED.
 	*/
 	//REQUIRED
-	Id string `json:"id"`
+	ID string `json:"id"`
 
 	//*
 	/*
@@ -66,7 +66,7 @@ type MaintenanceInfo struct {
 		This MUST be a string conforming to a semantic version 2.0. The Platform MAY use this field to determine
 		whether a maintenance update is available for a Service Instance.
 	*/
-	Version string `json:"version,omitempty"`
+	Version *string `json:"version,omitempty"`
 
 	//*
 	/*
@@ -79,7 +79,7 @@ type MaintenanceInfo struct {
 
 func newServicePlan(catalogSettings *CatalogSettings, catalog *Catalog) *ServicePlan {
 	servicePlan := ServicePlan{
-		Id:          catalog.createUniqueId(),
+		ID:          catalog.createUniqueId(),
 		Name:        catalog.createUniqueName(5),
 		Description: generator.RandomString(8),
 		Metadata:    generator.MetadataByBool(generator.ReturnBoolean(catalogSettings.PlanMetadata)),

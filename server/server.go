@@ -37,6 +37,7 @@ func Run() {
 		} else {
 			//log.Println()
 			var serviceInstances map[string]model.ServiceDeployment
+			serviceInstances = make(map[string]model.ServiceDeployment)
 			catalogService := service.NewCatalogService(catalog)
 			catalogController := controller.NewCatalogController(&catalogService, settings)
 			deploymentService := service.NewDeploymentService(catalog, &serviceInstances)

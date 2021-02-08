@@ -11,4 +11,11 @@ const RequiresApp = "The request body is missing the app_guid field."
 
 //Expected Action: The Platform SHOULD fetch the latest version of the Service Broker's Catalog.
 const MaintenanceInfoConflict = "The maintenance_info.version field provided in the request does not match the " +
-"maintenance_info.version field provided in the Service Broker's Catalog."
+	"maintenance_info.version field provided in the Service Broker's Catalog."
+
+type ServiceBrokerError struct {
+	Error            string `json:"error,omitempty"`
+	Description      string `json:"description,omitempty"`
+	InstanceUsable   string `json:"instance_usable,omitempty"`
+	UpdateRepeatable string `json:"update_repeatable,omitempty"`
+}

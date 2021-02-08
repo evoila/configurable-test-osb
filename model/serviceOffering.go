@@ -68,7 +68,7 @@ func (catalog *Catalog) createUniqueName(n int) string {
 
 func (catalog *Catalog) createUniqueId() string {
 	id := generator.RandomString(8) + "-XXXX-XXXX-XXXX-" + generator.RandomString(12)
-	for catalog.GetServiceOfferingById(id) != nil {
+	for _, exists := catalog.GetServiceOfferingById(id); exists == true; {
 		id = generator.RandomString(8) + "-XXXX-XXXX-XXXX-" + generator.RandomString(12)
 	}
 	return id
@@ -82,4 +82,13 @@ func makePlans(catalogSettings *CatalogSettings, catalog *Catalog) []ServicePlan
 		servicePlans = append(servicePlans, *newServicePlan(catalogSettings, catalog))
 	}
 	return servicePlans
+}
+
+func (serviceOffering *ServiceOffering) GetPlanByID(planID string) (*ServicePlan, bool) {
+	for _, plan := range serviceOffering.Plans {
+		if planID == plan.ID {
+			return &plan, true
+		}
+	}
+	return nil, false
 }

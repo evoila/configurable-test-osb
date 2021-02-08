@@ -1,6 +1,6 @@
 package model
 
-type provisionRequest struct {
+type ProvisionRequest struct {
 	ServiceID        string          `json:"service_id" binding:"required"`
 	PlanID           string          `json:"plan_id" binding:"required"`
 	Context          interface{}     `json:"context"`
@@ -10,7 +10,7 @@ type provisionRequest struct {
 	MaintenanceInfo  MaintenanceInfo `json:"maintenance_info"`
 }
 
-type provisionResponse struct {
+type ProvisionResponse struct {
 	DashboardURL string                  `json:"dashboard_url,omitempty"`
 	Operation    string                  `json:"operation,omitempty"`
 	Metadata     ServiceInstanceMetadata `json:"metadata,omitempty"`
