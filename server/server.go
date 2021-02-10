@@ -40,7 +40,7 @@ func Run() {
 			serviceInstances = make(map[string]model.ServiceDeployment)
 			catalogService := service.NewCatalogService(catalog)
 			catalogController := controller.NewCatalogController(&catalogService, settings)
-			deploymentService := service.NewDeploymentService(catalog, &serviceInstances)
+			deploymentService := service.NewDeploymentService(catalog, &serviceInstances, settings)
 			deploymentController := controller.NewDeploymentController(deploymentService, settings)
 
 			middleware := controller.NewMiddleware(settings)

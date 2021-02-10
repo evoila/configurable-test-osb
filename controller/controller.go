@@ -58,7 +58,7 @@ func LastOpServiceBinding(context *gin.Context) {
 
 	fmt.Println(uriParams.InstanceId)
 	fmt.Println("Help")
-	context.String(http.StatusOK, "InstanceID: " + uriParams.InstanceId + " BindingID: " + uriParams.BindingId)
+	context.String(http.StatusOK, "instanceID: " + uriParams.InstanceId + " BindingID: " + uriParams.BindingId)
 }
 
 //PUT /v2/service_instances/:instance_id
@@ -70,7 +70,7 @@ func ProvideService(context *gin.Context)  {
 		context.JSON(http.StatusBadRequest, gin.H{"message": err})
 	}
 
-	context.String(http.StatusOK, "InstanceID: " + uriParams.InstanceId)
+	context.String(http.StatusOK, "instanceID: " + uriParams.InstanceId)
 }
 
 //GET /v2/service_instances/:instance_id
@@ -80,7 +80,7 @@ func FetchServiceInstance(context *gin.Context) {
 		//Appropriate error response needed
 		context.JSON(http.StatusBadRequest, gin.H{"message": err})
 	}
-	context.String(http.StatusOK, "InstanceID: " + uriParams.InstanceId)
+	context.String(http.StatusOK, "instanceID: " + uriParams.InstanceId)
 }
 
 //PATCH /v2/service_instances/:instance_id
@@ -90,7 +90,7 @@ func UpdateServiceInstance(context *gin.Context) {
 		//Appropriate error response needed
 		context.JSON(http.StatusBadRequest, gin.H{"message": err})
 	}
-	context.String(http.StatusOK, "InstanceID: " + uriParams.InstanceId)
+	context.String(http.StatusOK, "instanceID: " + uriParams.InstanceId)
 }
 
 //PUT /v2/service_instances/:instance_id/service_bindings/:binding_id
@@ -100,7 +100,7 @@ func CreateServiceBinding(context *gin.Context) {
 		//Appropriate error response needed
 		context.JSON(http.StatusBadRequest, gin.H{"message": err})
 	}
-	context.String(http.StatusOK, "InstanceID: " + uriParams.InstanceId + " BindingID: " + uriParams.BindingId)
+	context.String(http.StatusOK, "instanceID: " + uriParams.InstanceId + " BindingID: " + uriParams.BindingId)
 }
 
 //PUT /v2/service_instances/:instance_id/service_bindings/:binding_id
@@ -110,7 +110,7 @@ func RotateServiceBinding(context *gin.Context) {
 		//Appropriate error response needed
 		context.JSON(http.StatusBadRequest, gin.H{"message": err})
 	}
-	context.String(http.StatusOK, "InstanceID: " + uriParams.InstanceId + " BindingID: " + uriParams.BindingId)
+	context.String(http.StatusOK, "instanceID: " + uriParams.InstanceId + " BindingID: " + uriParams.BindingId)
 }
 
 //GET /v2/service_instances/:instance_id/service_bindings/:binding_id
@@ -120,7 +120,7 @@ func FetchServiceBinding(context *gin.Context) {
 		//Appropriate error response needed
 		context.JSON(http.StatusBadRequest, gin.H{"message": err})
 	}
-	context.String(http.StatusOK, "InstanceID: " + uriParams.InstanceId + " BindingID: " + uriParams.BindingId)
+	context.String(http.StatusOK, "instanceID: " + uriParams.InstanceId + " BindingID: " + uriParams.BindingId)
 }
 
 //DELETE /v2/service_instances/:instance_id/service_bindings/:binding_id
@@ -130,7 +130,7 @@ func Unbind(context *gin.Context) {
 		//Appropriate error response needed
 		context.JSON(http.StatusBadRequest, gin.H{"message": err})
 	}
-	context.String(http.StatusOK, "InstanceID: " + uriParams.InstanceId + " BindingID: " + uriParams.BindingId)
+	context.String(http.StatusOK, "instanceID: " + uriParams.InstanceId + " BindingID: " + uriParams.BindingId)
 }
 
 //DELETE /v2/service_instances/:instance_id
@@ -140,7 +140,7 @@ func Deprovide(context *gin.Context) {
 		//Appropriate error response needed
 		context.JSON(http.StatusBadRequest, gin.H{"message": err})
 	}
-	context.String(http.StatusOK, "InstanceID: " + uriParams.InstanceId)
+	context.String(http.StatusOK, "instanceID: " + uriParams.InstanceId)
 }
 */
 

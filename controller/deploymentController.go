@@ -42,9 +42,11 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 	instanceID := context.Param("instance_id")
 	fmt.Println(instanceID)
 	//statuscode must be returned by ProvideService too
-	if statusCode, err := deploymentController.deploymentService.ProvideService(&provisionRequest, &instanceID); err != nil {
+	statusCode, err := deploymentController.deploymentService.ProvideService(&provisionRequest, &instanceID,
+		acceptsIncomplete == "true")
+	if err != nil {
 		context.JSON(statusCode, err)
 		return
 	}
-	context.JSON(http.StatusOK, "in construction")
+	context.JSON(statusCode, "in construction")
 }

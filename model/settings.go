@@ -1,7 +1,9 @@
 package model
 
 type Settings struct {
-	HeaderSettings HeaderSettings `json:"header_settings"`
+	GeneralSettings   GeneralSettings   `json:"general_settings" binding:"required"`
+	HeaderSettings    HeaderSettings    `json:"header_settings" binding:"required"`
+	ProvisionSettings ProvisionSettings `json:"provision_settings" binding:"required"`
 }
 
 type HeaderSettings struct {
@@ -14,4 +16,12 @@ type HeaderSettings struct {
 	LogRequestID                  bool   `json:"log_request_id" binding:"required"`
 	RequestIDInResponse           bool   `json:"request_id_in_response" binding:"required"`
 	EtagIfModifiedSinceInResponse bool   `json:"etag_if_modified_since_in_response" binding:"required"`
+}
+
+type GeneralSettings struct {
+	Async bool `json:"async" binding:"required"`
+}
+
+type ProvisionSettings struct {
+	StatusCodeOK bool `json:"status_code_ok" binding:"required"`
 }

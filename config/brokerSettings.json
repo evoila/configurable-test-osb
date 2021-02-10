@@ -1,4 +1,7 @@
 {
+  "general_settings": {
+    "async": false
+  },
   "header_settings": {
     "broker_version": "0.7",
     "reject_wrong_api_version": true,
@@ -9,6 +12,9 @@
     "log_request_id": true,
     "request_id_in_response": true,
     "etag_if_modified_since_in_response": false
+  },
+  "provision_settings": {
+    "status_code_ok": true
   },
   "milliseconds_to_update": 500
 }
