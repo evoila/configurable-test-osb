@@ -1,6 +1,5 @@
 {
   "general_settings": {
-    "async": false
   },
   "header_settings": {
     "broker_version": "0.7",
@@ -14,7 +13,25 @@
     "etag_if_modified_since_in_response": false
   },
   "provision_settings": {
-    "status_code_ok": true
+    "status_code_ok": true,
+    "async": true,
+    "dashboard_url": true,
+    "operation": true,
+    "metadata": true,
+    "seconds_to_finish": 0,
+    "show_dashboard_url": true,
+    "show_operation": false,
+    "show_metadata": true
+  },
+  "fetch_service_instance_settings": {
+    "offering_id_must_match": true,
+    "plan_id_must_match": true,
+    "show_service_id": false,
+    "show_plan_id": true,
+    "show_dashboard_url": true,
+    "show_parameters": true,
+    "show_maintenance_info": true,
+    "show_metadata": true
   },
   "milliseconds_to_update": 500
 }

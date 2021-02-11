@@ -1,9 +1,10 @@
 package model
 
 type Settings struct {
-	GeneralSettings   GeneralSettings   `json:"general_settings" binding:"required"`
-	HeaderSettings    HeaderSettings    `json:"header_settings" binding:"required"`
-	ProvisionSettings ProvisionSettings `json:"provision_settings" binding:"required"`
+	GeneralSettings              GeneralSettings              `json:"general_settings" binding:"required"`
+	HeaderSettings               HeaderSettings               `json:"header_settings" binding:"required"`
+	ProvisionSettings            ProvisionSettings            `json:"provision_settings" binding:"required"`
+	FetchServiceInstanceSettings FetchServiceInstanceSettings `json:"fetch_service_instance_settings" binding:"required"`
 }
 
 type HeaderSettings struct {
@@ -19,9 +20,27 @@ type HeaderSettings struct {
 }
 
 type GeneralSettings struct {
-	Async bool `json:"async" binding:"required"`
 }
 
 type ProvisionSettings struct {
-	StatusCodeOK bool `json:"status_code_ok" binding:"required"`
+	StatusCodeOK     bool `json:"status_code_ok" binding:"required"`
+	Async            bool `json:"async" binding:"required"`
+	DashboardURL     bool `json:"dashboard_url" binding:"required"`
+	Operation        bool `json:"operation" binding:"required"`
+	Metadata         bool `json:"metadata" binding:"required"`
+	SecondsToFinish  int  `json:"seconds_to_finish" binding:"required"`
+	ShowDashboardURL bool `json:"show_dashboard_url" binding:"required"`
+	ShowOperation    bool `json:"show_operation" binding:"required"`
+	ShowMetadata     bool `json:"show_metadata" binding:"required"`
+}
+
+type FetchServiceInstanceSettings struct {
+	OfferingIDMustMatch bool `json:"offering_id_must_match" binding:"required"`
+	PlanIDMustMatch     bool `json:"plan_id_must_match" binding:"required"`
+	ShowServiceID       bool `json:"show_service_id" binding:"required"`
+	ShowPlanID          bool `json:"show_plan_id" binding:"required"`
+	ShowDashboardURL    bool `json:"show_dashboard_url" binding:"required"`
+	ShowParameters      bool `json:"show_parameters" binding:"required"`
+	ShowMaintenanceInfo bool `json:"show_maintenance_info" binding:"required"`
+	ShowMetadata        bool `json:"show_metadata" binding:"required"`
 }

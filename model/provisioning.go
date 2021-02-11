@@ -1,5 +1,7 @@
 package model
 
+//NOT NEEDED? IN serviveInstance
+/*
 type ProvisionRequest struct {
 	ServiceID        string          `json:"service_id" binding:"required"`
 	PlanID           string          `json:"plan_id" binding:"required"`
@@ -15,3 +17,6 @@ type ProvisionResponse struct {
 	Operation    string                  `json:"operation,omitempty"`
 	Metadata     ServiceInstanceMetadata `json:"metadata,omitempty"`
 }
+
+*/
+//

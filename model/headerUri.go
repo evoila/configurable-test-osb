@@ -46,6 +46,7 @@ type Header struct {
 }
 
 type UriProperties struct {
+	//needed???
 	//Validators for binding
 	//Values of type uppercase and lowercase letters, decimal digits, hyphen, period, underscore and tilde
 	ServiceId  string `form:"service_id" binding:"omitempty"`

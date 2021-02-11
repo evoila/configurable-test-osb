@@ -21,7 +21,7 @@ func NewDeploymentController(deploymentService *service.DeploymentService, setti
 }
 
 func (deploymentController *DeploymentController) Provision(context *gin.Context) {
-	var provisionRequest model.ProvisionRequest
+	var provisionRequest model.ProvideServiceInstanceRequest
 	if err := context.ShouldBindJSON(&provisionRequest); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{
 			"message": "error while binding request body to struct",
@@ -42,11 +42,49 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 	instanceID := context.Param("instance_id")
 	fmt.Println(instanceID)
 	//statuscode must be returned by ProvideService too
-	statusCode, err := deploymentController.deploymentService.ProvideService(&provisionRequest, &instanceID,
+	if provisionRequest.OrganizationGUID == "" {
+		context.JSON(http.StatusBadRequest, &model.ServiceBrokerError{
+			Error:       "EmptyOrganizationGUID",
+			Description: "organization_guid must be a non-empty string",
+		})
+		return
+	}
+	if provisionRequest.SpaceGUID == "" {
+		context.JSON(http.StatusBadRequest, &model.ServiceBrokerError{
+			Error:       "EmptySpaceGUID",
+			Description: "space_guid must be a non-empty string",
+		})
+		return
+	}
+	if deploymentController.settings.ProvisionSettings.Async == true && acceptsIncomplete == "false" {
+		context.JSON(422, &model.ServiceBrokerError{
+			Error:       "AsyncRequired",
+			Description: "This Broker requires client support for asynchronous service operations.",
+		})
+		return
+	}
+
+	statusCode, response, err := deploymentController.deploymentService.ProvideService(&provisionRequest, &instanceID,
 		acceptsIncomplete == "true")
 	if err != nil {
 		context.JSON(statusCode, err)
 		return
 	}
-	context.JSON(statusCode, "in construction")
+	context.JSON(statusCode, response)
+}
+
+func (deploymentController *DeploymentController) FetchServiceInstance(context *gin.Context) {
+	instanceID := context.Param("instance_id")
+	serviceID := context.Query("service_id")
+	planID := context.Query("plan_id")
+	statusCode, response, err := deploymentController.deploymentService.FetchServiceInstance(&instanceID, &serviceID, &planID)
+	if err != nil {
+		context.JSON(statusCode, err)
+		return
+	}
+	context.JSON(statusCode, response)
+}
+
+func (deploymentController *DeploymentController) UpdateServiceInstance(context *gin.Context) {
+
 }

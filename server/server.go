@@ -65,6 +65,12 @@ func Run() {
 
 			//Provisioning (of service)
 			r.PUT("/v2/service_instances/:instance_id", deploymentController.Provision)
+
+			//fetching service instances
+			r.GET("/v2/service_instances/:instance_id", deploymentController.FetchServiceInstance)
+
+			//Updating service instance
+			r.PATCH("/v2/service_instances/:instance_id", deploymentController.UpdateServiceInstance)
 			//Replace when new controllers are implemented?
 			//Catalog
 			//r.GET("/v2/catalog", testController.GetCatalog)
@@ -78,10 +84,9 @@ func Run() {
 
 
 				//Fetching service instance
-				r.GET("/v2/service_instances/:instance_id", testController.FetchServiceInstance)
 
-				//Updating service instance
-				r.PATCH("/v2/service_instances/:instance_id", testController.UpdateServiceInstance)
+
+
 
 				//Request (creating service binding)
 				r.PUT("/v2/service_instances/:instance_id/service_bindings/:binding_id", testController.CreateServiceBinding)

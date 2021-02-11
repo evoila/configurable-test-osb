@@ -2,17 +2,13 @@ package model
 
 //request (only request????)
 type ProvideServiceInstanceRequest struct {
-	//NEEDED
-	ServiceId string `json:"service_id" binding:"required"`
-	//NEEDER
-	PlanId  string      `json:"plan_id" binding:"required"`
-	Context interface{} `json:"context"`
-	//NEEDED
-	OrganizationGuid string `json:"organization_guid" binding:"required"`
-	//NEEDER
-	SpaceGuid       string           `json:"space_guid" binding:"required"`
-	Parameters      interface{}      `json:"parameters"`
-	MaintenanceInfo *MaintenanceInfo `json:"maintenance_info"`
+	ServiceID        string          `json:"service_id" binding:"required"`
+	PlanID           string          `json:"plan_id" binding:"required"`
+	Context          interface{}     `json:"context"`
+	OrganizationGUID string          `json:"organization_guid" binding:"required"`
+	SpaceGUID        string          `json:"space_guid" binding:"required"`
+	Parameters       interface{}     `json:"parameters"`
+	MaintenanceInfo  MaintenanceInfo `json:"maintenance_info"`
 }
 
 //Provision and Update have the same response form
@@ -22,11 +18,30 @@ type ProvideUpdateServiceInstanceResponse struct {
 	Metadata     *ServiceInstanceMetadata `json:"metadata,omitempty"`
 }
 
+func NewProvideServiceInstanceResponse(dashboardUrl *string, operation *string,
+	metadata *ServiceInstanceMetadata, settings *Settings) *ProvideUpdateServiceInstanceResponse {
+	response := ProvideUpdateServiceInstanceResponse{}
+	if settings.ProvisionSettings.ShowDashboardURL {
+		response.DashboardUrl = *dashboardUrl
+	}
+	if settings.ProvisionSettings.ShowOperation {
+		response.Operation = *operation
+	}
+	if settings.ProvisionSettings.ShowMetadata {
+		response.Metadata = metadata
+	}
+	return &response
+}
+
+func NewUpdateServiceInstanceResponse() {
+
+}
+
 type FetchingServiceInstanceResponse struct {
 	ServiceId       string                   `json:"service_id,omitempty"`
 	PlanId          string                   `json:"plan_id,omitempty"`
-	DashboardUrl    string                   `json:"dashboard_url,omitempty"`
-	Parameters      interface{}              `json:"parameters,omitempty"`
+	DashboardUrl    *string                  `json:"dashboard_url,omitempty"`
+	Parameters      *interface{}             `json:"parameters,omitempty"`
 	MaintenanceInfo *MaintenanceInfo         `json:"maintenance_info,omitempty"`
 	Metadata        *ServiceInstanceMetadata `json:"metadata,omitempty"`
 }
