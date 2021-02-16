@@ -20,7 +20,7 @@
     "metadata": true,
     "seconds_to_finish": 0,
     "show_dashboard_url": true,
-    "show_operation": false,
+    "show_operation": true,
     "show_metadata": true
   },
   "fetch_service_instance_settings": {

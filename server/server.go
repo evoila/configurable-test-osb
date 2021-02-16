@@ -60,6 +60,8 @@ func Run() {
 			//Test
 			r.GET("/", testController.Hello)
 			r.POST("/", testController.TestBind)
+			//BONUS
+			r.GET("/v2/catalog/generate", catalogController.GenerateCatalog)
 			//new endpoints with new controllers
 			r.GET("/v2/catalog", catalogController.GetCatalog)
 

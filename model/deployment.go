@@ -14,12 +14,13 @@ type ServiceDeployment struct {
 	parameters               interface{}
 	dashboardURL             *string
 	metadata                 *ServiceInstanceMetadata
-	operation                *string
+	lastOperation            *Operation
+	operations               map[string]*Operation
 	nextOperationNumber      int
 	state                    string
 	async                    bool
 	secondsToFinishOperation int
-	//operation
+	//lastOperation
 }
 
 func (serviceDeployment *ServiceDeployment) PlanID() string {
@@ -42,8 +43,8 @@ func (serviceDeployment *ServiceDeployment) DashboardURL() *string {
 	return serviceDeployment.dashboardURL
 }
 
-func (serviceDeployment *ServiceDeployment) Operation() *string {
-	return serviceDeployment.operation
+func (serviceDeployment *ServiceDeployment) LastOperationID() *string {
+	return serviceDeployment.lastOperation.Name()
 }
 
 /*var nextOperationNumber chan int
@@ -56,6 +57,9 @@ func init() {
 }*/
 
 func (serviceDeployment *ServiceDeployment) Parameters() *interface{} {
+	if serviceDeployment.parameters == nil {
+		return nil
+	}
 	return &serviceDeployment.parameters
 }
 
@@ -65,19 +69,20 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 		planID:     provisionRequest.PlanID,
 		instanceID: instanceID,
 		parameters: provisionRequest.Parameters,
+		operations: make(map[string]*Operation),
 		//async:                    async,
 		secondsToFinishOperation: settings.ProvisionSettings.SecondsToFinish,
-		//operation: "task_0",
+		//lastOperation: "task_0",
 		nextOperationNumber: 0,
 	}
 	/*var opNumber int
 	opNumber = <-nextOperationNumber
-	serviceDeployment.operation = "task_" + strconv.Itoa(opNumber)
+	serviceDeployment.lastOperation = "task_" + strconv.Itoa(opNumber)
 	nextOperationNumber <- opNumber + 1
 
 	*/
 	if !(!settings.ProvisionSettings.Async && !settings.ProvisionSettings.Operation) {
-		serviceDeployment.doOperation()
+		serviceDeployment.doOperation(settings.ProvisionSettings.SecondsToFinish)
 	}
 	if settings.ProvisionSettings.DashboardURL {
 		serviceDeployment.buildDashboardURL()
@@ -114,10 +119,15 @@ func (serviceDeployment *ServiceDeployment) deploy() {
 	serviceDeployment.state = "succeeded"
 }
 
-func (serviceDeployment *ServiceDeployment) doOperation() {
-	operation := "task_" + strconv.Itoa(serviceDeployment.nextOperationNumber)
-	serviceDeployment.operation = &operation
-	serviceDeployment.nextOperationNumber++
+func (serviceDeployment *ServiceDeployment) doOperation(duration int) {
+	operationID := "task_" + strconv.Itoa(serviceDeployment.nextOperationNumber)
+	operation := NewOperation(operationID, duration)
+	serviceDeployment.lastOperation = operation
+	serviceDeployment.operations[operationID] = operation
+	//fmt.Println(serviceDeployment.operations)
+	/*operation := "task_" + strconv.Itoa(serviceDeployment.nextOperationNumber)
+	serviceDeployment.lastOperation = &operation
+	serviceDeployment.nextOperationNumber++*/
 }
 
 func (serviceDeployment *ServiceDeployment) buildDashboardURL() {

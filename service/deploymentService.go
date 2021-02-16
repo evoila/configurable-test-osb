@@ -30,7 +30,7 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 		if deploymentService.settings.ProvisionSettings.StatusCodeOK {
 			if cmp.Equal(provisionRequest.Parameters, deployment.Parameters()) {
 				response := model.NewProvideServiceInstanceResponse(deployment.DashboardURL(),
-					deployment.Operation(), deployment.Metadata(), deploymentService.settings)
+					deployment.LastOperationID(), deployment.Metadata(), deploymentService.settings)
 				return 200, response, nil
 			}
 		}
@@ -44,14 +44,14 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 	serviceOffering, exists := deploymentService.catalog.GetServiceOfferingById(provisionRequest.ServiceID)
 	if !exists {
 		return 400, nil, &model.ServiceBrokerError{
-			Error:       "ServiceIDConflict",
+			Error:       "ServiceIDMissing",
 			Description: "The given service_id does not exist in the catalog",
 		}
 	}
 	servicePlan, exists := serviceOffering.GetPlanByID(provisionRequest.PlanID)
 	if !exists {
 		return 400, nil, &model.ServiceBrokerError{
-			Error:       "PlanIDConflict",
+			Error:       "PlanIDMissing",
 			Description: "The given plan_id does not exist for this service_id",
 		}
 	}
@@ -90,7 +90,7 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 		(*deploymentService.serviceInstances)[*instanceID] = deployment
 
 		response := model.NewProvideServiceInstanceResponse(deployment.DashboardURL(),
-			deployment.Operation(), deployment.Metadata(), deploymentService.settings)
+			deployment.LastOperationID(), deployment.Metadata(), deploymentService.settings)
 		return 202, response, nil
 	}
 	//wenn alles gut:
@@ -99,7 +99,7 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 	(*deploymentService.serviceInstances)[*instanceID] = deployment
 	log.Println(*deploymentService.serviceInstances)
 	response := model.NewProvideServiceInstanceResponse(deployment.DashboardURL(),
-		deployment.Operation(), deployment.Metadata(), deploymentService.settings)
+		deployment.LastOperationID(), deployment.Metadata(), deploymentService.settings)
 	return 201, response, nil
 }
 

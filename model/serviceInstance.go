@@ -67,7 +67,7 @@ type PreviousValues struct {
 /*
 type UpdateInstanceResponse struct {
 	DashboardUrl string
-	Operation string
+	LastOperationID string
 	Metadata ServiceInstanceMetadata
 }
 */
@@ -90,5 +90,5 @@ type ServiceInstanceMetadata struct {
 }
 
 type DeleteServiceResponse struct {
-	Operation string `json:"operation,omitempty"`
+	Operation string `json:"lastOperation,omitempty"`
 }
