@@ -29,6 +29,8 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 		})
 		return
 	}
+	var requestSettings *model.RequestSettings
+	requestSettings, _ = model.GetRequestSettings(provisionRequest.Parameters)
 	acceptsIncomplete := context.DefaultQuery("accepts_incomplete", "false")
 	if acceptsIncomplete != "false" && acceptsIncomplete != "true" {
 		context.JSON(http.StatusBadRequest, gin.H{
@@ -56,7 +58,7 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 		})
 		return
 	}
-	if deploymentController.settings.ProvisionSettings.Async == true && acceptsIncomplete == "false" {
+	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint && acceptsIncomplete == "false" {
 		context.JSON(422, &model.ServiceBrokerError{
 			Error:       "AsyncRequired",
 			Description: "This Broker requires client support for asynchronous service operations.",
@@ -64,8 +66,7 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 		return
 	}
 
-	statusCode, response, err := deploymentController.deploymentService.ProvideService(&provisionRequest, &instanceID,
-		acceptsIncomplete == "true")
+	statusCode, response, err := deploymentController.deploymentService.ProvideService(&provisionRequest, &instanceID) //accepts_incomplete used to be here but is not needed
 	if err != nil {
 		context.JSON(statusCode, err)
 		return

@@ -9,6 +9,8 @@ type ProvideServiceInstanceRequest struct {
 	SpaceGUID        string          `json:"space_guid" binding:"required"`
 	Parameters       interface{}     `json:"parameters"`
 	MaintenanceInfo  MaintenanceInfo `json:"maintenance_info"`
+
+	//RequestSettings RequestSettings `json:"request_settings"`
 }
 
 //Provision and Update have the same response form

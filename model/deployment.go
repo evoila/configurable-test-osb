@@ -4,7 +4,6 @@ import (
 	"github.com/MaxFuhrich/serviceBrokerDummy/generator"
 	"log"
 	"strconv"
-	"time"
 )
 
 type ServiceDeployment struct {
@@ -71,19 +70,25 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 		parameters: provisionRequest.Parameters,
 		operations: make(map[string]*Operation),
 		//async:                    async,
-		secondsToFinishOperation: settings.ProvisionSettings.SecondsToFinish,
+		//secondsToFinishOperation: settings.ProvisionSettings.SecondsToFinish,
 		//lastOperation: "task_0",
 		nextOperationNumber: 0,
 	}
+	var requestSettings *RequestSettings
+	requestSettings, _ = GetRequestSettings(provisionRequest.Parameters)
+
 	/*var opNumber int
 	opNumber = <-nextOperationNumber
 	serviceDeployment.lastOperation = "task_" + strconv.Itoa(opNumber)
 	nextOperationNumber <- opNumber + 1
 
 	*/
-	if !(!settings.ProvisionSettings.Async && !settings.ProvisionSettings.Operation) {
+	//CHECK IF OPERATION SHOULD BE ALSO DONE WITH SYNC!!! PROBABLY?!
+	/*if !(!settings.ProvisionSettings.Async && !settings.ProvisionSettings.Operation) {
 		serviceDeployment.doOperation(settings.ProvisionSettings.SecondsToFinish)
 	}
+
+	*/
 	if settings.ProvisionSettings.DashboardURL {
 		serviceDeployment.buildDashboardURL()
 	}
@@ -97,31 +102,38 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 			},
 		}
 	}
-	if settings.ProvisionSettings.Async {
+	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint { //settings.ProvisionSettings.Async {
 		//in progress here or in deploy()? if it's here then the service will safely have a state when returned
-		serviceDeployment.state = "in progress"
-		go serviceDeployment.deploy()
+		//operation := NewOperation()
+		//serviceDeployment.state = "in progress"
+		//go serviceDeployment.deploy(settings.ProvisionSettings.SecondsToFinish)
+
+		serviceDeployment.doOperation(*requestSettings.SecondsToComplete)
 	} else {
-		//state notwending, wenn !async? mal versuchen bei !async auf state zu verzichten
-		serviceDeployment.state = "succeeded"
+		serviceDeployment.doOperation(*requestSettings.SecondsToComplete)
+		//hier einfach sleepen bevor returned wird??????
 	}
 	log.Println("here comes the deployment")
 	log.Println(serviceDeployment)
 	log.Println(*serviceDeployment.dashboardURL)
+	//ATTENTION?!
+	//WRITE HERE IN CHANNEL FROM WHICH WILL BE CONSUMED WHEN DELETING???
+	//ATTENTION?!
+	//DOES DELETING NEED TO BLOCKED? PROBABLY YES, BECAUSE INSTANCE ID IS KNOWN BY PLATFORM (PLATFORM PROVIDES ID)
 	return &serviceDeployment
 }
 
-func (serviceDeployment *ServiceDeployment) deploy() {
-	/*
-		milliSecondsToFinishOperation warten, dann state auf succeeded
-	*/
-	time.Sleep(time.Duration(serviceDeployment.secondsToFinishOperation) * time.Second)
+/*func (serviceDeployment *ServiceDeployment) deploy(seconds int) {
+
+		77milliSecondsToFinishOperation warten, dann state auf succeeded
+
+	time.Sleep(time.duration(seconds) * time.Second)
 	serviceDeployment.state = "succeeded"
-}
+}*/
 
 func (serviceDeployment *ServiceDeployment) doOperation(duration int) {
 	operationID := "task_" + strconv.Itoa(serviceDeployment.nextOperationNumber)
-	operation := NewOperation(operationID, duration)
+	operation := NewOperation(operationID, float64(duration))
 	serviceDeployment.lastOperation = operation
 	serviceDeployment.operations[operationID] = operation
 	//fmt.Println(serviceDeployment.operations)

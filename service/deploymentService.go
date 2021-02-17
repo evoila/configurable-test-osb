@@ -23,7 +23,7 @@ func NewDeploymentService(catalog *model.Catalog, serviceInstances *map[string]m
 }
 
 func (deploymentService *DeploymentService) ProvideService(provisionRequest *model.ProvideServiceInstanceRequest,
-	instanceID *string, acceptsIncomplete bool) (int, *model.ProvideUpdateServiceInstanceResponse,
+	instanceID *string) (int, *model.ProvideUpdateServiceInstanceResponse,
 	*model.ServiceBrokerError) {
 	//check: id already exists?
 	if deployment, exists := (*deploymentService.serviceInstances)[*instanceID]; exists == true {
@@ -73,7 +73,10 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 			}
 		}
 	}
-	if deploymentService.settings.ProvisionSettings.Async == true {
+	var requestSettings *model.RequestSettings
+	requestSettings, _ = model.GetRequestSettings(provisionRequest.Parameters)
+
+	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint == true {
 		/*
 			handled in controller
 			if !acceptsIncomplete {
