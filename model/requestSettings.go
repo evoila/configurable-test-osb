@@ -8,33 +8,42 @@ import (
 )
 
 type RequestSettings struct {
-	AsyncEndpoint     *bool `json:"async_endpoint"`
-	SecondsToComplete *int  `json:"seconds_to_complete"`
+	AsyncEndpoint             *bool `json:"async_endpoint"`
+	SecondsToComplete         *int  `json:"seconds_to_complete"`
+	FailAtOperation           *bool `json:"fail_at_operation"`
+	InstanceUsableAfterFail   *bool `json:"instance_usable_after_fail"`
+	UpdateRepeatableAfterFail *bool `json:"update_repeatable_after_fail"`
 }
 
 func GetRequestSettings(params interface{}) (*RequestSettings, error) {
 	var requestSettings RequestSettings
-	//settings := reflect.ValueOf(params).FieldByName("config_broker_settings")
 	paramMap := params.(map[string]interface{})
 	settingsInterface := paramMap["config_broker_settings"]
 	if settingsInterface == nil {
 		return nil, errors.New("config_broker_settings not found")
 	}
 	settingsMap := settingsInterface.(map[string]interface{})
-	jsonbody, err := json.Marshal(settingsMap)
+	jsonBody, err := json.Marshal(settingsMap)
 	if err != nil {
 		fmt.Println("error: " + err.Error())
 	}
-	if err = json.Unmarshal(jsonbody, &requestSettings); err != nil {
+	if err = json.Unmarshal(jsonBody, &requestSettings); err != nil {
 		// do error check
 		fmt.Println(err)
 		return nil, err
 	}
-
-	/*if !settings.IsValid() {
-		return nil, errors.New("No field \"")
-	}*/
-	fmt.Println("checking secondstocomplete")
+	if requestSettings.FailAtOperation == nil {
+		val := false
+		requestSettings.FailAtOperation = &val
+	}
+	if requestSettings.InstanceUsableAfterFail == nil {
+		val := true
+		requestSettings.InstanceUsableAfterFail = &val
+	}
+	if requestSettings.UpdateRepeatableAfterFail == nil {
+		val := true
+		requestSettings.UpdateRepeatableAfterFail = &val
+	}
 	if requestSettings.SecondsToComplete == nil {
 		val := 0
 		requestSettings.SecondsToComplete = &val
