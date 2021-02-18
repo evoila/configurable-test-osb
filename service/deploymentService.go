@@ -63,7 +63,25 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 	//s, _ = json.MarshalIndent(servicePlan, "", "\t")
 	//log.Print(string(s))
 
-	if provisionRequest.MaintenanceInfo.Version != nil && servicePlan.MaintenanceInfo.Version != nil {
+	//NULL POINTER ERROR POSSIBLE???? IF YES, CHECK MAINTENANCE_INFO FIRST. NO, BECAUSE IT IS NOT A POINTER
+	if provisionRequest.MaintenanceInfo.Version != nil {
+		if servicePlan.MaintenanceInfo.Version == nil {
+			return 422, nil, &model.ServiceBrokerError{
+				Error:       "MaintenanceInfoConflict",
+				Description: model.MaintenanceInfoConflict,
+			}
+		}
+		if *provisionRequest.MaintenanceInfo.Version != *servicePlan.MaintenanceInfo.Version {
+			log.Println(*provisionRequest.MaintenanceInfo.Version)
+			log.Println(*servicePlan.MaintenanceInfo.Version)
+			return 422, nil, &model.ServiceBrokerError{
+				Error:       "MaintenanceInfoConflict",
+				Description: model.MaintenanceInfoConflict,
+			}
+		}
+
+	}
+	/*if provisionRequest.MaintenanceInfo.Version != nil && servicePlan.MaintenanceInfo.Version != nil {
 		if *provisionRequest.MaintenanceInfo.Version != *servicePlan.MaintenanceInfo.Version {
 			log.Println(*provisionRequest.MaintenanceInfo.Version)
 			log.Println(*servicePlan.MaintenanceInfo.Version)
@@ -73,6 +91,8 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 			}
 		}
 	}
+
+	*/
 	var requestSettings *model.RequestSettings
 	requestSettings, _ = model.GetRequestSettings(provisionRequest.Parameters)
 
@@ -165,4 +185,99 @@ func (deploymentService *DeploymentService) FetchServiceInstance(instanceID *str
 		response.Metadata = deployment.Metadata()
 	}
 	return 200, &response, nil
+}
+
+func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest *model.UpdateServiceInstanceRequest,
+	instanceID *string) (int, *model.ProvideUpdateServiceInstanceResponse, *model.ServiceBrokerError) {
+	deployment, exists := (*deploymentService.serviceInstances)[*instanceID]
+	if !exists {
+		return 404, nil, &model.ServiceBrokerError{
+			Error:       "NotFound",
+			Description: "given instance_id was not found",
+		}
+	}
+	if *updateRequest.ServiceId != deployment.ServiceID() {
+		return 400, nil, &model.ServiceBrokerError{
+			Error:       "InvalidData",
+			Description: "this service instance uses a different service offering",
+		}
+	}
+
+	/*
+		IS THIS RIGHT???
+		RIGHT NOW THIS CHECK WILL BE DONE IF CONTEXT != NIL BUT SHOULD IT BE DONE ONLY IF OTHER FIELDS == NIL???
+	*/
+	serviceOffering, _ := deploymentService.catalog.GetServiceOfferingById(deployment.ServiceID())
+	//context given, offering has field AllowContextUpdates and is false
+	if updateRequest.Context != nil && serviceOffering.AllowContextUpdates != nil && !*serviceOffering.AllowContextUpdates {
+		return 400, nil, &model.ServiceBrokerError{
+			Error:       "InvalidData",
+			Description: "this service offering does not allow context updates",
+		}
+	}
+
+	if updateRequest.PlanId != nil {
+		if _, exists := serviceOffering.GetPlanByID(*updateRequest.PlanId); !exists {
+			return 404, nil, &model.ServiceBrokerError{
+				Error:       "NotFound",
+				Description: "plan_id was not found for given instance_id",
+			}
+		}
+	}
+
+	if updateRequest.PreviousValues != nil {
+		//DEPRECATED (BUT STILL REQUIRED)
+		if updateRequest.PreviousValues.ServiceId != nil && *updateRequest.PreviousValues.ServiceId != deployment.ServiceID() {
+			return 400, nil, &model.ServiceBrokerError{
+				Error:       "ServiceIDMatch",
+				Description: "this service instance uses a different service offering",
+			}
+		}
+		if updateRequest.PreviousValues.PlanId != nil && *updateRequest.PreviousValues.PlanId != deployment.PlanID() {
+			return 400, nil, &model.ServiceBrokerError{
+				Error:       "PlanIDMatch",
+				Description: "this service instance uses a different service plan",
+			}
+		}
+		//DEPRECATED IN FAVOR OF CONTEXT (BUT STILL REQUIRED) CHECK IF THERE IS A PROFILE (WITH ORGANIZATION_ID) FOR CONTEXT???
+		if updateRequest.PreviousValues.OrganizationId != nil && *updateRequest.PreviousValues.OrganizationId != *deployment.OrganizationID() {
+			return 400, nil, &model.ServiceBrokerError{
+				Error:       "OrganizationIDMatch",
+				Description: "this service instance uses a different organization_id",
+			}
+		}
+		//DEPRECATED (BUT STILL REQUIRED)
+		if updateRequest.PreviousValues.SpaceID != nil && *updateRequest.PreviousValues.SpaceID != *deployment.SpaceID() {
+			return 400, nil, &model.ServiceBrokerError{
+				Error:       "SpaceIDMatch",
+				Description: "this service instance uses a different space_id",
+			}
+		}
+		//NO INFORMATION ABOUT WHAT TO TO WITH PREVIOUS_VALUES.MAINTENANCE_INFO???
+	}
+	if updateRequest.MaintenanceInfo.Version != nil {
+		servicePlan, _ := serviceOffering.GetPlanByID(*updateRequest.PlanId)
+		if servicePlan.MaintenanceInfo.Version == nil {
+			return 422, nil, &model.ServiceBrokerError{
+				Error:       "MaintenanceInfoConflict",
+				Description: model.MaintenanceInfoConflict,
+			}
+		}
+		if *updateRequest.MaintenanceInfo.Version != *servicePlan.MaintenanceInfo.Version {
+			log.Println(*updateRequest.MaintenanceInfo.Version)
+			log.Println(*servicePlan.MaintenanceInfo.Version)
+			return 422, nil, &model.ServiceBrokerError{
+				Error:       "MaintenanceInfoConflict",
+				Description: model.MaintenanceInfoConflict,
+			}
+		}
+
+	}
+	var updateServiceInstanceResponse *model.ProvideUpdateServiceInstanceResponse
+	//var requestSettings *model.RequestSettings
+	//requestSettings, _ = model.GetRequestSettings(updateRequest.Parameters)
+	//if requestSettings.AsyncEndpoint
+	//var requestSettings *model.RequestSettings
+	//requestSettings, _ = model.GetRequestSettings(provisionRequest.Parameters)
+	return 200, updateServiceInstanceResponse, nil
 }

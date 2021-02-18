@@ -8,6 +8,11 @@ type Operation struct {
 	startTime  time.Time
 	duration   float64
 	shouldFail bool
+	/*
+		this should be a pointer because it is read from poll_last_operation which does not know if this field should not exist
+		in the response in case the operation was not an update
+	*/
+	updateRepeatable *bool
 }
 
 const (
@@ -33,11 +38,13 @@ func (operation *Operation) State() *string {
 	return &operation.state
 }
 
-func NewOperation(name string, duration float64) *Operation {
+func NewOperation(name string, duration float64, shouldFail bool, updateRepeatable *bool) *Operation {
 	return &Operation{
-		name:      name,
-		state:     PROGRESSING,
-		startTime: time.Now(),
-		duration:  duration,
+		name:             name,
+		state:            PROGRESSING,
+		startTime:        time.Now(),
+		duration:         duration,
+		shouldFail:       shouldFail,
+		updateRepeatable: updateRepeatable,
 	}
 }

@@ -32,6 +32,10 @@ func GetRequestSettings(params interface{}) (*RequestSettings, error) {
 		fmt.Println(err)
 		return nil, err
 	}
+	if requestSettings.AsyncEndpoint == nil {
+		val := false
+		requestSettings.AsyncEndpoint = &val
+	}
 	if requestSettings.FailAtOperation == nil {
 		val := false
 		requestSettings.FailAtOperation = &val

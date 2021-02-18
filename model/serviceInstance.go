@@ -49,19 +49,19 @@ type FetchingServiceInstanceResponse struct {
 }
 
 type UpdateServiceInstanceRequest struct {
-	Context         interface{}      `json:"context"`
-	ServiceId       string           `json:"service_id" binding:"required"`
-	PlanId          string           `json:"plan_id"`
-	Parameters      interface{}      `json:"parameters"`
+	Context         *interface{}     `json:"context"`
+	ServiceId       *string          `json:"service_id" binding:"required"`
+	PlanId          *string          `json:"plan_id"`
+	Parameters      *interface{}     `json:"parameters"`
 	PreviousValues  *PreviousValues  `json:"previous_values"`
 	MaintenanceInfo *MaintenanceInfo `json:"maintenance_info"`
 }
 
 type PreviousValues struct {
-	ServiceId       string           `json:"service_id"`
-	PlanId          string           `json:"plan_id"`
-	OrganizationId  string           `json:"organization_id"`
-	SpaceId         string           `json:"space_id"`
+	ServiceId       *string          `json:"service_id"`
+	PlanId          *string          `json:"plan_id"`
+	OrganizationId  *string          `json:"organization_id"`
+	SpaceID         *string          `json:"space_id"`
 	MaintenanceInfo *MaintenanceInfo `json:"maintenance_info"`
 }
 

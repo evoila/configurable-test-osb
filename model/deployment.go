@@ -19,7 +19,18 @@ type ServiceDeployment struct {
 	state                    string
 	async                    bool
 	secondsToFinishOperation int
+	organizationID           *string
+	spaceID                  *string
+	doOperationChan          chan int
 	//lastOperation
+}
+
+func (serviceDeployment *ServiceDeployment) SpaceID() *string {
+	return serviceDeployment.spaceID
+}
+
+func (serviceDeployment *ServiceDeployment) OrganizationID() *string {
+	return serviceDeployment.organizationID
 }
 
 func (serviceDeployment *ServiceDeployment) PlanID() string {
@@ -73,6 +84,7 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 		//secondsToFinishOperation: settings.ProvisionSettings.SecondsToFinish,
 		//lastOperation: "task_0",
 		nextOperationNumber: 0,
+		doOperationChan:     make(chan int, 1),
 	}
 	var requestSettings *RequestSettings
 	requestSettings, _ = GetRequestSettings(provisionRequest.Parameters)
@@ -102,15 +114,17 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 			},
 		}
 	}
+
 	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint { //settings.ProvisionSettings.Async {
 		//in progress here or in deploy()? if it's here then the service will safely have a state when returned
 		//operation := NewOperation()
 		//serviceDeployment.state = "in progress"
 		//go serviceDeployment.deploy(settings.ProvisionSettings.SecondsToFinish)
-
-		serviceDeployment.doOperation(*requestSettings.SecondsToComplete)
+		//provisioning "never" fails / is not specified in the specs???
+		serviceDeployment.doOperation(*requestSettings.SecondsToComplete, false, nil)
 	} else {
-		serviceDeployment.doOperation(*requestSettings.SecondsToComplete)
+		//provisioning "never" fails / is not specified in the specs?
+		serviceDeployment.doOperation(*requestSettings.SecondsToComplete, false, nil)
 		//hier einfach sleepen bevor returned wird??????
 	}
 	log.Println("here comes the deployment")
@@ -131,11 +145,15 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 	serviceDeployment.state = "succeeded"
 }*/
 
-func (serviceDeployment *ServiceDeployment) doOperation(duration int) {
+func (serviceDeployment *ServiceDeployment) doOperation(duration int, shouldFail bool, updateRepeatable *bool) {
+	serviceDeployment.doOperationChan <- 1
 	operationID := "task_" + strconv.Itoa(serviceDeployment.nextOperationNumber)
-	operation := NewOperation(operationID, float64(duration))
+	operation := NewOperation(operationID, float64(duration), shouldFail, updateRepeatable)
 	serviceDeployment.lastOperation = operation
 	serviceDeployment.operations[operationID] = operation
+	serviceDeployment.nextOperationNumber++
+	<-serviceDeployment.doOperationChan
+	//WAIT HERE IF SYNC???!
 	//fmt.Println(serviceDeployment.operations)
 	/*operation := "task_" + strconv.Itoa(serviceDeployment.nextOperationNumber)
 	serviceDeployment.lastOperation = &operation

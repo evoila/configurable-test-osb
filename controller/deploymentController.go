@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"github.com/MaxFuhrich/serviceBrokerDummy/model"
 	"github.com/MaxFuhrich/serviceBrokerDummy/service"
 	"github.com/gin-gonic/gin"
@@ -35,15 +34,23 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 	if acceptsIncomplete != "false" && acceptsIncomplete != "true" {
 		context.JSON(http.StatusBadRequest, gin.H{
 			"message": "error while parsing query parameter \"accepts_incomplete\"",
-			"error":   "invalid value, value must be either \"true\" or \"false\"",
+			"error":   "invalid value, value must be either \"true\", \"false\" or omitted which defaults to \"false\"",
+			//fmt.Println(acceptsIncomplete)
+			//fmt.Println(instanceID)
+			//statuscode must be returned by ProvideService too
 		})
 		return
 	}
 
-	fmt.Println(acceptsIncomplete)
+	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint && acceptsIncomplete == "false" {
+		context.JSON(422, &model.ServiceBrokerError{
+			Error:       "AsyncRequired",
+			Description: "This Broker requires client support for asynchronous service operations.",
+		})
+		return
+	}
+
 	instanceID := context.Param("instance_id")
-	fmt.Println(instanceID)
-	//statuscode must be returned by ProvideService too
 	if provisionRequest.OrganizationGUID == "" {
 		context.JSON(http.StatusBadRequest, &model.ServiceBrokerError{
 			Error:       "EmptyOrganizationGUID",
@@ -55,13 +62,6 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 		context.JSON(http.StatusBadRequest, &model.ServiceBrokerError{
 			Error:       "EmptySpaceGUID",
 			Description: "space_guid must be a non-empty string",
-		})
-		return
-	}
-	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint && acceptsIncomplete == "false" {
-		context.JSON(422, &model.ServiceBrokerError{
-			Error:       "AsyncRequired",
-			Description: "This Broker requires client support for asynchronous service operations.",
 		})
 		return
 	}
@@ -87,5 +87,41 @@ func (deploymentController *DeploymentController) FetchServiceInstance(context *
 }
 
 func (deploymentController *DeploymentController) UpdateServiceInstance(context *gin.Context) {
+	//what happens if empty???
+	instanceID := context.Param("instance_id")
+	var updateRequest model.UpdateServiceInstanceRequest
+	if err := context.ShouldBindJSON(&updateRequest); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"message": "error while binding request body to struct",
+			"error":   err.Error(),
+		})
+		return
+	}
+	var requestSettings *model.RequestSettings
+	requestSettings, _ = model.GetRequestSettings(updateRequest.Parameters)
+	//GROUP IN ITS OWN FUNCTION???
+	acceptsIncomplete := context.DefaultQuery("accepts_incomplete", "false")
+	if acceptsIncomplete != "false" && acceptsIncomplete != "true" {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"message": "error while parsing query parameter \"accepts_incomplete\"",
+			"error":   "invalid value, value must be either \"true\", \"false\" or omitted which defaults to \"false\"",
+		})
+		return
+	}
+	//checking for nil not needed because asyncEndpoint gets default value = false
+	//if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint && acceptsIncomplete == "false" {
+	if *requestSettings.AsyncEndpoint && acceptsIncomplete == "false" {
+		context.JSON(422, &model.ServiceBrokerError{
+			Error:       "AsyncRequired",
+			Description: "This Broker requires client support for asynchronous service operations.",
+		})
+		return
+	}
 
+	statusCode, response, err := deploymentController.deploymentService.UpdateServiceInstance(&updateRequest, &instanceID)
+	if err != nil {
+		context.JSON(statusCode, err)
+		return
+	}
+	context.JSON(statusCode, response)
 }
