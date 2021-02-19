@@ -110,18 +110,30 @@ func (deploymentController *DeploymentController) UpdateServiceInstance(context 
 	}
 	//checking for nil not needed because asyncEndpoint gets default value = false
 	//if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint && acceptsIncomplete == "false" {
+	//fmt.Printf("accepts incomplete :%s\n", acceptsIncomplete)
+	//fmt.Printf("asyncendpoint: %v\n", *requestSettings.AsyncEndpoint)
 	if *requestSettings.AsyncEndpoint && acceptsIncomplete == "false" {
+		//fmt.Println("accepts incomplete false")
 		context.JSON(422, &model.ServiceBrokerError{
 			Error:       "AsyncRequired",
 			Description: "This Broker requires client support for asynchronous service operations.",
 		})
 		return
 	}
-
-	statusCode, response, err := deploymentController.deploymentService.UpdateServiceInstance(&updateRequest, &instanceID)
+	var header model.Header
+	//error not assigned because this should already be checked by middleware
+	_ = context.ShouldBindHeader(&header)
+	statusCode, response, err := deploymentController.deploymentService.UpdateServiceInstance(&updateRequest, &instanceID, header.RequestID)
 	if err != nil {
 		context.JSON(statusCode, err)
 		return
 	}
+	//fmt.Println("error was nil, response is:")
+	//fmt.Println(response)
 	context.JSON(statusCode, response)
+}
+
+func (deploymentController *DeploymentController) CurrentServiceInstances(context *gin.Context) {
+	response := deploymentController.deploymentService.CurrentServiceInstances()
+	context.JSON(200, response)
 }

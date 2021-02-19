@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"github.com/MaxFuhrich/serviceBrokerDummy/model"
 	"github.com/google/go-cmp/cmp"
 	"log"
@@ -9,11 +10,11 @@ import (
 type DeploymentService struct {
 	catalog *model.Catalog
 	//pointer to settings?
-	serviceInstances *map[string]model.ServiceDeployment
+	serviceInstances *map[string]*model.ServiceDeployment
 	settings         *model.Settings
 }
 
-func NewDeploymentService(catalog *model.Catalog, serviceInstances *map[string]model.ServiceDeployment,
+func NewDeploymentService(catalog *model.Catalog, serviceInstances *map[string]*model.ServiceDeployment,
 	settings *model.Settings) *DeploymentService {
 	return &DeploymentService{
 		catalog:          catalog,
@@ -108,19 +109,23 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 
 		*/
 		//pass whole request instead of only parmeters???
-		deployment := *model.NewServiceDeployment(*instanceID,
-			provisionRequest, deploymentService.settings)
+		//var deployment *model.ServiceDeployment
+		//var operationID *string
+		deployment, operationID := model.NewServiceDeployment(*instanceID, provisionRequest, deploymentService.settings)
 		(*deploymentService.serviceInstances)[*instanceID] = deployment
 
 		response := model.NewProvideServiceInstanceResponse(deployment.DashboardURL(),
-			deployment.LastOperationID(), deployment.Metadata(), deploymentService.settings)
+			operationID, deployment.Metadata(), deploymentService.settings)
 		return 202, response, nil
 	}
 	//wenn alles gut:
-	deployment := *model.NewServiceDeployment(*instanceID,
+	deployment, _ := model.NewServiceDeployment(*instanceID,
 		provisionRequest, deploymentService.settings)
 	(*deploymentService.serviceInstances)[*instanceID] = deployment
+	/*log.Println("Current instances:")
 	log.Println(*deploymentService.serviceInstances)
+	marshalled, _ := json.Marshal(*deploymentService.serviceInstances)
+	log.Println(marshalled)*/
 	response := model.NewProvideServiceInstanceResponse(deployment.DashboardURL(),
 		deployment.LastOperationID(), deployment.Metadata(), deploymentService.settings)
 	return 201, response, nil
@@ -188,8 +193,10 @@ func (deploymentService *DeploymentService) FetchServiceInstance(instanceID *str
 }
 
 func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest *model.UpdateServiceInstanceRequest,
-	instanceID *string) (int, *model.ProvideUpdateServiceInstanceResponse, *model.ServiceBrokerError) {
-	deployment, exists := (*deploymentService.serviceInstances)[*instanceID]
+	instanceID *string, requestID *string) (int, *model.ProvideUpdateServiceInstanceResponse, *model.ServiceBrokerError) {
+	var deployment *model.ServiceDeployment
+	var exists bool
+	deployment, exists = (*deploymentService.serviceInstances)[*instanceID]
 	if !exists {
 		return 404, nil, &model.ServiceBrokerError{
 			Error:       "NotFound",
@@ -255,7 +262,7 @@ func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest 
 		}
 		//NO INFORMATION ABOUT WHAT TO TO WITH PREVIOUS_VALUES.MAINTENANCE_INFO???
 	}
-	if updateRequest.MaintenanceInfo.Version != nil {
+	if updateRequest.MaintenanceInfo != nil && updateRequest.MaintenanceInfo.Version != nil {
 		servicePlan, _ := serviceOffering.GetPlanByID(*updateRequest.PlanId)
 		if servicePlan.MaintenanceInfo.Version == nil {
 			return 422, nil, &model.ServiceBrokerError{
@@ -273,11 +280,46 @@ func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest 
 		}
 
 	}
-	var updateServiceInstanceResponse *model.ProvideUpdateServiceInstanceResponse
+	//deploymentService.UpdateServiceInstance(updateRequest)
+	operationID := deployment.Update(updateRequest, nil)
+	var updateServiceInstanceResponse model.ProvideUpdateServiceInstanceResponse
+	/*if dashboardURL := deployment.DashboardURL(); dashboardURL != nil {
+		updateServiceInstanceResponse.DashboardUrl = dashboardURL
+	}
+
+	*/
+	updateServiceInstanceResponse.DashboardUrl = deployment.DashboardURL()
+	requestSettings, err := model.GetRequestSettings(updateRequest.Parameters)
+	if err != nil {
+		fmt.Println("there has been an error when binding the request parameters in update in deployment service")
+	}
+	if requestSettings != nil && *requestSettings.AsyncEndpoint {
+		updateServiceInstanceResponse.Operation = operationID
+	}
+	updateServiceInstanceResponse.Metadata = deployment.Metadata()
+	//if requestSet
+	//BUILD RESPONSE HERE
+	//return async status code here
+	if requestSettings != nil && *requestSettings.AsyncEndpoint {
+		return 202, &updateServiceInstanceResponse, nil
+	}
+	if requestSettings != nil && *requestSettings.FailAtOperation {
+		return 500, nil, &model.ServiceBrokerError{
+			Error:            "OperationFail",
+			Description:      "Update operation failed",
+			InstanceUsable:   requestSettings.InstanceUsableAfterFail,
+			UpdateRepeatable: requestSettings.UpdateRepeatableAfterFail,
+		}
+	}
 	//var requestSettings *model.RequestSettings
 	//requestSettings, _ = model.GetRequestSettings(updateRequest.Parameters)
 	//if requestSettings.AsyncEndpoint
 	//var requestSettings *model.RequestSettings
 	//requestSettings, _ = model.GetRequestSettings(provisionRequest.Parameters)
-	return 200, updateServiceInstanceResponse, nil
+	//deployment.
+	return 200, &updateServiceInstanceResponse, nil
+}
+
+func (deploymentService *DeploymentService) CurrentServiceInstances() *map[string]*model.ServiceDeployment {
+	return deploymentService.serviceInstances
 }

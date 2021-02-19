@@ -45,7 +45,6 @@ func (middleware *Middleware) BindAndCheckHeader(context *gin.Context) {
 	if middleware.settings.HeaderSettings.OriginIDRequired {
 		if header.OriginID == nil {
 			context.AbortWithStatusJSON(http.StatusBadRequest, "the header \"X-Broker-API-Originating-Identity\" is required but missing")
-			//RETURN necessary???YES
 			return
 		}
 		separator := regexp.MustCompile(` `)
@@ -71,12 +70,6 @@ func (middleware *Middleware) BindAndCheckHeader(context *gin.Context) {
 						"X-Broker-API-Originating-Identity: "+err.Error())
 					return
 				}
-				/*
-					fmt.Println("IM HERE")
-					s, _ := json.MarshalIndent(cf, "", "\t")
-					log.Println(string(s))
-
-				*/
 			} else if split[0] == "kubernetes" {
 				decoded, err := base64.StdEncoding.DecodeString(split[1])
 				if err != nil {
@@ -99,9 +92,6 @@ func (middleware *Middleware) BindAndCheckHeader(context *gin.Context) {
 		}
 		//fmt.Println(split[0])
 		//fmt.Println(split[1])
-	}
-	if middleware.settings.HeaderSettings.OriginIDValMustMatchProfile {
-		//MORE COMPLEX TO DO
 	}
 	if middleware.settings.HeaderSettings.RequestIDRequired {
 		if header.RequestID == nil {

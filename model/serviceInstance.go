@@ -7,7 +7,7 @@ type ProvideServiceInstanceRequest struct {
 	Context          interface{}     `json:"context"`
 	OrganizationGUID string          `json:"organization_guid" binding:"required"`
 	SpaceGUID        string          `json:"space_guid" binding:"required"`
-	Parameters       interface{}     `json:"parameters"`
+	Parameters       *interface{}    `json:"parameters"`
 	MaintenanceInfo  MaintenanceInfo `json:"maintenance_info"`
 
 	//RequestSettings RequestSettings `json:"request_settings"`
@@ -15,8 +15,8 @@ type ProvideServiceInstanceRequest struct {
 
 //Provision and Update have the same response form
 type ProvideUpdateServiceInstanceResponse struct {
-	DashboardUrl string                   `json:"dashboard_url,omitempty"`
-	Operation    string                   `json:"operation,omitempty"`
+	DashboardUrl *string                  `json:"dashboard_url,omitempty"`
+	Operation    *string                  `json:"operation,omitempty"`
 	Metadata     *ServiceInstanceMetadata `json:"metadata,omitempty"`
 }
 
@@ -24,10 +24,10 @@ func NewProvideServiceInstanceResponse(dashboardUrl *string, operation *string,
 	metadata *ServiceInstanceMetadata, settings *Settings) *ProvideUpdateServiceInstanceResponse {
 	response := ProvideUpdateServiceInstanceResponse{}
 	if settings.ProvisionSettings.ShowDashboardURL {
-		response.DashboardUrl = *dashboardUrl
+		response.DashboardUrl = dashboardUrl
 	}
 	if settings.ProvisionSettings.ShowOperation {
-		response.Operation = *operation
+		response.Operation = operation
 	}
 	if settings.ProvisionSettings.ShowMetadata {
 		response.Metadata = metadata

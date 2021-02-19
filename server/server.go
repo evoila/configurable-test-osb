@@ -36,8 +36,8 @@ func Run() {
 			log.Println("There has been an error while creating the settings!", err.Error())
 		} else {
 			//log.Println()
-			var serviceInstances map[string]model.ServiceDeployment
-			serviceInstances = make(map[string]model.ServiceDeployment)
+			var serviceInstances map[string]*model.ServiceDeployment
+			serviceInstances = make(map[string]*model.ServiceDeployment)
 			catalogService := service.NewCatalogService(catalog)
 			catalogController := controller.NewCatalogController(&catalogService, settings)
 			deploymentService := service.NewDeploymentService(catalog, &serviceInstances, settings)
@@ -62,6 +62,7 @@ func Run() {
 			r.POST("/", testController.TestBind)
 			//BONUS
 			r.GET("/v2/catalog/generate", catalogController.GenerateCatalog)
+			r.GET("/v2/service_instances", deploymentController.CurrentServiceInstances)
 			//new endpoints with new controllers
 			r.GET("/v2/catalog", catalogController.GetCatalog)
 

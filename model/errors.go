@@ -16,6 +16,6 @@ const MaintenanceInfoConflict = "The maintenance_info.version field provided in 
 type ServiceBrokerError struct {
 	Error            string `json:"error,omitempty"`
 	Description      string `json:"description,omitempty"`
-	InstanceUsable   string `json:"instance_usable,omitempty"`
-	UpdateRepeatable string `json:"update_repeatable,omitempty"`
+	InstanceUsable   *bool  `json:"instance_usable,omitempty"`
+	UpdateRepeatable *bool  `json:"update_repeatable,omitempty"`
 }

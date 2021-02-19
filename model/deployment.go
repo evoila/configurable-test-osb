@@ -1,20 +1,28 @@
 package model
 
 import (
+	"fmt"
 	"github.com/MaxFuhrich/serviceBrokerDummy/generator"
 	"log"
 	"strconv"
+	"time"
 )
 
 type ServiceDeployment struct {
-	serviceID                string
-	planID                   string
-	instanceID               string
-	parameters               interface{}
-	dashboardURL             *string
-	metadata                 *ServiceInstanceMetadata
-	lastOperation            *Operation
-	operations               map[string]*Operation
+	serviceID     string
+	planID        string
+	instanceID    string
+	parameters    *interface{}
+	dashboardURL  *string
+	metadata      *ServiceInstanceMetadata
+	lastOperation *Operation
+	operations    map[string]*Operation
+	/*
+		Alternative solution ???
+		requestIDToOperation map[string]map[string]*Operation?? Seems too sketchy/too much???
+		originIDToOperation instead/too???
+	*/
+	requestIDToOperation     map[string]*Operation
 	nextOperationNumber      int
 	state                    string
 	async                    bool
@@ -22,6 +30,7 @@ type ServiceDeployment struct {
 	organizationID           *string
 	spaceID                  *string
 	doOperationChan          chan int
+	deploymentUsable         bool
 	//lastOperation
 }
 
@@ -70,10 +79,9 @@ func (serviceDeployment *ServiceDeployment) Parameters() *interface{} {
 	if serviceDeployment.parameters == nil {
 		return nil
 	}
-	return &serviceDeployment.parameters
+	return serviceDeployment.parameters
 }
-
-func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceInstanceRequest, settings *Settings) *ServiceDeployment {
+func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceInstanceRequest, settings *Settings) (*ServiceDeployment, *string) {
 	serviceDeployment := ServiceDeployment{
 		serviceID:  provisionRequest.ServiceID,
 		planID:     provisionRequest.PlanID,
@@ -115,7 +123,7 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 		}
 	}
 
-	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint { //settings.ProvisionSettings.Async {
+	/*if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint { //settings.ProvisionSettings.Async {
 		//in progress here or in deploy()? if it's here then the service will safely have a state when returned
 		//operation := NewOperation()
 		//serviceDeployment.state = "in progress"
@@ -127,6 +135,10 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 		serviceDeployment.doOperation(*requestSettings.SecondsToComplete, false, nil)
 		//hier einfach sleepen bevor returned wird??????
 	}
+
+	*/
+	shouldFail := false
+	operationID := serviceDeployment.doOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, &shouldFail, nil, nil)
 	log.Println("here comes the deployment")
 	log.Println(serviceDeployment)
 	log.Println(*serviceDeployment.dashboardURL)
@@ -134,7 +146,32 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 	//WRITE HERE IN CHANNEL FROM WHICH WILL BE CONSUMED WHEN DELETING???
 	//ATTENTION?!
 	//DOES DELETING NEED TO BLOCKED? PROBABLY YES, BECAUSE INSTANCE ID IS KNOWN BY PLATFORM (PLATFORM PROVIDES ID)
-	return &serviceDeployment
+	return &serviceDeployment, operationID
+}
+
+func (serviceDeployment *ServiceDeployment) Update(updateServiceInstanceRequest *UpdateServiceInstanceRequest,
+	settings *Settings) *string { //}, requestSettings *RequestSettings)  {
+	//could also be passed instead
+	requestSettings, _ := GetRequestSettings(updateServiceInstanceRequest.Parameters)
+	//make use of context or ignore????
+	//change ONLY parameters and planid???
+	if updateServiceInstanceRequest.PlanId != nil {
+		fmt.Println("plan id prior to update: " + serviceDeployment.planID)
+		serviceDeployment.planID = *updateServiceInstanceRequest.PlanId
+		fmt.Println("plan id after update: " + serviceDeployment.planID)
+	}
+	if updateServiceInstanceRequest.Parameters != nil {
+		log.Println("trying to change parameters, old :")
+		log.Println(serviceDeployment.parameters)
+		//oldParam :=
+		serviceDeployment.parameters = updateServiceInstanceRequest.Parameters
+		log.Println("new: ")
+		log.Println(serviceDeployment.parameters)
+	}
+	operationID := serviceDeployment.doOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete,
+		requestSettings.FailAtOperation, requestSettings.UpdateRepeatableAfterFail,
+		requestSettings.InstanceUsableAfterFail)
+	return operationID
 }
 
 /*func (serviceDeployment *ServiceDeployment) deploy(seconds int) {
@@ -145,15 +182,28 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 	serviceDeployment.state = "succeeded"
 }*/
 
-func (serviceDeployment *ServiceDeployment) doOperation(duration int, shouldFail bool, updateRepeatable *bool) {
+func (serviceDeployment *ServiceDeployment) doOperation(async bool, duration int, shouldFail *bool, updateRepeatable *bool, deploymentUsable *bool) *string {
 	serviceDeployment.doOperationChan <- 1
 	operationID := "task_" + strconv.Itoa(serviceDeployment.nextOperationNumber)
-	operation := NewOperation(operationID, float64(duration), shouldFail, updateRepeatable)
+	operation := NewOperation(operationID, float64(duration), *shouldFail, updateRepeatable)
 	serviceDeployment.lastOperation = operation
 	serviceDeployment.operations[operationID] = operation
-	serviceDeployment.nextOperationNumber++
+	fmt.Printf("nextoperationnumber before increment %v\n", serviceDeployment.nextOperationNumber)
+	serviceDeployment.nextOperationNumber++ // = serviceDeployment.nextOperationNumber + 1
+	fmt.Printf("nextoperationnumber after increment %v\n", serviceDeployment.nextOperationNumber)
+	fmt.Println("operations:")
+	fmt.Println(serviceDeployment.operations)
 	<-serviceDeployment.doOperationChan
-	//WAIT HERE IF SYNC???!
+	//WAIT HERE IF !ASYNC???!
+	if !async {
+		//CHECK=!
+		time.Sleep(time.Duration(duration) * time.Second)
+	}
+	if deploymentUsable != nil && *shouldFail && !*deploymentUsable {
+		serviceDeployment.deploymentUsable = *deploymentUsable
+	}
+	//async check necessary??? checking now somewhere else if async (and therefore if operationID should be in response)
+	return &operationID
 	//fmt.Println(serviceDeployment.operations)
 	/*operation := "task_" + strconv.Itoa(serviceDeployment.nextOperationNumber)
 	serviceDeployment.lastOperation = &operation
