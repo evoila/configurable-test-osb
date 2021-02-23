@@ -11,8 +11,8 @@ type RequestSettings struct {
 	AsyncEndpoint             *bool `json:"async_endpoint"`
 	SecondsToComplete         *int  `json:"seconds_to_complete"`
 	FailAtOperation           *bool `json:"fail_at_operation"`
-	InstanceUsableAfterFail   *bool `json:"instance_usable_after_fail"`
-	UpdateRepeatableAfterFail *bool `json:"update_repeatable_after_fail"`
+	InstanceUsableAfterFail   *bool `json:"instance_usable_after_fail,omitempty"`
+	UpdateRepeatableAfterFail *bool `json:"update_repeatable_after_fail,omitempty"`
 }
 
 func GetRequestSettings(params *interface{}) (*RequestSettings, error) {
@@ -48,14 +48,14 @@ func GetRequestSettings(params *interface{}) (*RequestSettings, error) {
 		val := false
 		requestSettings.FailAtOperation = &val
 	}
-	if requestSettings.InstanceUsableAfterFail == nil {
+	/*if requestSettings.InstanceUsableAfterFail == nil {
 		val := true
 		requestSettings.InstanceUsableAfterFail = &val
 	}
 	if requestSettings.UpdateRepeatableAfterFail == nil {
 		val := true
 		requestSettings.UpdateRepeatableAfterFail = &val
-	}
+	}*/
 	if requestSettings.SecondsToComplete == nil {
 		val := 0
 		requestSettings.SecondsToComplete = &val

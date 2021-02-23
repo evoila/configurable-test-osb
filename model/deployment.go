@@ -22,9 +22,21 @@ type ServiceDeployment struct {
 		requestIDToOperation map[string]map[string]*Operation?? Seems too sketchy/too much???
 		originIDToOperation instead/too???
 	*/
-	requestIDToOperation     map[string]*Operation
-	nextOperationNumber      int
-	state                    string
+	requestIDToOperation map[string]*Operation
+	nextOperationNumber  int
+
+	//use
+	//this to indicate if still usable
+	state string
+	//and
+	//this to indicate if update running
+	updatingOperations map[string]bool //if an operation is updating the instance, its name is in this string, otherwise nil
+	/*
+		if fetching instance and updatingOperation != nil: get the state of the Operation (by using the name from updatingOperation)
+		set updatingOperation to nil and continue (return true - instance fetchable), if Operation is finished. otherwise
+		leave updatingOperation as is and return (return false - instance not fetchable?)
+	*/
+
 	async                    bool
 	secondsToFinishOperation int
 	organizationID           *string
@@ -32,6 +44,18 @@ type ServiceDeployment struct {
 	doOperationChan          chan int
 	deploymentUsable         bool
 	//lastOperation
+}
+
+func (serviceDeployment *ServiceDeployment) DeploymentUsable() bool {
+	return serviceDeployment.deploymentUsable
+}
+
+func (serviceDeployment *ServiceDeployment) GetLastOperation() *Operation {
+	return serviceDeployment.lastOperation
+}
+
+func (serviceDeployment *ServiceDeployment) GetOperationByName(operationName string) *Operation {
+	return serviceDeployment.operations[operationName]
 }
 
 func (serviceDeployment *ServiceDeployment) SpaceID() *string {
@@ -83,16 +107,20 @@ func (serviceDeployment *ServiceDeployment) Parameters() *interface{} {
 }
 func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceInstanceRequest, settings *Settings) (*ServiceDeployment, *string) {
 	serviceDeployment := ServiceDeployment{
-		serviceID:  provisionRequest.ServiceID,
-		planID:     provisionRequest.PlanID,
-		instanceID: instanceID,
-		parameters: provisionRequest.Parameters,
-		operations: make(map[string]*Operation),
+		serviceID:      provisionRequest.ServiceID,
+		planID:         provisionRequest.PlanID,
+		instanceID:     instanceID,
+		parameters:     provisionRequest.Parameters,
+		organizationID: &provisionRequest.OrganizationGUID,
+		spaceID:        &provisionRequest.SpaceGUID,
+		operations:     make(map[string]*Operation),
 		//async:                    async,
 		//secondsToFinishOperation: settings.ProvisionSettings.SecondsToFinish,
 		//lastOperation: "task_0",
 		nextOperationNumber: 0,
+		updatingOperations:  make(map[string]bool),
 		doOperationChan:     make(chan int, 1),
+		deploymentUsable:    true,
 	}
 	var requestSettings *RequestSettings
 	requestSettings, _ = GetRequestSettings(provisionRequest.Parameters)
@@ -149,8 +177,28 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 	return &serviceDeployment, operationID
 }
 
+//check return types
+/*
+func (serviceDeployment *ServiceDeployment) GetStateOfOperation() string {
+
+}
+
+*/
+
 func (serviceDeployment *ServiceDeployment) Update(updateServiceInstanceRequest *UpdateServiceInstanceRequest,
-	settings *Settings) *string { //}, requestSettings *RequestSettings)  {
+	settings *Settings) (*string, *ServiceBrokerError) { //}, requestSettings *RequestSettings)  {
+
+	//check even before if instance usable?!
+	//not here? the spec is saying that fetching while updating is forbidden, not updating while updating (which will be a different issue lol)???
+	/*
+		if serviceDeployment.updatingOperation != nil && serviceDeployment.operations[*serviceDeployment.updatingOperation] != nil {
+			if state := serviceDeployment.operations[*serviceDeployment.updatingOperation].State(); *state != PROGRESSING {
+
+			}
+		}
+
+	*/
+
 	//could also be passed instead
 	requestSettings, _ := GetRequestSettings(updateServiceInstanceRequest.Parameters)
 	//make use of context or ignore????
@@ -171,7 +219,10 @@ func (serviceDeployment *ServiceDeployment) Update(updateServiceInstanceRequest 
 	operationID := serviceDeployment.doOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete,
 		requestSettings.FailAtOperation, requestSettings.UpdateRepeatableAfterFail,
 		requestSettings.InstanceUsableAfterFail)
-	return operationID
+	//setting updatingOperaton field to indicate ongoing update
+	//serviceDeployment.updatingOperations[*operationID] = true
+	//serviceDeployment.updatingOperation = operationID
+	return operationID, nil
 }
 
 /*func (serviceDeployment *ServiceDeployment) deploy(seconds int) {
@@ -182,10 +233,26 @@ func (serviceDeployment *ServiceDeployment) Update(updateServiceInstanceRequest 
 	serviceDeployment.state = "succeeded"
 }*/
 
+func (serviceDeployment *ServiceDeployment) UpdatesRunning() bool {
+	//will entry be removed if value is set to false? how fast will this use up memory if not???
+	for operationName, running := range serviceDeployment.updatingOperations {
+		if running {
+			//state := serviceDeployment.operations[operationName].State()
+			if *serviceDeployment.operations[operationName].State() == PROGRESSING {
+				return true
+			}
+			serviceDeployment.updatingOperations[operationName] = false
+
+		}
+	}
+	return false
+}
+
 func (serviceDeployment *ServiceDeployment) doOperation(async bool, duration int, shouldFail *bool, updateRepeatable *bool, deploymentUsable *bool) *string {
 	serviceDeployment.doOperationChan <- 1
 	operationID := "task_" + strconv.Itoa(serviceDeployment.nextOperationNumber)
-	operation := NewOperation(operationID, float64(duration), *shouldFail, updateRepeatable)
+	serviceDeployment.updatingOperations[operationID] = true
+	operation := NewOperation(operationID, float64(duration), *shouldFail, updateRepeatable, deploymentUsable)
 	serviceDeployment.lastOperation = operation
 	serviceDeployment.operations[operationID] = operation
 	fmt.Printf("nextoperationnumber before increment %v\n", serviceDeployment.nextOperationNumber)

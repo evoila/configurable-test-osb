@@ -29,7 +29,14 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 	//check: id already exists?
 	if deployment, exists := (*deploymentService.serviceInstances)[*instanceID]; exists == true {
 		if deploymentService.settings.ProvisionSettings.StatusCodeOK {
-			if cmp.Equal(provisionRequest.Parameters, deployment.Parameters()) {
+			log.Println("existing deployment")
+			log.Println(deployment)
+			log.Println("trying to print spaceID")
+			log.Println(deployment.SpaceID())
+			if cmp.Equal(provisionRequest.Parameters, deployment.Parameters()) &&
+				deployment.ServiceID() == provisionRequest.ServiceID && deployment.PlanID() == provisionRequest.PlanID &&
+				*deployment.SpaceID() == provisionRequest.SpaceGUID &&
+				*deployment.OrganizationID() == provisionRequest.OrganizationGUID {
 				response := model.NewProvideServiceInstanceResponse(deployment.DashboardURL(),
 					deployment.LastOperationID(), deployment.Metadata(), deploymentService.settings)
 				return 200, response, nil
@@ -148,13 +155,17 @@ func (deploymentService *DeploymentService) FetchServiceInstance(instanceID *str
 		}
 	}
 	//if deploymentService.catalog.GetServiceOfferingById(deployment.ServiceID())
-	if deployment.State() == "in progress" {
+	//if deployment.State() == "in progress" {
+	if deployment.UpdatesRunning() {
 		return 422, nil, &model.ServiceBrokerError{
 			Error:       "ConcurrencyError",
 			Description: "The Service Broker does not support concurrent requests while instance is updating.",
 		}
 	}
-	if deploymentService.settings.FetchServiceInstanceSettings.OfferingIDMustMatch && *serviceID != deployment.ServiceID() {
+
+	//do the ids HAVE TO match??? this is not directly specified?!
+	//if deploymentService.settings.FetchServiceInstanceSettings.OfferingIDMustMatch && *serviceID != deployment.ServiceID() {
+	if serviceID != nil && deploymentService.settings.FetchServiceInstanceSettings.OfferingIDMustMatch && *serviceID != deployment.ServiceID() {
 		log.Println("Service id of request: " + *serviceID)
 		log.Println("Service id of instance: " + deployment.ServiceID())
 		return 400, nil, &model.ServiceBrokerError{
@@ -162,7 +173,8 @@ func (deploymentService *DeploymentService) FetchServiceInstance(instanceID *str
 			Description: "The given service_id does not match the service_id of the instance",
 		}
 	}
-	if deploymentService.settings.FetchServiceInstanceSettings.PlanIDMustMatch && *planID != deployment.PlanID() {
+	//if deploymentService.settings.FetchServiceInstanceSettings.PlanIDMustMatch && *planID != deployment.PlanID() {
+	if planID != nil && deploymentService.settings.FetchServiceInstanceSettings.PlanIDMustMatch && *planID != deployment.PlanID() {
 		return 400, nil, &model.ServiceBrokerError{
 			Error:       "PlanIDMatch",
 			Description: "The given plan_id does not match the plan_id of the instance",
@@ -202,6 +214,9 @@ func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest 
 			Error:       "NotFound",
 			Description: "given instance_id was not found",
 		}
+	}
+	if !deployment.DeploymentUsable() {
+
 	}
 	if *updateRequest.ServiceId != deployment.ServiceID() {
 		return 400, nil, &model.ServiceBrokerError{
@@ -281,7 +296,7 @@ func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest 
 
 	}
 	//deploymentService.UpdateServiceInstance(updateRequest)
-	operationID := deployment.Update(updateRequest, nil)
+	operationID, _ := deployment.Update(updateRequest, nil)
 	var updateServiceInstanceResponse model.ProvideUpdateServiceInstanceResponse
 	/*if dashboardURL := deployment.DashboardURL(); dashboardURL != nil {
 		updateServiceInstanceResponse.DashboardUrl = dashboardURL
@@ -320,6 +335,65 @@ func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest 
 	return 200, &updateServiceInstanceResponse, nil
 }
 
+func (deploymentService *DeploymentService) PollOperationState(instanceID *string, serviceID *string, planID *string,
+	operationName *string) (int, *model.InstanceOperationPollResponse, *model.ServiceBrokerError) {
+	var deployment *model.ServiceDeployment
+	var exists bool
+	deployment, exists = (*deploymentService.serviceInstances)[*instanceID]
+	if !exists {
+		return 404, nil, &model.ServiceBrokerError{
+			Error:       "NotFound",
+			Description: "given instance_id was not found",
+		}
+	}
+	if serviceID != nil && *serviceID != deployment.ServiceID() {
+		log.Println("Service id of request: " + *serviceID)
+		log.Println("Service id of instance: " + deployment.ServiceID())
+		return 400, nil, &model.ServiceBrokerError{
+			Error:       "ServiceIDMatch",
+			Description: "The given service_id does not match the service_id of the instance",
+		}
+	}
+	if planID != nil && *planID != deployment.PlanID() {
+		return 400, nil, &model.ServiceBrokerError{
+			Error:       "PlanIDMatch",
+			Description: "The given plan_id does not match the plan_id of the instance",
+		}
+	}
+	var operation *model.Operation
+	if operationName != nil {
+		operation = deployment.GetOperationByName(*operationName)
+		if operation == nil {
+			return 400, nil, &model.ServiceBrokerError{
+				Error:       "OperationID",
+				Description: "The given operation does not exist for the service instance",
+			}
+		}
+	} else {
+		operation = deployment.GetLastOperation()
+		// to do: create response from operation fields ;)
+	}
+	//var pollResponse model.InstanceOperationPollResponse
+	var responseDescription *string
+	if deploymentService.settings.PollInstanceOperationSettings.DescriptionInResponse {
+		description := "Default description"
+		responseDescription = &description
+	}
+	pollResponse := model.InstanceOperationPollResponse{
+		State:            *operation.State(),
+		Description:      responseDescription,
+		InstanceUsable:   operation.InstanceUsable(),
+		UpdateRepeatable: operation.UpdateRepeatable(),
+	}
+	statusCode := 200 //ok
+	if operation.InstanceUsable() != nil && !*operation.InstanceUsable() && operation.SupposedToFail() {
+		statusCode = 410 //gone
+	}
+
+	return statusCode, &pollResponse, nil
+}
+
+//does not work atm
 func (deploymentService *DeploymentService) CurrentServiceInstances() *map[string]*model.ServiceDeployment {
 	return deploymentService.serviceInstances
 }

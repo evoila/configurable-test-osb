@@ -76,9 +76,34 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 
 func (deploymentController *DeploymentController) FetchServiceInstance(context *gin.Context) {
 	instanceID := context.Param("instance_id")
-	serviceID := context.Query("service_id")
-	planID := context.Query("plan_id")
-	statusCode, response, err := deploymentController.deploymentService.FetchServiceInstance(&instanceID, &serviceID, &planID)
+	var serviceID *string
+	value, exists := context.GetQuery("service_id")
+	if exists {
+		if value == "" {
+			context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
+				Error:       "MalformedRequest",
+				Description: "Query parameter \"service_id\" must not be an empty string (but can be omitted)",
+			})
+		} else {
+			serviceID = &value
+		}
+	}
+	//*serviceID = context.Query("service_id")
+
+	//planID := context.Query("plan_id")
+	var planID *string
+	value, exists = context.GetQuery("plan_id")
+	if exists {
+		if value == "" {
+			context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
+				Error:       "MalformedRequest",
+				Description: "Query parameter \"plan_id\" must not be an empty string (but can be omitted)",
+			})
+		} else {
+			planID = &value
+		}
+	}
+	statusCode, response, err := deploymentController.deploymentService.FetchServiceInstance(&instanceID, serviceID, planID)
 	if err != nil {
 		context.JSON(statusCode, err)
 		return
@@ -133,6 +158,58 @@ func (deploymentController *DeploymentController) UpdateServiceInstance(context 
 	context.JSON(statusCode, response)
 }
 
+func (deploymentController *DeploymentController) PollOperationState(context *gin.Context) {
+	instanceID := context.Param("instance_id")
+	var serviceID *string
+	value, exists := context.GetQuery("service_id")
+	if exists {
+		if value == "" {
+			context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
+				Error:       "MalformedRequest",
+				Description: "Query parameter \"service_id\" must not be an empty string (but can be omitted)",
+			})
+		} else {
+			serviceID = &value
+		}
+	}
+	//*serviceID = context.Query("service_id")
+
+	//planID := context.Query("plan_id")
+	var planID *string
+	value, exists = context.GetQuery("plan_id")
+	if exists {
+		if value == "" {
+			context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
+				Error:       "MalformedRequest",
+				Description: "Query parameter \"plan_id\" must not be an empty string (but can be omitted)",
+			})
+		} else {
+			planID = &value
+		}
+	}
+	var operation *string
+	value, exists = context.GetQuery("operation")
+	if exists {
+		if value == "" {
+			context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
+				Error:       "MalformedRequest",
+				Description: "Query parameter \"operation\" must not be an empty string (but can be omitted)",
+			})
+		} else {
+			operation = &value
+		}
+	}
+
+	statusCode, response, err := deploymentController.deploymentService.PollOperationState(&instanceID, serviceID, planID, operation)
+	if err != nil {
+		context.JSON(statusCode, err)
+		return
+	}
+	context.JSON(statusCode, response)
+	//deploymentController.deploymentService.UpdateServiceInstance(&updateRequest, &instanceID, header.RequestID)
+}
+
+//BONUS, DOES NOT WORK ATM
 func (deploymentController *DeploymentController) CurrentServiceInstances(context *gin.Context) {
 	response := deploymentController.deploymentService.CurrentServiceInstances()
 	context.JSON(200, response)

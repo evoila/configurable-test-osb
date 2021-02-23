@@ -1,10 +1,11 @@
 package model
 
 type Settings struct {
-	GeneralSettings              GeneralSettings              `json:"general_settings" binding:"required"`
-	HeaderSettings               HeaderSettings               `json:"header_settings" binding:"required"`
-	ProvisionSettings            ProvisionSettings            `json:"provision_settings" binding:"required"`
-	FetchServiceInstanceSettings FetchServiceInstanceSettings `json:"fetch_service_instance_settings" binding:"required"`
+	GeneralSettings               GeneralSettings               `json:"general_settings" binding:"required"`
+	HeaderSettings                HeaderSettings                `json:"header_settings" binding:"required"`
+	ProvisionSettings             ProvisionSettings             `json:"provision_settings" binding:"required"`
+	FetchServiceInstanceSettings  FetchServiceInstanceSettings  `json:"fetch_service_instance_settings" binding:"required"`
+	PollInstanceOperationSettings PollInstanceOperationSettings `json:"poll_instance_operation_settings" binding:"required"`
 }
 
 type HeaderSettings struct {
@@ -44,4 +45,8 @@ type FetchServiceInstanceSettings struct {
 	ShowParameters      bool `json:"show_parameters" binding:"required"`
 	ShowMaintenanceInfo bool `json:"show_maintenance_info" binding:"required"`
 	ShowMetadata        bool `json:"show_metadata" binding:"required"`
+}
+
+type PollInstanceOperationSettings struct {
+	DescriptionInResponse bool `json:"description_in_response" binding:"required"`
 }

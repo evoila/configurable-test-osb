@@ -74,19 +74,19 @@ func Run() {
 
 			//Updating service instance
 			r.PATCH("/v2/service_instances/:instance_id", deploymentController.UpdateServiceInstance)
+
+			//Polling last operation for service instances
+			r.GET("/v2/service_instances/:instance_id/last_operation", deploymentController.PollOperationState)
 			//Replace when new controllers are implemented?
 			//Catalog
 			//r.GET("/v2/catalog", testController.GetCatalog)
 			/*
-				//Polling last operation for service instances
-				r.GET("/v2/service_instances/:instance_id/last_operation", testController.LastOpServiceInstance)
+
 
 				//Polling last operation for service binding
 				r.GET("/v2/service_instances/:instance_id/service_bindings/:binding_id/last_operation", testController.LastOpServiceBinding)
 
 
-
-				//Fetching service instance
 
 
 
