@@ -255,7 +255,7 @@ func (serviceDeployment *ServiceDeployment) doOperation(async bool, duration int
 	serviceDeployment.doOperationChan <- 1
 	operationID := "task_" + strconv.Itoa(serviceDeployment.nextOperationNumber)
 	serviceDeployment.updatingOperations[operationID] = true
-	operation := NewOperation(operationID, float64(duration), *shouldFail, updateRepeatable, deploymentUsable)
+	operation := NewOperation(operationID, float64(duration), *shouldFail, updateRepeatable, deploymentUsable, async)
 	serviceDeployment.lastOperation = operation
 	serviceDeployment.operations[operationID] = operation
 	fmt.Printf("nextoperationnumber before increment %v\n", serviceDeployment.nextOperationNumber)

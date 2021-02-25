@@ -99,7 +99,7 @@ func (serviceBinding *ServiceBinding) doOperation(async bool, duration int, shou
 	//serviceBinding.updatingOperations[operationID] = true
 	//deploymentUsable not needed as the binding will always be "usable"???
 	//updateRepeatable also not needed as bindings operations don't have a field update_repeatable
-	operation := NewOperation(operationID, float64(duration), *shouldFail, nil, nil)
+	operation := NewOperation(operationID, float64(duration), *shouldFail, nil, nil, async)
 	serviceBinding.lastOperation = operation
 	serviceBinding.operations[operationID] = operation
 	//fmt.Printf("nextoperationnumber before increment %v\n", serviceBinding.nextOperationNumber)

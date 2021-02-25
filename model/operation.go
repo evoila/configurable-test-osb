@@ -72,7 +72,7 @@ func (operation *Operation) State() *string {
 	return &operation.state
 }
 
-func NewOperation(name string, duration float64, shouldFail bool, updateRepeatableAfterFail *bool, instanceUsableAfterFail *bool) *Operation {
+func NewOperation(name string, duration float64, shouldFail bool, updateRepeatableAfterFail *bool, instanceUsableAfterFail *bool, async bool) *Operation {
 	return &Operation{
 		name:                      name,
 		state:                     PROGRESSING,
@@ -81,5 +81,6 @@ func NewOperation(name string, duration float64, shouldFail bool, updateRepeatab
 		shouldFail:                shouldFail,
 		updateRepeatableAfterFail: updateRepeatableAfterFail,
 		instanceUsableAfterFail:   instanceUsableAfterFail,
+		async:                     &async,
 	}
 }
