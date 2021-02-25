@@ -6,6 +6,7 @@ type Settings struct {
 	ProvisionSettings             ProvisionSettings             `json:"provision_settings" binding:"required"`
 	FetchServiceInstanceSettings  FetchServiceInstanceSettings  `json:"fetch_service_instance_settings" binding:"required"`
 	PollInstanceOperationSettings PollInstanceOperationSettings `json:"poll_instance_operation_settings" binding:"required"`
+	BindingSettings               BindingSettings               `json:"binding_settings" binding:"required"`
 }
 
 type HeaderSettings struct {
@@ -49,4 +50,38 @@ type FetchServiceInstanceSettings struct {
 
 type PollInstanceOperationSettings struct {
 	DescriptionInResponse bool `json:"description_in_response" binding:"required"`
+}
+
+type BindingSettings struct {
+	ReturnBindingInformationOnce bool                    `json:"return_binding_information_once" binding:"required"`
+	ReturnOperationIfAsync       bool                    `json:"return_operation_if_async" binding:"required"`
+	BindingMetadataSettings      BindingMetadataSettings `json:"binding_metadata_settings" binding:"required"`
+	//ReturnMetadata bool `json:"return_metadata" binding:"required"`
+	ReturnCredentials          bool                       `json:"return_credentials" binding:"required"`
+	ReturnSyslogDrainURL       bool                       `json:"return_syslog_drain_url" binding:"required"`
+	ReturnRouteServiceURL      bool                       `json:"return_route_service_url" binding:"required"`
+	BindingVolumeMountSettings BindingVolumeMountSettings `json:"binding_volume_mount_settings" binding:"required"`
+	BindingEndpointSettings    BindingEndpointSettings    `json:"binding_endpoint_settings" binding:"required"`
+	ReturnParameters           bool                       `json:"return_parameters" binding:"required"`
+}
+
+type BindingMetadataSettings struct {
+	ReturnMetadata    bool `json:"return_metadata" binding:"required"`
+	ReturnExpiresAt   bool `json:"return_expires_at" binding:"required"`
+	ReturnRenewBefore bool `json:"return_renew_before" binding:"required"`
+}
+
+type BindingVolumeMountSettings struct {
+	ReturnVolumeMounts bool `json:"return_volume_mounts" binding:"required"`
+	ReturnMountConfig  bool `json:"return_mount_config" binding:"required"`
+}
+
+type BindingEndpointSettings struct {
+	ReturnEndpoints bool `json:"return_endpoints" binding:"required"`
+	//???
+	//the next two fields could be grouped by using *string and not requiring a binding
+	//nil -> don't return protocol; value set -> return protocol
+	//this is currently not done because of consistency with the rest of the settings
+	ReturnProtocol bool   `json:"return_protocol" binding:"required"`
+	ProtocolValue  string `json:"protocol_value" binding:"required"`
 }

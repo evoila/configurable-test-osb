@@ -43,6 +43,11 @@ func Run() {
 			deploymentService := service.NewDeploymentService(catalog, &serviceInstances, settings)
 			deploymentController := controller.NewDeploymentController(deploymentService, settings)
 
+			var bindingInstances map[string]*model.ServiceBinding
+			bindingInstances = make(map[string]*model.ServiceBinding)
+			bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+			bindingController := controller.NewBindingController(bindingService, settings)
+
 			middleware := controller.NewMiddleware(settings)
 			//PUT THIS TO A DIFFERENT PLACE
 			//Default router, should be changed?
@@ -63,6 +68,8 @@ func Run() {
 			//BONUS
 			r.GET("/v2/catalog/generate", catalogController.GenerateCatalog)
 			r.GET("/v2/service_instances", deploymentController.CurrentServiceInstances)
+			r.GET("/v2/service_bindings", bindingController.CurrentBindings)
+
 			//new endpoints with new controllers
 			r.GET("/v2/catalog", catalogController.GetCatalog)
 
@@ -77,34 +84,40 @@ func Run() {
 
 			//Polling last operation for service instances
 			r.GET("/v2/service_instances/:instance_id/last_operation", deploymentController.PollOperationState)
+
+			//Creating service binding (and rotate, since it uses the same endpoint
+			r.PUT("/v2/service_instances/:instance_id/service_bindings/:binding_id", bindingController.CreateBinding)
+
+			//Request (rotating service binding)
+			//r.PUT("/v2/service_instances/:instance_id/service_bindings/:binding_id", bindingController.RotateBinding)
 			//Replace when new controllers are implemented?
 			//Catalog
 			//r.GET("/v2/catalog", testController.GetCatalog)
 			/*
 
 
-				//Polling last operation for service binding
-				r.GET("/v2/service_instances/:instance_id/service_bindings/:binding_id/last_operation", testController.LastOpServiceBinding)
+							//Polling last operation for service binding
+							r.GET("/v2/service_instances/:instance_id/service_bindings/:binding_id/last_operation", testController.LastOpServiceBinding)
+
+			//PUT /v2/service_instances/:instance_id/service_bindings/:binding_id
 
 
 
 
+							//Request (creating service binding)
+							r.PUT("/v2/service_instances/:instance_id/service_bindings/:binding_id", testController.CreateServiceBinding)
 
+							//Request (rotating service binding)
+							r.PUT("/v2/service_instances/:instance_id/service_bindings/:binding_id", testController.RotateServiceBinding)
 
-				//Request (creating service binding)
-				r.PUT("/v2/service_instances/:instance_id/service_bindings/:binding_id", testController.CreateServiceBinding)
+							//Fetching service binding
+							r.GET("/v2/service_instances/:instance_id/service_bindings/:binding_id", testController.FetchServiceBinding)
 
-				//Request (rotating service binding)
-				r.PUT("/v2/service_instances/:instance_id/service_bindings/:binding_id", testController.RotateServiceBinding)
+							//Unbinding
+							r.DELETE("/v2/service_instances/:instance_id/service_bindings/:binding_id", testController.Unbind)
 
-				//Fetching service binding
-				r.GET("/v2/service_instances/:instance_id/service_bindings/:binding_id", testController.FetchServiceBinding)
-
-				//Unbinding
-				r.DELETE("/v2/service_instances/:instance_id/service_bindings/:binding_id", testController.Unbind)
-
-				//Deprovisioning
-				r.DELETE("/v2/service_instances/:instance_id", testController.Deprovide)
+							//Deprovisioning
+							r.DELETE("/v2/service_instances/:instance_id", testController.Deprovide)
 			*/
 			//Generating new random catalog from catalogSettings.json
 			//r.GET("/generate_catalog", testController.GenerateCatalog)
@@ -162,6 +175,11 @@ func makeSettings() (*model.Settings, error) {
 	}
 	if _, err = strconv.Atoi(version[1]); err != nil {
 		return nil, errors.New("version \"MINOR\" in \"MAJOR.MINOR\" must be an integer")
+	}
+	if settings.BindingSettings.BindingEndpointSettings.ProtocolValue != "tcp" &&
+		settings.BindingSettings.BindingEndpointSettings.ProtocolValue != "udp" &&
+		settings.BindingSettings.BindingEndpointSettings.ProtocolValue != "all" {
+		return nil, errors.New("protocol_value must be either \"tct\", \"udp\", or \"all\"")
 	}
 	return &settings, nil
 }

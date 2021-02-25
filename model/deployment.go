@@ -203,19 +203,22 @@ func (serviceDeployment *ServiceDeployment) Update(updateServiceInstanceRequest 
 	requestSettings, _ := GetRequestSettings(updateServiceInstanceRequest.Parameters)
 	//make use of context or ignore????
 	//change ONLY parameters and planid???
-	if updateServiceInstanceRequest.PlanId != nil {
-		fmt.Println("plan id prior to update: " + serviceDeployment.planID)
-		serviceDeployment.planID = *updateServiceInstanceRequest.PlanId
-		fmt.Println("plan id after update: " + serviceDeployment.planID)
+	if !*requestSettings.FailAtOperation {
+		if updateServiceInstanceRequest.PlanId != nil {
+			fmt.Println("plan id prior to update: " + serviceDeployment.planID)
+			serviceDeployment.planID = *updateServiceInstanceRequest.PlanId
+			fmt.Println("plan id after update: " + serviceDeployment.planID)
+		}
+		if updateServiceInstanceRequest.Parameters != nil {
+			log.Println("trying to change parameters, old :")
+			log.Println(serviceDeployment.parameters)
+			//oldParam :=
+			serviceDeployment.parameters = updateServiceInstanceRequest.Parameters
+			log.Println("new: ")
+			log.Println(serviceDeployment.parameters)
+		}
 	}
-	if updateServiceInstanceRequest.Parameters != nil {
-		log.Println("trying to change parameters, old :")
-		log.Println(serviceDeployment.parameters)
-		//oldParam :=
-		serviceDeployment.parameters = updateServiceInstanceRequest.Parameters
-		log.Println("new: ")
-		log.Println(serviceDeployment.parameters)
-	}
+
 	operationID := serviceDeployment.doOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete,
 		requestSettings.FailAtOperation, requestSettings.UpdateRepeatableAfterFail,
 		requestSettings.InstanceUsableAfterFail)

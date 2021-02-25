@@ -4,6 +4,7 @@ import (
 	"github.com/MaxFuhrich/serviceBrokerDummy/model"
 	"github.com/MaxFuhrich/serviceBrokerDummy/service"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 )
 
@@ -161,56 +162,63 @@ func (deploymentController *DeploymentController) UpdateServiceInstance(context 
 func (deploymentController *DeploymentController) PollOperationState(context *gin.Context) {
 	instanceID := context.Param("instance_id")
 	var serviceID *string
-	value, exists := context.GetQuery("service_id")
+	valueServiceID, exists := context.GetQuery("service_id")
 	if exists {
-		if value == "" {
+		log.Printf("service_id valueServiceID: %v\n", valueServiceID)
+		if valueServiceID == "" {
 			context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
 				Error:       "MalformedRequest",
 				Description: "Query parameter \"service_id\" must not be an empty string (but can be omitted)",
 			})
 		} else {
-			serviceID = &value
+			serviceID = &valueServiceID
+			log.Printf("service_id assigned valueServiceID: %v\n", *serviceID)
 		}
 	}
 	//*serviceID = context.Query("service_id")
 
 	//planID := context.Query("plan_id")
 	var planID *string
-	value, exists = context.GetQuery("plan_id")
+	valuePlanID, exists := context.GetQuery("plan_id")
 	if exists {
-		if value == "" {
+		if valuePlanID == "" {
 			context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
 				Error:       "MalformedRequest",
 				Description: "Query parameter \"plan_id\" must not be an empty string (but can be omitted)",
 			})
 		} else {
-			planID = &value
+			planID = &valuePlanID
 		}
 	}
 	var operation *string
-	value, exists = context.GetQuery("operation")
+	valueOperation, exists := context.GetQuery("operation")
 	if exists {
-		if value == "" {
+		if valueOperation == "" {
 			context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
 				Error:       "MalformedRequest",
 				Description: "Query parameter \"operation\" must not be an empty string (but can be omitted)",
 			})
 		} else {
-			operation = &value
+			operation = &valueOperation
 		}
 	}
-
+	//log.Printf("service_id valueServiceID right before passing to poll operation: %v\n", *serviceID)
 	statusCode, response, err := deploymentController.deploymentService.PollOperationState(&instanceID, serviceID, planID, operation)
 	if err != nil {
 		context.JSON(statusCode, err)
 		return
 	}
 	context.JSON(statusCode, response)
-	//deploymentController.deploymentService.UpdateServiceInstance(&updateRequest, &instanceID, header.RequestID)
+	//deploymentController.bindingService.UpdateServiceInstance(&updateRequest, &instanceID, header.RequestID)
 }
 
 //BONUS, DOES NOT WORK ATM
 func (deploymentController *DeploymentController) CurrentServiceInstances(context *gin.Context) {
-	response := deploymentController.deploymentService.CurrentServiceInstances()
-	context.JSON(200, response)
+	resp := struct {
+		Instances *map[string]*model.ServiceDeployment `json:"instances"`
+	}{}
+	resp.Instances = deploymentController.deploymentService.CurrentServiceInstances()
+	//this won't show the fields inside a service instance, since it fields are not public (and not annotated)
+	//only the names (with empty values) will be shown
+	context.JSON(200, resp)
 }

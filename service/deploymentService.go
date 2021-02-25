@@ -29,10 +29,13 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 	//check: id already exists?
 	if deployment, exists := (*deploymentService.serviceInstances)[*instanceID]; exists == true {
 		if deploymentService.settings.ProvisionSettings.StatusCodeOK {
-			log.Println("existing deployment")
-			log.Println(deployment)
-			log.Println("trying to print spaceID")
-			log.Println(deployment.SpaceID())
+			/*
+				log.Println("existing deployment")
+				log.Println(deployment)
+				log.Println("trying to print spaceID")
+				log.Println(deployment.SpaceID())
+
+			*/
 			if cmp.Equal(provisionRequest.Parameters, deployment.Parameters()) &&
 				deployment.ServiceID() == provisionRequest.ServiceID && deployment.PlanID() == provisionRequest.PlanID &&
 				*deployment.SpaceID() == provisionRequest.SpaceGUID &&
@@ -103,7 +106,12 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 	*/
 	var requestSettings *model.RequestSettings
 	requestSettings, _ = model.GetRequestSettings(provisionRequest.Parameters)
-
+	//NEWLY ADDED
+	deployment, operationID := model.NewServiceDeployment(*instanceID, provisionRequest, deploymentService.settings)
+	(*deploymentService.serviceInstances)[*instanceID] = deployment
+	response := model.NewProvideServiceInstanceResponse(deployment.DashboardURL(),
+		operationID, deployment.Metadata(), deploymentService.settings)
+	//
 	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint == true {
 		/*
 			handled in controller
@@ -118,23 +126,32 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 		//pass whole request instead of only parmeters???
 		//var deployment *model.ServiceDeployment
 		//var operationID *string
+		//CREATE DEAPLOYMENT BEFORE IF REQUEST???!
+		/*ORIGINAL?!
 		deployment, operationID := model.NewServiceDeployment(*instanceID, provisionRequest, deploymentService.settings)
 		(*deploymentService.serviceInstances)[*instanceID] = deployment
-
 		response := model.NewProvideServiceInstanceResponse(deployment.DashboardURL(),
 			operationID, deployment.Metadata(), deploymentService.settings)
+		*/
+
 		return 202, response, nil
 	}
 	//wenn alles gut:
+	/* ORIGINAL?!
 	deployment, _ := model.NewServiceDeployment(*instanceID,
 		provisionRequest, deploymentService.settings)
 	(*deploymentService.serviceInstances)[*instanceID] = deployment
+
+	*/
 	/*log.Println("Current instances:")
 	log.Println(*deploymentService.serviceInstances)
 	marshalled, _ := json.Marshal(*deploymentService.serviceInstances)
 	log.Println(marshalled)*/
+	/* ORIGINAL?!
 	response := model.NewProvideServiceInstanceResponse(deployment.DashboardURL(),
 		deployment.LastOperationID(), deployment.Metadata(), deploymentService.settings)
+
+	*/
 	return 201, response, nil
 }
 
@@ -346,6 +363,8 @@ func (deploymentService *DeploymentService) PollOperationState(instanceID *strin
 			Description: "given instance_id was not found",
 		}
 	}
+	//log.Println(*serviceID)
+	//log.Println(serviceID)
 	if serviceID != nil && *serviceID != deployment.ServiceID() {
 		log.Println("Service id of request: " + *serviceID)
 		log.Println("Service id of instance: " + deployment.ServiceID())

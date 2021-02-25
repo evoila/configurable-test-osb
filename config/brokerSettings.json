@@ -36,5 +36,27 @@
   "poll_instance_operation_settings": {
     "description_in_response": true
   },
+  "binding_settings":{
+    "return_binding_information_once": false,
+    "return_operation_if_async": true,
+    "binding_metadata_settings": {
+      "return_metadata": true,
+      "return_expires_at": true,
+      "return_renew_before": true
+    },
+    "return_credentials": true,
+    "return_syslog_drain_url": true,
+    "return_route_service_url": true,
+    "binding_volume_mount_settings": {
+      "return_volume_mounts": true,
+      "return_mount_config": true
+    },
+    "binding_endpoint_settings": {
+      "return_endpoints": false,
+      "return_protocol": false,
+      "protocol_value": "tcp"
+    },
+    "return_parameters": true
+  },
   "milliseconds_to_update": 500
 }

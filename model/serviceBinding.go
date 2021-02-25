@@ -1,27 +1,34 @@
 package model
 
 type CreateBindingRequest struct {
-	Context string `json:"context"`
+	Context *interface{} `json:"context"`
 	//*
-	ServiceId string `json:"service_id" binding:"required"`
+	ServiceID *string `json:"service_id" binding:"required"`
 	//*
-	PlanId       string        `json:"plan_id" binding:"required"`
-	AppGuid      string        `json:"app_guid"`
+	PlanID       *string       `json:"plan_id" binding:"required"`
+	AppGUID      *string       `json:"app_guid"`
 	BindResource *BindResource `json:"bind_resource"`
-	Parameters   interface{}   `json:"parameters"`
+	Parameters   *interface{}  `json:"parameters"`
 }
 
+/*
+NOT NEEDED???!
+the operation field could be in CreateRotateBindingResponse and just be omitted, if empty (and if 202 should
+be returned, the other fields can be left empty, which will then be omitted)
+*/
 type CreateRotateBindingAcceptedResponse struct {
 	Operation string `json:"operation,omitempty"`
 }
 
-type CreateRotateBindingOkCreatedResponse struct {
+//changed name, because this contains also the accepted response
+type CreateRotateBindingResponse struct {
 	Metadata        *BindingMetadata `json:"metadata,omitempty"`
-	Credentials     interface{}      `json:"credentials,omitempty"`
-	SyslogDrainUrl  string           `json:"syslog_drain_url,omitempty"`
-	RouteServiceUrl string           `json:"route_service_url,omitempty"`
+	Credentials     *interface{}     `json:"credentials,omitempty"`
+	SyslogDrainUrl  *string          `json:"syslog_drain_url,omitempty"`
+	RouteServiceUrl *string          `json:"route_service_url,omitempty"`
 	VolumeMounts    []*VolumeMount   `json:"volume_mounts,omitempty"`
 	Endpoints       []*Endpoint      `json:"endpoints,omitempty"`
+	Operation       *string          `json:"operation,omitempty"`
 }
 
 type BindingOperationPollResponse struct {
@@ -33,17 +40,19 @@ type BindingOperationPollResponse struct {
 }
 
 type RotateBindingRequest struct {
-	PredecessorBindingId string `json:"predecessor_binding_id" binding:"required"`
+	PredecessorBindingId *string      `json:"predecessor_binding_id" binding:"required"`
+	Parameters           *interface{} `json:"parameters"`
 }
 
-type FetchingBindingResponse struct {
+type CreateRotateFetchBindingResponse struct {
 	Metadata        *BindingMetadata `json:"metadata,omitempty"`
-	Credentials     interface{}      `json:"credentials,omitempty"`
-	SyslogDrainUrl  string           `json:"syslog_drain_url,omitempty"`
-	RouteServiceUrl string           `json:"route_service_url,omitempty"`
-	VolumeMounts    []*VolumeMount   `json:"volume_mounts,omitempty"`
-	Parameters      interface{}      `json:"parameters,omitempty"`
-	Endpoints       []Endpoint       `json:"endpoints,omitempty"`
+	Credentials     *interface{}     `json:"credentials,omitempty"`
+	SyslogDrainUrl  *string          `json:"syslog_drain_url,omitempty"`
+	RouteServiceUrl *string          `json:"route_service_url,omitempty"`
+	VolumeMounts    *[]VolumeMount   `json:"volume_mounts,omitempty"`
+	Parameters      *interface{}     `json:"parameters,omitempty"`
+	Endpoints       *[]Endpoint      `json:"endpoints,omitempty"`
+	Operation       *string          `json:"operation,omitempty"`
 }
 
 type BindResource struct {
@@ -52,8 +61,8 @@ type BindResource struct {
 }
 
 type BindingMetadata struct {
-	ExpiresAt   string `json:"expires_at,omitempty"`
-	RenewBefore string `json:"renew_before,omitempty"`
+	ExpiresAt   *string `json:"expires_at,omitempty"`
+	RenewBefore *string `json:"renew_before,omitempty"`
 }
 
 type VolumeMount struct {
@@ -73,13 +82,13 @@ type Device struct {
 	//REQUIRED
 	VolumeId string `json:"volume_id"`
 
-	MountConfig interface{} `json:"mount_config,omitempty"`
+	MountConfig *interface{} `json:"mount_config,omitempty"`
 }
 
 type Endpoint struct {
 	//REQUIRED
-	Host string `json:"host"`
+	Host string `json:"Host"`
 	//REQUIRED
 	Ports    []string `json:"ports"`
-	Protocol string   `json:"protocol,omitempty"`
+	Protocol *string  `json:"protocol,omitempty"`
 }
