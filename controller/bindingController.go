@@ -192,6 +192,54 @@ func (bindingController *BindingController) PollOperationState(context *gin.Cont
 	context.JSON(statusCode, response)
 }
 
+func (bindingController *BindingController) Unbind(context *gin.Context) {
+	instanceID := context.Param("instance_id")
+	bindingID := context.Param("binding_id")
+
+	//var serviceID *string
+	serviceOfferingID, exists := context.GetQuery("service_id")
+	if !exists {
+		context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
+			Error:       "MalformedRequest",
+			Description: "service_id must be included as query parameter",
+		})
+		return
+	}
+	servicePlanID, exists := context.GetQuery("plan_id")
+	if !exists {
+		context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
+			Error:       "MalformedRequest",
+			Description: "plan_id must be included as query parameter",
+		})
+		return
+	}
+	acceptsIncomplete := context.DefaultQuery("accepts_incomplete", "false")
+	if acceptsIncomplete != "false" && acceptsIncomplete != "true" {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"message": "error while parsing query parameter \"accepts_incomplete\"",
+			"error":   "invalid value, value must be either \"true\", \"false\" or omitted which defaults to \"false\"",
+		})
+		return
+	}
+	var deleteRequest model.DeleteRequest
+	_ = context.ShouldBindBodyWith(&deleteRequest, binding.JSON)
+	var requestSettings *model.RequestSettings
+	requestSettings, _ = model.GetRequestSettings(deleteRequest.Parameters)
+	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint && acceptsIncomplete == "false" {
+		context.JSON(422, &model.ServiceBrokerError{
+			Error:       "AsyncRequired",
+			Description: "This Broker requires client support for asynchronous service operations.",
+		})
+		return
+	}
+	statusCode, response, err := bindingController.bindingService.Unbind(&deleteRequest, &instanceID, &bindingID, &serviceOfferingID, &servicePlanID)
+	if err != nil {
+		context.JSON(statusCode, err)
+		return
+	}
+	context.JSON(statusCode, response)
+}
+
 func (bindingController *BindingController) CurrentBindings(context *gin.Context) {
 	resp := struct {
 		Bindings *map[string]*model.ServiceBinding `json:"service_bindings"`

@@ -94,6 +94,9 @@ func Run() {
 			//Polling last operation for service binding
 			r.GET("/v2/service_instances/:instance_id/service_bindings/:binding_id/last_operation", bindingController.PollOperationState)
 
+			//Unbinding
+			r.DELETE("/v2/service_instances/:instance_id/service_bindings/:binding_id", bindingController.Unbind)
+
 			//Request (rotating service binding)
 			//r.PUT("/v2/service_instances/:instance_id/service_bindings/:binding_id", bindingController.RotateBinding)
 			//Replace when new controllers are implemented?

@@ -135,7 +135,7 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 	*/
 	//CHECK IF OPERATION SHOULD BE ALSO DONE WITH SYNC!!! PROBABLY?!
 	/*if !(!settings.ProvisionSettings.Async && !settings.ProvisionSettings.Operation) {
-		serviceDeployment.doOperation(settings.ProvisionSettings.SecondsToFinish)
+		serviceDeployment.DoOperation(settings.ProvisionSettings.SecondsToFinish)
 	}
 
 	*/
@@ -159,10 +159,10 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 		//serviceDeployment.state = "in progress"
 		//go serviceDeployment.deploy(settings.ProvisionSettings.SecondsToFinish)
 		//provisioning "never" fails / is not specified in the specs???
-		serviceDeployment.doOperation(*requestSettings.SecondsToComplete, false, nil)
+		serviceDeployment.DoOperation(*requestSettings.SecondsToComplete, false, nil)
 	} else {
 		//provisioning "never" fails / is not specified in the specs?
-		serviceDeployment.doOperation(*requestSettings.SecondsToComplete, false, nil)
+		serviceDeployment.DoOperation(*requestSettings.SecondsToComplete, false, nil)
 		//hier einfach sleepen bevor returned wird??????
 	}
 
@@ -294,6 +294,11 @@ func (serviceDeployment *ServiceDeployment) GetBinding(bindingID *string) (*Serv
 	//(*bindingService.serviceInstances)[*instanceID]
 	serviceBinding, exists := (serviceDeployment.bindings)[*bindingID]
 	return serviceBinding, exists
+}
+
+func (serviceDeployment *ServiceDeployment) RemoveBinding(bindingID *string) {
+	delete(serviceDeployment.bindings, *bindingID)
+	//serviceDeployment.bindings[*bindingID] = nil
 }
 
 func (serviceDeployment *ServiceDeployment) buildDashboardURL() {

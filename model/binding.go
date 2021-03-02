@@ -82,7 +82,7 @@ func (serviceBinding *ServiceBinding) GetLastOperation() *Operation {
 }
 
 func NewServiceBinding(bindingID *string, bindingRequest *CreateBindingRequest, settings *Settings,
-	catalog *Catalog) (*ServiceBinding, *string) {
+	catalog *Catalog, bindingInstances *map[string]*ServiceBinding, deployment *ServiceDeployment) (*ServiceBinding, *string) {
 	serviceBinding := ServiceBinding{
 		bindingID:           bindingID,
 		context:             bindingRequest.Context,
@@ -101,19 +101,20 @@ func NewServiceBinding(bindingID *string, bindingRequest *CreateBindingRequest, 
 		//planID: &bindingRequest.PlanID,
 		response: &CreateRotateFetchBindingResponse{},
 	}
-
+	deployment.AddBinding(&serviceBinding)
 	serviceBinding.serviceOffering, _ = catalog.GetServiceOfferingById(*bindingRequest.ServiceID)
 	serviceBinding.setResponse()
+	(*bindingInstances)[*bindingID] = &serviceBinding
 	var requestSettings *RequestSettings
 	requestSettings, _ = GetRequestSettings(bindingRequest.Parameters)
 	shouldFail := false
-	operationID := serviceBinding.doOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, &shouldFail, nil, nil)
+	operationID := serviceBinding.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, &shouldFail, nil, nil, nil)
 	return &serviceBinding, operationID
 }
 
 //is this ok??? what happens, if the original service binding is deleted??? is the garbage collector "smart" enough to
 //store the field of the new serviceBinding separately even though it is created from the old one?
-func (serviceBinding *ServiceBinding) RotateBinding(rotateBindingRequest *RotateBindingRequest) (*ServiceBinding, *string) {
+func (serviceBinding *ServiceBinding) RotateBinding(rotateBindingRequest *RotateBindingRequest, deployment *ServiceDeployment) (*ServiceBinding, *string) {
 	newServiceBinding := ServiceBinding{
 		context:             serviceBinding.context,
 		appGuid:             serviceBinding.appGuid,
@@ -129,20 +130,24 @@ func (serviceBinding *ServiceBinding) RotateBinding(rotateBindingRequest *Rotate
 		serviceOffering:     serviceBinding.serviceOffering,
 		informationReturned: false,
 	}
+	deployment.AddBinding(&newServiceBinding)
 	var requestSettings *RequestSettings
 	requestSettings, _ = GetRequestSettings(rotateBindingRequest.Parameters)
 	shouldFail := false
-	operationID := newServiceBinding.doOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, &shouldFail, nil, nil)
+	operationID := newServiceBinding.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, &shouldFail, nil, nil, nil)
 	return &newServiceBinding, operationID
 }
 
-func (serviceBinding *ServiceBinding) doOperation(async bool, duration int, shouldFail *bool, updateRepeatable *bool, deploymentUsable *bool) *string {
+func (serviceBinding *ServiceBinding) DoOperation(async bool, duration int, shouldFail *bool, updateRepeatable *bool, deploymentUsable *bool, lastOperationDeletedBinding *map[string]*Operation) *string {
 	serviceBinding.doOperationChan <- 1
 	operationID := "task_" + strconv.Itoa(serviceBinding.nextOperationNumber)
 	//serviceBinding.updatingOperations[operationID] = true
 	//deploymentUsable not needed as the binding will always be "usable"???
 	//updateRepeatable also not needed as bindings operations don't have a field update_repeatable
 	operation := NewOperation(operationID, float64(duration), *shouldFail, nil, nil, async)
+	if lastOperationDeletedBinding != nil {
+		(*lastOperationDeletedBinding)[operationID] = operation
+	}
 	serviceBinding.lastOperation = operation
 	serviceBinding.operations[operationID] = operation
 	//fmt.Printf("nextoperationnumber before increment %v\n", serviceBinding.nextOperationNumber)

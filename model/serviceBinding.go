@@ -92,3 +92,7 @@ type Endpoint struct {
 	Ports    []string `json:"ports"`
 	Protocol *string  `json:"protocol,omitempty"`
 }
+
+type DeleteRequest struct {
+	Parameters *interface{} `json:"parameters"`
+}
