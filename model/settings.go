@@ -63,6 +63,7 @@ type BindingSettings struct {
 	BindingVolumeMountSettings BindingVolumeMountSettings `json:"binding_volume_mount_settings" binding:"required"`
 	BindingEndpointSettings    BindingEndpointSettings    `json:"binding_endpoint_settings" binding:"required"`
 	ReturnParameters           bool                       `json:"return_parameters" binding:"required"`
+	StatusCodeOK               bool                       `json:"status_code_ok" binding:"required"`
 }
 
 type BindingMetadataSettings struct {

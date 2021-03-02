@@ -15,6 +15,7 @@ type ServiceDeployment struct {
 	parameters    *interface{}
 	dashboardURL  *string
 	metadata      *ServiceInstanceMetadata
+	bindings      map[string]*ServiceBinding
 	lastOperation *Operation
 	operations    map[string]*Operation
 	/*
@@ -113,6 +114,7 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 		parameters:     provisionRequest.Parameters,
 		organizationID: &provisionRequest.OrganizationGUID,
 		spaceID:        &provisionRequest.SpaceGUID,
+		bindings:       make(map[string]*ServiceBinding),
 		operations:     make(map[string]*Operation),
 		//async:                    async,
 		//secondsToFinishOperation: settings.ProvisionSettings.SecondsToFinish,
@@ -278,6 +280,20 @@ func (serviceDeployment *ServiceDeployment) doOperation(async bool, duration int
 	/*operation := "task_" + strconv.Itoa(serviceDeployment.nextOperationNumber)
 	serviceDeployment.lastOperation = &operation
 	serviceDeployment.nextOperationNumber++*/
+}
+
+func (serviceDeployment *ServiceDeployment) AddBinding(serviceBinding *ServiceBinding) {
+	if serviceBinding != nil {
+		serviceDeployment.bindings[*serviceBinding.bindingID] = serviceBinding
+	} else {
+		log.Println("Nil pointer passed when adding binding, this should not have happened.")
+	}
+}
+
+func (serviceDeployment *ServiceDeployment) GetBinding(bindingID *string) (*ServiceBinding, bool) {
+	//(*bindingService.serviceInstances)[*instanceID]
+	serviceBinding, exists := (serviceDeployment.bindings)[*bindingID]
+	return serviceBinding, exists
 }
 
 func (serviceDeployment *ServiceDeployment) buildDashboardURL() {

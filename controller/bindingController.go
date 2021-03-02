@@ -127,6 +127,19 @@ func (bindingController *BindingController) rotateBinding(context *gin.Context) 
 	context.JSON(statusCode, response)
 }
 
+func (bindingController *BindingController) FetchBinding(context *gin.Context) {
+	instanceID := context.Param("instance_id")
+	bindingID := context.Param("binding_id")
+	serviceID := context.Query("service_id")
+	planID := context.Query("plan_id")
+	statusCode, response, err := bindingController.bindingService.FetchBinding(&instanceID, &bindingID, &serviceID, &planID)
+	if err != nil {
+		context.JSON(statusCode, err)
+		return
+	}
+	context.JSON(statusCode, response)
+}
+
 func (bindingController *BindingController) CurrentBindings(context *gin.Context) {
 	resp := struct {
 		Bindings *map[string]*model.ServiceBinding `json:"service_bindings"`

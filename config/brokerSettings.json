@@ -52,11 +52,12 @@
       "return_mount_config": true
     },
     "binding_endpoint_settings": {
-      "return_endpoints": false,
-      "return_protocol": false,
+      "return_endpoints": true,
+      "return_protocol": true,
       "protocol_value": "tcp"
     },
-    "return_parameters": true
+    "return_parameters": true,
+    "status_code_ok": true
   },
   "milliseconds_to_update": 500
 }

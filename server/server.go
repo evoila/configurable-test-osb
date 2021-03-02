@@ -88,6 +88,9 @@ func Run() {
 			//Creating service binding (and rotate, since it uses the same endpoint
 			r.PUT("/v2/service_instances/:instance_id/service_bindings/:binding_id", bindingController.CreateBinding)
 
+			//Fetching service binding
+			r.GET("/v2/service_instances/:instance_id/service_bindings/:binding_id", bindingController.FetchBinding)
+
 			//Request (rotating service binding)
 			//r.PUT("/v2/service_instances/:instance_id/service_bindings/:binding_id", bindingController.RotateBinding)
 			//Replace when new controllers are implemented?
@@ -96,28 +99,23 @@ func Run() {
 			/*
 
 
-							//Polling last operation for service binding
-							r.GET("/v2/service_instances/:instance_id/service_bindings/:binding_id/last_operation", testController.LastOpServiceBinding)
+								//Polling last operation for service binding
+								r.GET("/v2/service_instances/:instance_id/service_bindings/:binding_id/last_operation", testController.LastOpServiceBinding)
 
-			//PUT /v2/service_instances/:instance_id/service_bindings/:binding_id
-
-
+				//PUT /v2/service_instances/:instance_id/service_bindings/:binding_id
 
 
-							//Request (creating service binding)
-							r.PUT("/v2/service_instances/:instance_id/service_bindings/:binding_id", testController.CreateServiceBinding)
 
-							//Request (rotating service binding)
-							r.PUT("/v2/service_instances/:instance_id/service_bindings/:binding_id", testController.RotateServiceBinding)
 
-							//Fetching service binding
-							r.GET("/v2/service_instances/:instance_id/service_bindings/:binding_id", testController.FetchServiceBinding)
 
-							//Unbinding
-							r.DELETE("/v2/service_instances/:instance_id/service_bindings/:binding_id", testController.Unbind)
 
-							//Deprovisioning
-							r.DELETE("/v2/service_instances/:instance_id", testController.Deprovide)
+
+
+								//Unbinding
+								r.DELETE("/v2/service_instances/:instance_id/service_bindings/:binding_id", testController.Unbind)
+
+								//Deprovisioning
+								r.DELETE("/v2/service_instances/:instance_id", testController.Deprovide)
 			*/
 			//Generating new random catalog from catalogSettings.json
 			//r.GET("/generate_catalog", testController.GenerateCatalog)

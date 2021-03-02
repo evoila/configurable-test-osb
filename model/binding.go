@@ -8,14 +8,18 @@ import (
 )
 
 type ServiceBinding struct {
+	bindingID           *string
 	context             *interface{}
+	serviceID           *string
+	planID              *string
 	appGuid             *string
 	bindResource        *BindResource
 	parameters          *interface{}
 	operations          map[string]*Operation
 	doOperationChan     chan int
 	nextOperationNumber int
-	lastOperation       *Operation
+
+	lastOperation *Operation
 	/*
 		BindingMetadata *BindingMetadata
 		Credentials *interface{}
@@ -27,6 +31,34 @@ type ServiceBinding struct {
 	catalog             *Catalog
 	serviceOffering     *ServiceOffering
 	informationReturned bool
+}
+
+func (serviceBinding *ServiceBinding) BindResource() *BindResource {
+	return serviceBinding.bindResource
+}
+
+func (serviceBinding *ServiceBinding) AppGuid() *string {
+	return serviceBinding.appGuid
+}
+
+func (serviceBinding *ServiceBinding) PlanID() *string {
+	return serviceBinding.planID
+}
+
+func (serviceBinding *ServiceBinding) ServiceID() *string {
+	return serviceBinding.serviceID
+}
+
+func (serviceBinding *ServiceBinding) Context() *interface{} {
+	return serviceBinding.context
+}
+
+func (serviceBinding *ServiceBinding) Parameters() *interface{} {
+	return serviceBinding.parameters
+}
+
+func (serviceBinding *ServiceBinding) BindingID() *string {
+	return serviceBinding.bindingID
 }
 
 func (serviceBinding *ServiceBinding) InformationReturned() bool {
@@ -41,10 +73,13 @@ func (serviceBinding *ServiceBinding) Response() *CreateRotateFetchBindingRespon
 	return serviceBinding.response
 }
 
-func NewServiceBinding(bindingID string, bindingRequest *CreateBindingRequest, settings *Settings,
+func NewServiceBinding(bindingID *string, bindingRequest *CreateBindingRequest, settings *Settings,
 	catalog *Catalog) (*ServiceBinding, *string) {
 	serviceBinding := ServiceBinding{
+		bindingID:           bindingID,
 		context:             bindingRequest.Context,
+		serviceID:           bindingRequest.ServiceID,
+		planID:              bindingRequest.PlanID,
 		appGuid:             bindingRequest.AppGUID,
 		bindResource:        bindingRequest.BindResource,
 		parameters:          bindingRequest.Parameters,
