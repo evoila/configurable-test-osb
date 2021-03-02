@@ -91,6 +91,9 @@ func Run() {
 			//Fetching service binding
 			r.GET("/v2/service_instances/:instance_id/service_bindings/:binding_id", bindingController.FetchBinding)
 
+			//Polling last operation for service binding
+			r.GET("/v2/service_instances/:instance_id/service_bindings/:binding_id/last_operation", bindingController.PollOperationState)
+
 			//Request (rotating service binding)
 			//r.PUT("/v2/service_instances/:instance_id/service_bindings/:binding_id", bindingController.RotateBinding)
 			//Replace when new controllers are implemented?
@@ -98,9 +101,6 @@ func Run() {
 			//r.GET("/v2/catalog", testController.GetCatalog)
 			/*
 
-
-								//Polling last operation for service binding
-								r.GET("/v2/service_instances/:instance_id/service_bindings/:binding_id/last_operation", testController.LastOpServiceBinding)
 
 				//PUT /v2/service_instances/:instance_id/service_bindings/:binding_id
 

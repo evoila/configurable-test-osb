@@ -383,7 +383,7 @@ func (deploymentService *DeploymentService) PollOperationState(instanceID *strin
 	if operationName != nil {
 		operation = deployment.GetOperationByName(*operationName)
 		if operation == nil {
-			return 400, nil, &model.ServiceBrokerError{
+			return 404, nil, &model.ServiceBrokerError{
 				Error:       "OperationID",
 				Description: "The given operation does not exist for the service instance",
 			}

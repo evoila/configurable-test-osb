@@ -73,6 +73,14 @@ func (serviceBinding *ServiceBinding) Response() *CreateRotateFetchBindingRespon
 	return serviceBinding.response
 }
 
+func (serviceBinding *ServiceBinding) GetOperationByName(operationName string) *Operation {
+	return serviceBinding.operations[operationName]
+}
+
+func (serviceBinding *ServiceBinding) GetLastOperation() *Operation {
+	return serviceBinding.lastOperation
+}
+
 func NewServiceBinding(bindingID *string, bindingRequest *CreateBindingRequest, settings *Settings,
 	catalog *Catalog) (*ServiceBinding, *string) {
 	serviceBinding := ServiceBinding{

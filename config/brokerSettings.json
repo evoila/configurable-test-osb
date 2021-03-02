@@ -57,7 +57,8 @@
       "protocol_value": "tcp"
     },
     "return_parameters": true,
-    "status_code_ok": true
+    "status_code_ok": true,
+    "return_description_last_operation": true
   },
   "milliseconds_to_update": 500
 }

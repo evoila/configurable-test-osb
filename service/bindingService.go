@@ -202,6 +202,70 @@ func (bindingService *BindingService) FetchBinding(instanceID *string, bindingID
 	return 200, response, nil
 }
 
+func (bindingService *BindingService) PollOperationState(instanceID *string, bindingID *string, serviceID *string, planID *string, operationName *string) (int, *model.InstanceOperationPollResponse, *model.ServiceBrokerError) {
+	var deployment *model.ServiceDeployment
+	var exists bool
+	deployment, exists = (*bindingService.serviceInstances)[*instanceID]
+	if !exists {
+		return 404, nil, &model.ServiceBrokerError{
+			Error:       "NotFound",
+			Description: "given instance_id was not found",
+		}
+	}
+	binding, exists := deployment.GetBinding(bindingID)
+	if !exists {
+		return 404, nil, &model.ServiceBrokerError{
+			Error:       "NotFound",
+			Description: "given binding_id was not found for this instance_id",
+		}
+	}
+	if serviceID != nil && *serviceID != deployment.ServiceID() {
+		log.Println("Service id of request: " + *serviceID)
+		log.Println("Service id of instance: " + deployment.ServiceID())
+		return 400, nil, &model.ServiceBrokerError{
+			Error:       "ServiceIDMatch",
+			Description: "The given service_id does not match the service_id of the instance",
+		}
+	}
+	if planID != nil && *planID != deployment.PlanID() {
+		return 400, nil, &model.ServiceBrokerError{
+			Error:       "PlanIDMatch",
+			Description: "The given plan_id does not match the plan_id of the instance",
+		}
+	}
+	var operation *model.Operation
+	if operationName != nil {
+		operation = binding.GetOperationByName(*operationName)
+		if operation == nil {
+			return 404, nil, &model.ServiceBrokerError{
+				Error:       "OperationID",
+				Description: "The given operation does not exist for the service instance",
+			}
+		}
+	} else {
+		operation = binding.GetLastOperation()
+		// to do: create response from operation fields ;)
+	}
+
+	//DIFFERENT APPROACH ???!
+	//USING INSTANCEOPERATIONPOLLRESPONSE INSTEAD OF BINDINGOPERATIONPOLLRESPONSE
+	//-> FIELDS FOR INSTANCE_USABLE AND UPDATE_REPEATABLE CAN SIMPLY BE OMITTED
+	var responseDescription *string
+	if bindingService.settings.BindingSettings.ReturnDescriptionLastOperation {
+		description := "Default description"
+		responseDescription = &description
+	}
+	pollResponse := model.InstanceOperationPollResponse{
+		State:       *operation.State(),
+		Description: responseDescription,
+	}
+	statusCode := 200 //ok
+	if operation.InstanceUsable() != nil && !*operation.InstanceUsable() && operation.SupposedToFail() {
+		statusCode = 410 //gone
+	}
+	return statusCode, &pollResponse, nil
+}
+
 func (bindingService *BindingService) CurrentBindings() *map[string]*model.ServiceBinding {
 	return bindingService.bindingInstances
 }

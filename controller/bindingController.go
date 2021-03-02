@@ -140,6 +140,58 @@ func (bindingController *BindingController) FetchBinding(context *gin.Context) {
 	context.JSON(statusCode, response)
 }
 
+func (bindingController *BindingController) PollOperationState(context *gin.Context) {
+	instanceID := context.Param("instance_id")
+	bindingID := context.Param("binding_id")
+	var serviceID *string
+	valueServiceID, exists := context.GetQuery("service_id")
+	if exists {
+		log.Printf("service_id valueServiceID: %v\n", valueServiceID)
+		if valueServiceID == "" {
+			context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
+				Error:       "MalformedRequest",
+				Description: "Query parameter \"service_id\" must not be an empty string (but can be omitted)",
+			})
+		} else {
+			serviceID = &valueServiceID
+			log.Printf("service_id assigned valueServiceID: %v\n", *serviceID)
+		}
+	}
+	//*serviceID = context.Query("service_id")
+
+	//planID := context.Query("plan_id")
+	var planID *string
+	valuePlanID, exists := context.GetQuery("plan_id")
+	if exists {
+		if valuePlanID == "" {
+			context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
+				Error:       "MalformedRequest",
+				Description: "Query parameter \"plan_id\" must not be an empty string (but can be omitted)",
+			})
+		} else {
+			planID = &valuePlanID
+		}
+	}
+	var operation *string
+	valueOperation, exists := context.GetQuery("operation")
+	if exists {
+		if valueOperation == "" {
+			context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
+				Error:       "MalformedRequest",
+				Description: "Query parameter \"operation\" must not be an empty string (but can be omitted)",
+			})
+		} else {
+			operation = &valueOperation
+		}
+	}
+	statusCode, response, err := bindingController.bindingService.PollOperationState(&instanceID, &bindingID, serviceID, planID, operation)
+	if err != nil {
+		context.JSON(statusCode, err)
+		return
+	}
+	context.JSON(statusCode, response)
+}
+
 func (bindingController *BindingController) CurrentBindings(context *gin.Context) {
 	resp := struct {
 		Bindings *map[string]*model.ServiceBinding `json:"service_bindings"`

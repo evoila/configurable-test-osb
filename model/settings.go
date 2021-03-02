@@ -57,13 +57,14 @@ type BindingSettings struct {
 	ReturnOperationIfAsync       bool                    `json:"return_operation_if_async" binding:"required"`
 	BindingMetadataSettings      BindingMetadataSettings `json:"binding_metadata_settings" binding:"required"`
 	//ReturnMetadata bool `json:"return_metadata" binding:"required"`
-	ReturnCredentials          bool                       `json:"return_credentials" binding:"required"`
-	ReturnSyslogDrainURL       bool                       `json:"return_syslog_drain_url" binding:"required"`
-	ReturnRouteServiceURL      bool                       `json:"return_route_service_url" binding:"required"`
-	BindingVolumeMountSettings BindingVolumeMountSettings `json:"binding_volume_mount_settings" binding:"required"`
-	BindingEndpointSettings    BindingEndpointSettings    `json:"binding_endpoint_settings" binding:"required"`
-	ReturnParameters           bool                       `json:"return_parameters" binding:"required"`
-	StatusCodeOK               bool                       `json:"status_code_ok" binding:"required"`
+	ReturnCredentials              bool                       `json:"return_credentials" binding:"required"`
+	ReturnSyslogDrainURL           bool                       `json:"return_syslog_drain_url" binding:"required"`
+	ReturnRouteServiceURL          bool                       `json:"return_route_service_url" binding:"required"`
+	BindingVolumeMountSettings     BindingVolumeMountSettings `json:"binding_volume_mount_settings" binding:"required"`
+	BindingEndpointSettings        BindingEndpointSettings    `json:"binding_endpoint_settings" binding:"required"`
+	ReturnParameters               bool                       `json:"return_parameters" binding:"required"`
+	StatusCodeOK                   bool                       `json:"status_code_ok" binding:"required"`
+	ReturnDescriptionLastOperation bool                       `json:"return_description_last_operation" binding"required"`
 }
 
 type BindingMetadataSettings struct {
