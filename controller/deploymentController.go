@@ -4,6 +4,7 @@ import (
 	"github.com/MaxFuhrich/serviceBrokerDummy/model"
 	"github.com/MaxFuhrich/serviceBrokerDummy/service"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"log"
 	"net/http"
 )
@@ -210,6 +211,53 @@ func (deploymentController *DeploymentController) PollOperationState(context *gi
 	}
 	context.JSON(statusCode, response)
 	//deploymentController.bindingService.UpdateServiceInstance(&updateRequest, &instanceID, header.RequestID)
+}
+
+func (deploymentController *DeploymentController) Delete(context *gin.Context) {
+	instanceID := context.Param("instance_id")
+
+	//var serviceID *string
+	serviceOfferingID, exists := context.GetQuery("service_id")
+	if !exists {
+		context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
+			Error:       "MalformedRequest",
+			Description: "service_id must be included as query parameter",
+		})
+		return
+	}
+	servicePlanID, exists := context.GetQuery("plan_id")
+	if !exists {
+		context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
+			Error:       "MalformedRequest",
+			Description: "plan_id must be included as query parameter",
+		})
+		return
+	}
+	acceptsIncomplete := context.DefaultQuery("accepts_incomplete", "false")
+	if acceptsIncomplete != "false" && acceptsIncomplete != "true" {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"message": "error while parsing query parameter \"accepts_incomplete\"",
+			"error":   "invalid value, value must be either \"true\", \"false\" or omitted which defaults to \"false\"",
+		})
+		return
+	}
+	var deleteRequest model.DeleteRequest
+	_ = context.ShouldBindBodyWith(&deleteRequest, binding.JSON)
+	var requestSettings *model.RequestSettings
+	requestSettings, _ = model.GetRequestSettings(deleteRequest.Parameters)
+	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint && acceptsIncomplete == "false" {
+		context.JSON(422, &model.ServiceBrokerError{
+			Error:       "AsyncRequired",
+			Description: "This Broker requires client support for asynchronous service operations.",
+		})
+		return
+	}
+	statusCode, response, err := deploymentController.deploymentService.Delete(&deleteRequest, &instanceID, &serviceOfferingID, &servicePlanID)
+	if err != nil {
+		context.JSON(statusCode, err)
+		return
+	}
+	context.JSON(statusCode, response)
 }
 
 //BONUS, DOES NOT WORK ATM

@@ -16,12 +16,13 @@
     "status_code_ok": true,
     "async": true,
     "dashboard_url": true,
-    "operation": true,
+    "return_operation_if_async": true,
     "metadata": true,
     "seconds_to_finish": 0,
     "show_dashboard_url": true,
     "show_operation": true,
-    "show_metadata": true
+    "show_metadata": true,
+    "allow_deprovision_with_bindings": false
   },
   "fetch_service_instance_settings": {
     "offering_id_must_match": true,

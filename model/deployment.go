@@ -33,8 +33,8 @@ type ServiceDeployment struct {
 	//this to indicate if update running
 	updatingOperations map[string]bool //if an operation is updating the instance, its name is in this string, otherwise nil
 	/*
-		if fetching instance and updatingOperation != nil: get the state of the Operation (by using the name from updatingOperation)
-		set updatingOperation to nil and continue (return true - instance fetchable), if Operation is finished. otherwise
+		if fetching instance and updatingOperation != nil: get the state of the ReturnOperationIfAsync (by using the name from updatingOperation)
+		set updatingOperation to nil and continue (return true - instance fetchable), if ReturnOperationIfAsync is finished. otherwise
 		leave updatingOperation as is and return (return false - instance not fetchable?)
 	*/
 
@@ -134,7 +134,7 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 
 	*/
 	//CHECK IF OPERATION SHOULD BE ALSO DONE WITH SYNC!!! PROBABLY?!
-	/*if !(!settings.ProvisionSettings.Async && !settings.ProvisionSettings.Operation) {
+	/*if !(!settings.ProvisionSettings.Async && !settings.ProvisionSettings.ReturnOperationIfAsync) {
 		serviceDeployment.DoOperation(settings.ProvisionSettings.SecondsToFinish)
 	}
 
@@ -168,7 +168,8 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 
 	*/
 	shouldFail := false
-	operationID := serviceDeployment.doOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, &shouldFail, nil, nil)
+	operationID := serviceDeployment.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete,
+		&shouldFail, nil, nil, nil, nil)
 	log.Println("here comes the deployment")
 	log.Println(serviceDeployment)
 	log.Println(*serviceDeployment.dashboardURL)
@@ -221,9 +222,9 @@ func (serviceDeployment *ServiceDeployment) Update(updateServiceInstanceRequest 
 		}
 	}
 
-	operationID := serviceDeployment.doOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete,
+	operationID := serviceDeployment.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete,
 		requestSettings.FailAtOperation, requestSettings.UpdateRepeatableAfterFail,
-		requestSettings.InstanceUsableAfterFail)
+		requestSettings.InstanceUsableAfterFail, nil, nil)
 	//setting updatingOperaton field to indicate ongoing update
 	//serviceDeployment.updatingOperations[*operationID] = true
 	//serviceDeployment.updatingOperation = operationID
@@ -253,18 +254,19 @@ func (serviceDeployment *ServiceDeployment) UpdatesRunning() bool {
 	return false
 }
 
-func (serviceDeployment *ServiceDeployment) doOperation(async bool, duration int, shouldFail *bool, updateRepeatable *bool, deploymentUsable *bool) *string {
+func (serviceDeployment *ServiceDeployment) DoOperation(async bool, duration int, shouldFail *bool,
+	updateRepeatable *bool, deploymentUsable *bool, lastOperationOfDeletedInstance *map[string]*Operation,
+	id *string) *string {
 	serviceDeployment.doOperationChan <- 1
 	operationID := "task_" + strconv.Itoa(serviceDeployment.nextOperationNumber)
 	serviceDeployment.updatingOperations[operationID] = true
 	operation := NewOperation(operationID, float64(duration), *shouldFail, updateRepeatable, deploymentUsable, async)
+	if lastOperationOfDeletedInstance != nil && id != nil {
+		(*lastOperationOfDeletedInstance)[*id] = operation
+	}
 	serviceDeployment.lastOperation = operation
 	serviceDeployment.operations[operationID] = operation
-	fmt.Printf("nextoperationnumber before increment %v\n", serviceDeployment.nextOperationNumber)
 	serviceDeployment.nextOperationNumber++ // = serviceDeployment.nextOperationNumber + 1
-	fmt.Printf("nextoperationnumber after increment %v\n", serviceDeployment.nextOperationNumber)
-	fmt.Println("operations:")
-	fmt.Println(serviceDeployment.operations)
 	<-serviceDeployment.doOperationChan
 	//WAIT HERE IF !ASYNC???!
 	if !async {
@@ -299,6 +301,10 @@ func (serviceDeployment *ServiceDeployment) GetBinding(bindingID *string) (*Serv
 func (serviceDeployment *ServiceDeployment) RemoveBinding(bindingID *string) {
 	delete(serviceDeployment.bindings, *bindingID)
 	//serviceDeployment.bindings[*bindingID] = nil
+}
+
+func (serviceDeployment *ServiceDeployment) AmountOfBindings() int {
+	return len(serviceDeployment.bindings)
 }
 
 func (serviceDeployment *ServiceDeployment) buildDashboardURL() {

@@ -94,7 +94,7 @@ func (bindingService *BindingService) CreateBinding(bindingRequest *model.Create
 	//(*bindingService.bindingInstances)[*bindingID] = binding
 
 	//is just using var ok here or do i actually need to create CrateRotateBindingResponse{} ???
-	//response.Operation = "hello"
+	//response.ReturnOperationIfAsync = "hello"
 
 	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint == true {
 		var response model.CreateRotateFetchBindingResponse
@@ -149,7 +149,7 @@ func (bindingService *BindingService) RotateBinding(rotateBindingRequest *model.
 	newBinding, operationID := oldBinding.RotateBinding(rotateBindingRequest, deployment)
 	(*bindingService.bindingInstances)[*bindingID] = newBinding
 	//deployment.AddBinding(newBinding)
-	//response.Operation = "hello"
+	//response.ReturnOperationIfAsync = "hello"
 	var requestSettings *model.RequestSettings
 	requestSettings, _ = model.GetRequestSettings(rotateBindingRequest.Parameters)
 	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint == true {
@@ -217,6 +217,39 @@ func (bindingService *BindingService) FetchBinding(instanceID *string, bindingID
 func (bindingService *BindingService) PollOperationState(instanceID *string, bindingID *string, serviceID *string, planID *string, operationName *string) (int, *model.InstanceOperationPollResponse, *model.ServiceBrokerError) {
 	var deployment *model.ServiceDeployment
 	var exists bool
+	if _, bindingExists := (*bindingService.bindingInstances)[*bindingID]; !bindingExists {
+		log.Println("binding does not exist, now checking deleted bindings")
+		operation, bindingDeleted := (*bindingService).lastOperationOfDeletedBinding[*bindingID]
+		if bindingDeleted {
+			var responseDescription *string
+			if bindingService.settings.BindingSettings.ReturnDescriptionLastOperation {
+				description := "Default description"
+				responseDescription = &description
+			}
+			if *operation.Async() {
+				pollResponse := model.InstanceOperationPollResponse{
+					State:       *operation.State(),
+					Description: responseDescription,
+				}
+				//ALWAYS RETURN 410 IF ASYNC DELETION OR ONLY IF OPERATION STATE == "succeeded" (OR != "in progress") ????!!!!
+				return 410, &pollResponse, nil
+			} else {
+				/*
+					CORRECT BEHAVIOUR ???!!!
+					ALWAYS RETURN FAILED BECAUSE THE DELETION WAS NOT CALLED ASYNC???!
+					COULD THIS MEAN THAT ADDING A NEW OPERATION WHEN AN ENDPOINT IS CALLED IS NOT NEEDED????!!!
+					CHECK!!!
+				*/
+				pollResponse := model.InstanceOperationPollResponse{
+					State:       "failed",
+					Description: responseDescription,
+				}
+				return 200, &pollResponse, nil
+			}
+		}
+	} else {
+		log.Println((*bindingService.bindingInstances)[*bindingID])
+	}
 	deployment, exists = (*bindingService.serviceInstances)[*instanceID]
 	if !exists {
 		return 404, nil, &model.ServiceBrokerError{
@@ -256,6 +289,12 @@ func (bindingService *BindingService) PollOperationState(instanceID *string, bin
 		}
 	} else {
 		operation = binding.GetLastOperation()
+		if bindingService.settings.BindingSettings.ReturnOperationIfAsync && *operation.Async() {
+			return 400, nil, &model.ServiceBrokerError{
+				Error:       "MissingOperation",
+				Description: "The last operation requires an operation value!",
+			}
+		}
 		// to do: create response from operation fields ;)
 	}
 
@@ -286,7 +325,7 @@ func (bindingService *BindingService) Unbind(deleteRequest *model.DeleteRequest,
 	var exists bool
 	deployment, exists = (*bindingService.serviceInstances)[*instanceID]
 	if !exists {
-		return 404, nil, &model.ServiceBrokerError{
+		return 410, nil, &model.ServiceBrokerError{
 			Error:       "NotFound",
 			Description: "given instance_id was not found",
 		}
@@ -316,20 +355,31 @@ func (bindingService *BindingService) Unbind(deleteRequest *model.DeleteRequest,
 	//CRITICAL STUFF REMOVED HERE????!!!
 	//do stuff...
 	//remove from binding map
-	deployment.RemoveBinding(bindingID)
-	delete(*bindingService.bindingInstances, *bindingID)
+	var operationID *string
+	if !*requestSettings.FailAtOperation { //not fail = success lol
+		deployment.RemoveBinding(bindingID)
+		delete(*bindingService.bindingInstances, *bindingID)
+		operationID = binding.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, requestSettings.FailAtOperation, nil,
+			nil, &bindingService.lastOperationOfDeletedBinding, bindingID)
+	} else {
+		operationID = binding.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, requestSettings.FailAtOperation, nil,
+			nil, nil, nil)
+	}
+
 	//(*bindingService.bindingInstances)[*bindingID] = nil
 
 	//add operation to graveyard - done by adding parameter to DoOperation
-	async := false
+	/*async := false
 	if requestSettings.AsyncEndpoint != nil {
 		async = *requestSettings.AsyncEndpoint
 	}
-	shouldFail := false
+
+	*/
+	//shouldFail := false
 	//bindingService.lastOperationOfDeletedBinding[*bindingID] =
-	operationID := binding.DoOperation(async, *requestSettings.SecondsToComplete, &shouldFail, nil, nil, &bindingService.lastOperationOfDeletedBinding)
+
+	var response string
 	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint == true {
-		var response string
 		if bindingService.settings.BindingSettings.ReturnOperationIfAsync {
 			response = *operationID
 			//this is still ok, the response in the binding is only used when not async created or when fetched
@@ -345,10 +395,10 @@ func (bindingService *BindingService) Unbind(deleteRequest *model.DeleteRequest,
 		key = serviceID/bindingID, value = LAST operation
 		saves the LAST operation which is caused by the deletion
 		poll operation. binding not found in map of bindings? look in graveyard:
-		operation.async -> return 410 gone
-		!operation.async -> return operation (with state = failed. this represents the creation/rotation)
+		operation.async -> return 410 gone operation
+		!operation.async -> return 200 ok operation (with state = failed. this represents the creation/rotation)
 	*/
-	response := "{}"
+	response = "{}"
 	return 200, &response, nil
 }
 

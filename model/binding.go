@@ -108,7 +108,8 @@ func NewServiceBinding(bindingID *string, bindingRequest *CreateBindingRequest, 
 	var requestSettings *RequestSettings
 	requestSettings, _ = GetRequestSettings(bindingRequest.Parameters)
 	shouldFail := false
-	operationID := serviceBinding.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, &shouldFail, nil, nil, nil)
+	operationID := serviceBinding.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete,
+		&shouldFail, nil, nil, nil, nil)
 	return &serviceBinding, operationID
 }
 
@@ -134,19 +135,21 @@ func (serviceBinding *ServiceBinding) RotateBinding(rotateBindingRequest *Rotate
 	var requestSettings *RequestSettings
 	requestSettings, _ = GetRequestSettings(rotateBindingRequest.Parameters)
 	shouldFail := false
-	operationID := newServiceBinding.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, &shouldFail, nil, nil, nil)
+	operationID := newServiceBinding.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete,
+		&shouldFail, nil, nil, nil, nil)
 	return &newServiceBinding, operationID
 }
 
-func (serviceBinding *ServiceBinding) DoOperation(async bool, duration int, shouldFail *bool, updateRepeatable *bool, deploymentUsable *bool, lastOperationDeletedBinding *map[string]*Operation) *string {
+func (serviceBinding *ServiceBinding) DoOperation(async bool, duration int, shouldFail *bool, updateRepeatable *bool,
+	deploymentUsable *bool, lastOperationOfDeletedInstance *map[string]*Operation, id *string) *string {
 	serviceBinding.doOperationChan <- 1
 	operationID := "task_" + strconv.Itoa(serviceBinding.nextOperationNumber)
 	//serviceBinding.updatingOperations[operationID] = true
 	//deploymentUsable not needed as the binding will always be "usable"???
 	//updateRepeatable also not needed as bindings operations don't have a field update_repeatable
 	operation := NewOperation(operationID, float64(duration), *shouldFail, nil, nil, async)
-	if lastOperationDeletedBinding != nil {
-		(*lastOperationDeletedBinding)[operationID] = operation
+	if lastOperationOfDeletedInstance != nil && id != nil {
+		(*lastOperationOfDeletedInstance)[*id] = operation
 	}
 	serviceBinding.lastOperation = operation
 	serviceBinding.operations[operationID] = operation

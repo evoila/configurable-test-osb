@@ -10,16 +10,18 @@ import (
 type DeploymentService struct {
 	catalog *model.Catalog
 	//pointer to settings?
-	serviceInstances *map[string]*model.ServiceDeployment
-	settings         *model.Settings
+	serviceInstances               *map[string]*model.ServiceDeployment
+	settings                       *model.Settings
+	lastOperationOfDeletedInstance map[string]*model.Operation
 }
 
 func NewDeploymentService(catalog *model.Catalog, serviceInstances *map[string]*model.ServiceDeployment,
 	settings *model.Settings) *DeploymentService {
 	return &DeploymentService{
-		catalog:          catalog,
-		serviceInstances: serviceInstances,
-		settings:         settings,
+		catalog:                        catalog,
+		serviceInstances:               serviceInstances,
+		settings:                       settings,
+		lastOperationOfDeletedInstance: make(map[string]*model.Operation),
 	}
 }
 
@@ -358,10 +360,43 @@ func (deploymentService *DeploymentService) PollOperationState(instanceID *strin
 	var exists bool
 	deployment, exists = (*deploymentService.serviceInstances)[*instanceID]
 	if !exists {
-		return 404, nil, &model.ServiceBrokerError{
-			Error:       "NotFound",
-			Description: "given instance_id was not found",
+		log.Println("deployment does not exist, now checking deprovisioned service instances")
+		log.Println("list of deleted instances")
+		log.Println(deploymentService.lastOperationOfDeletedInstance)
+		operation, instanceDeleted := (*deploymentService).lastOperationOfDeletedInstance[*instanceID]
+		if instanceDeleted {
+			var responseDescription *string
+			if deploymentService.settings.PollInstanceOperationSettings.DescriptionInResponse { //bindingService.settings.BindingSettings.ReturnDescriptionLastOperation {
+				description := "Default description"
+				responseDescription = &description
+			}
+			if *operation.Async() {
+				pollResponse := model.InstanceOperationPollResponse{
+					State:       *operation.State(),
+					Description: responseDescription,
+				}
+				//ALWAYS RETURN 410 IF ASYNC DELETION OR ONLY IF OPERATION STATE == "succeeded" (OR != "in progress") ????!!!!
+				return 410, &pollResponse, nil
+			} else {
+				/*
+					CORRECT BEHAVIOUR ???!!!
+					ALWAYS RETURN FAILED BECAUSE THE DELETION WAS NOT CALLED ASYNC???!
+					COULD THIS MEAN THAT ADDING A NEW OPERATION WHEN AN ENDPOINT IS CALLED IS NOT NEEDED????!!!
+					CHECK!!!
+				*/
+				pollResponse := model.InstanceOperationPollResponse{
+					State:       "failed",
+					Description: responseDescription,
+				}
+				return 200, &pollResponse, nil
+			}
+		} else {
+			return 404, nil, &model.ServiceBrokerError{
+				Error:       "NotFound",
+				Description: "given instance_id was not found",
+			}
 		}
+
 	}
 	//log.Println(*serviceID)
 	//log.Println(serviceID)
@@ -390,7 +425,12 @@ func (deploymentService *DeploymentService) PollOperationState(instanceID *strin
 		}
 	} else {
 		operation = deployment.GetLastOperation()
-		// to do: create response from operation fields ;)
+		if deploymentService.settings.ProvisionSettings.ShowOperation && *operation.Async() {
+			return 400, nil, &model.ServiceBrokerError{
+				Error:       "MissingOperation",
+				Description: "The last operation requires an operation value!",
+			}
+		}
 	}
 	//var pollResponse model.InstanceOperationPollResponse
 	var responseDescription *string
@@ -410,6 +450,61 @@ func (deploymentService *DeploymentService) PollOperationState(instanceID *strin
 	}
 
 	return statusCode, &pollResponse, nil
+}
+
+func (deploymentService *DeploymentService) Delete(deleteRequest *model.DeleteRequest, instanceID *string,
+	serviceID *string, planID *string) (int, *string, *model.ServiceBrokerError) {
+	var requestSettings *model.RequestSettings
+	requestSettings, _ = model.GetRequestSettings(deleteRequest.Parameters)
+	var deployment *model.ServiceDeployment
+	var exists bool
+	deployment, exists = (*deploymentService.serviceInstances)[*instanceID]
+	if !exists {
+		return 410, nil, &model.ServiceBrokerError{
+			Error:       "NotFound",
+			Description: "given instance_id was not found",
+		}
+	}
+	if serviceID != nil && *serviceID != deployment.ServiceID() {
+		log.Println("Service id of request: " + *serviceID)
+		log.Println("Service id of instance: " + deployment.ServiceID())
+		return 400, nil, &model.ServiceBrokerError{
+			Error:       "ServiceIDMatch",
+			Description: "The given service_id does not match the service_id of the instance",
+		}
+	}
+	if planID != nil && *planID != deployment.PlanID() {
+		return 400, nil, &model.ServiceBrokerError{
+			Error:       "PlanIDMatch",
+			Description: "The given plan_id does not match the plan_id of the instance",
+		}
+	}
+	if !deploymentService.settings.ProvisionSettings.AllowDeprovisionWithBindings && deployment.AmountOfBindings() > 0 {
+		return 400, nil, &model.ServiceBrokerError{
+			Error:       "BlockedByBinding",
+			Description: "Deprovision failed because deployment has bindings. Please delete those first or change \"allow_deprovision_with_bindings\" to true",
+		}
+	}
+	var operationID *string
+	if !*requestSettings.FailAtOperation {
+		delete(*deploymentService.serviceInstances, *instanceID)
+		operationID = deployment.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete,
+			requestSettings.FailAtOperation, nil, requestSettings.InstanceUsableAfterFail, &deploymentService.lastOperationOfDeletedInstance, instanceID)
+	} else {
+		operationID = deployment.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete,
+			requestSettings.FailAtOperation, nil, requestSettings.InstanceUsableAfterFail, nil, nil)
+	}
+	var response string
+	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint == true {
+
+		if deploymentService.settings.ProvisionSettings.ReturnOperationIfAsync {
+			response = *operationID
+			//this is still ok, the response in the binding is only used when not async created or when fetched
+		}
+		return 202, &response, nil
+	}
+	response = "{}"
+	return 200, &response, nil
 }
 
 //does not work atm

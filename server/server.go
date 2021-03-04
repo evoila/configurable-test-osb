@@ -97,6 +97,8 @@ func Run() {
 			//Unbinding
 			r.DELETE("/v2/service_instances/:instance_id/service_bindings/:binding_id", bindingController.Unbind)
 
+			//Deprovisioning
+			r.DELETE("/v2/service_instances/:instance_id", deploymentController.Delete)
 			//Request (rotating service binding)
 			//r.PUT("/v2/service_instances/:instance_id/service_bindings/:binding_id", bindingController.RotateBinding)
 			//Replace when new controllers are implemented?
@@ -114,11 +116,7 @@ func Run() {
 
 
 
-								//Unbinding
-								r.DELETE("/v2/service_instances/:instance_id/service_bindings/:binding_id", testController.Unbind)
 
-								//Deprovisioning
-								r.DELETE("/v2/service_instances/:instance_id", testController.Deprovide)
 			*/
 			//Generating new random catalog from catalogSettings.json
 			//r.GET("/generate_catalog", testController.GenerateCatalog)

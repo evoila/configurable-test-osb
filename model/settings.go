@@ -26,15 +26,16 @@ type GeneralSettings struct {
 }
 
 type ProvisionSettings struct {
-	StatusCodeOK     bool `json:"status_code_ok" binding:"required"`
-	Async            bool `json:"async" binding:"required"`
-	DashboardURL     bool `json:"dashboard_url" binding:"required"`
-	Operation        bool `json:"operation" binding:"required"`
-	Metadata         bool `json:"metadata" binding:"required"`
-	SecondsToFinish  int  `json:"seconds_to_finish" binding:"required"`
-	ShowDashboardURL bool `json:"show_dashboard_url" binding:"required"`
-	ShowOperation    bool `json:"show_operation" binding:"required"`
-	ShowMetadata     bool `json:"show_metadata" binding:"required"`
+	StatusCodeOK                 bool `json:"status_code_ok" binding:"required"`
+	Async                        bool `json:"async" binding:"required"`
+	DashboardURL                 bool `json:"dashboard_url" binding:"required"`
+	ReturnOperationIfAsync       bool `json:"return_operation_if_async" binding:"required"`
+	Metadata                     bool `json:"metadata" binding:"required"`
+	SecondsToFinish              int  `json:"seconds_to_finish" binding:"required"`
+	ShowDashboardURL             bool `json:"show_dashboard_url" binding:"required"`
+	ShowOperation                bool `json:"show_operation" binding:"required"`
+	ShowMetadata                 bool `json:"show_metadata" binding:"required"`
+	AllowDeprovisionWithBindings bool `json:"allow_deprovision_with_bindings" binding:"required"`
 }
 
 type FetchServiceInstanceSettings struct {
