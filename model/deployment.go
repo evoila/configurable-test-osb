@@ -1,7 +1,6 @@
 package model
 
 import (
-	"fmt"
 	"github.com/MaxFuhrich/serviceBrokerDummy/generator"
 	"log"
 	"strconv"
@@ -9,20 +8,15 @@ import (
 )
 
 type ServiceDeployment struct {
-	serviceID     string
-	planID        string
-	instanceID    string
-	parameters    *interface{}
-	dashboardURL  *string
-	metadata      *ServiceInstanceMetadata
-	bindings      map[string]*ServiceBinding
-	lastOperation *Operation
-	operations    map[string]*Operation
-	/*
-		Alternative solution ???
-		requestIDToOperation map[string]map[string]*Operation?? Seems too sketchy/too much???
-		originIDToOperation instead/too???
-	*/
+	serviceID            string
+	planID               string
+	instanceID           string
+	parameters           *interface{}
+	dashboardURL         *string
+	metadata             *ServiceInstanceMetadata
+	bindings             map[string]*ServiceBinding
+	lastOperation        *Operation
+	operations           map[string]*Operation
 	requestIDToOperation map[string]*Operation
 	nextOperationNumber  int
 
@@ -31,6 +25,7 @@ type ServiceDeployment struct {
 	state string
 	//and
 	//this to indicate if update running
+	//CHANGE TYPE ?! LOOK DOWN FURTHER FOR MORE INFORMATION
 	updatingOperations map[string]bool //if an operation is updating the instance, its name is in this string, otherwise nil
 	/*
 		if fetching instance and updatingOperation != nil: get the state of the ReturnOperationIfAsync (by using the name from updatingOperation)
@@ -44,7 +39,6 @@ type ServiceDeployment struct {
 	spaceID                  *string
 	doOperationChan          chan int
 	deploymentUsable         bool
-	//lastOperation
 }
 
 func (serviceDeployment *ServiceDeployment) DeploymentUsable() bool {
@@ -91,15 +85,6 @@ func (serviceDeployment *ServiceDeployment) LastOperationID() *string {
 	return serviceDeployment.lastOperation.Name()
 }
 
-/*var nextOperationNumber chan int
-
-func init() {
-	nextOperationNumber = make(chan int, 1)
-	log.Println("before sending to channel")
-	nextOperationNumber <- 0
-	log.Println("after sending to channel")
-}*/
-
 func (serviceDeployment *ServiceDeployment) Parameters() *interface{} {
 	if serviceDeployment.parameters == nil {
 		return nil
@@ -108,17 +93,14 @@ func (serviceDeployment *ServiceDeployment) Parameters() *interface{} {
 }
 func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceInstanceRequest, settings *Settings) (*ServiceDeployment, *string) {
 	serviceDeployment := ServiceDeployment{
-		serviceID:      provisionRequest.ServiceID,
-		planID:         provisionRequest.PlanID,
-		instanceID:     instanceID,
-		parameters:     provisionRequest.Parameters,
-		organizationID: &provisionRequest.OrganizationGUID,
-		spaceID:        &provisionRequest.SpaceGUID,
-		bindings:       make(map[string]*ServiceBinding),
-		operations:     make(map[string]*Operation),
-		//async:                    async,
-		//secondsToFinishOperation: settings.ProvisionSettings.SecondsToFinish,
-		//lastOperation: "task_0",
+		serviceID:           provisionRequest.ServiceID,
+		planID:              provisionRequest.PlanID,
+		instanceID:          instanceID,
+		parameters:          provisionRequest.Parameters,
+		organizationID:      &provisionRequest.OrganizationGUID,
+		spaceID:             &provisionRequest.SpaceGUID,
+		bindings:            make(map[string]*ServiceBinding),
+		operations:          make(map[string]*Operation),
 		nextOperationNumber: 0,
 		updatingOperations:  make(map[string]bool),
 		doOperationChan:     make(chan int, 1),
@@ -126,19 +108,6 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 	}
 	var requestSettings *RequestSettings
 	requestSettings, _ = GetRequestSettings(provisionRequest.Parameters)
-
-	/*var opNumber int
-	opNumber = <-nextOperationNumber
-	serviceDeployment.lastOperation = "task_" + strconv.Itoa(opNumber)
-	nextOperationNumber <- opNumber + 1
-
-	*/
-	//CHECK IF OPERATION SHOULD BE ALSO DONE WITH SYNC!!! PROBABLY?!
-	/*if !(!settings.ProvisionSettings.Async && !settings.ProvisionSettings.ReturnOperationIfAsync) {
-		serviceDeployment.DoOperation(settings.ProvisionSettings.SecondsToFinish)
-	}
-
-	*/
 	if settings.ProvisionSettings.DashboardURL {
 		serviceDeployment.buildDashboardURL()
 	}
@@ -152,41 +121,10 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 			},
 		}
 	}
-
-	/*if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint { //settings.ProvisionSettings.Async {
-		//in progress here or in deploy()? if it's here then the service will safely have a state when returned
-		//operation := NewOperation()
-		//serviceDeployment.state = "in progress"
-		//go serviceDeployment.deploy(settings.ProvisionSettings.SecondsToFinish)
-		//provisioning "never" fails / is not specified in the specs???
-		serviceDeployment.DoOperation(*requestSettings.SecondsToComplete, false, nil)
-	} else {
-		//provisioning "never" fails / is not specified in the specs?
-		serviceDeployment.DoOperation(*requestSettings.SecondsToComplete, false, nil)
-		//hier einfach sleepen bevor returned wird??????
-	}
-
-	*/
-	shouldFail := false
 	operationID := serviceDeployment.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete,
-		&shouldFail, nil, nil, nil, nil)
-	log.Println("here comes the deployment")
-	log.Println(serviceDeployment)
-	log.Println(*serviceDeployment.dashboardURL)
-	//ATTENTION?!
-	//WRITE HERE IN CHANNEL FROM WHICH WILL BE CONSUMED WHEN DELETING???
-	//ATTENTION?!
-	//DOES DELETING NEED TO BLOCKED? PROBABLY YES, BECAUSE INSTANCE ID IS KNOWN BY PLATFORM (PLATFORM PROVIDES ID)
+		requestSettings.FailAtOperation, nil, nil, nil, nil)
 	return &serviceDeployment, operationID
 }
-
-//check return types
-/*
-func (serviceDeployment *ServiceDeployment) GetStateOfOperation() string {
-
-}
-
-*/
 
 func (serviceDeployment *ServiceDeployment) Update(updateServiceInstanceRequest *UpdateServiceInstanceRequest,
 	settings *Settings) (*string, *ServiceBrokerError) { //}, requestSettings *RequestSettings)  {
@@ -202,51 +140,35 @@ func (serviceDeployment *ServiceDeployment) Update(updateServiceInstanceRequest 
 
 	*/
 
-	//could also be passed instead
 	requestSettings, _ := GetRequestSettings(updateServiceInstanceRequest.Parameters)
-	//make use of context or ignore????
 	//change ONLY parameters and planid???
 	if !*requestSettings.FailAtOperation {
 		if updateServiceInstanceRequest.PlanId != nil {
-			fmt.Println("plan id prior to update: " + serviceDeployment.planID)
 			serviceDeployment.planID = *updateServiceInstanceRequest.PlanId
-			fmt.Println("plan id after update: " + serviceDeployment.planID)
 		}
 		if updateServiceInstanceRequest.Parameters != nil {
-			log.Println("trying to change parameters, old :")
-			log.Println(serviceDeployment.parameters)
-			//oldParam :=
 			serviceDeployment.parameters = updateServiceInstanceRequest.Parameters
-			log.Println("new: ")
-			log.Println(serviceDeployment.parameters)
 		}
 	}
 
 	operationID := serviceDeployment.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete,
 		requestSettings.FailAtOperation, requestSettings.UpdateRepeatableAfterFail,
 		requestSettings.InstanceUsableAfterFail, nil, nil)
-	//setting updatingOperaton field to indicate ongoing update
-	//serviceDeployment.updatingOperations[*operationID] = true
-	//serviceDeployment.updatingOperation = operationID
 	return operationID, nil
 }
 
-/*func (serviceDeployment *ServiceDeployment) deploy(seconds int) {
-
-		77milliSecondsToFinishOperation warten, dann state auf succeeded
-
-	time.Sleep(time.duration(seconds) * time.Second)
-	serviceDeployment.state = "succeeded"
-}*/
-
 func (serviceDeployment *ServiceDeployment) UpdatesRunning() bool {
-	//will entry be removed if value is set to false? how fast will this use up memory if not???
+	/*
+		entry will now be removed if state != progressing
+		-> true false check not necessary? only look, if entry in slice (instead of a map)???
+		OR: change updatingoperations to map[string]*Operation???!!! this sounds good
+	*/
 	for operationName, running := range serviceDeployment.updatingOperations {
 		if running {
-			//state := serviceDeployment.operations[operationName].State()
-			if *serviceDeployment.operations[operationName].State() == PROGRESSING {
+			if serviceDeployment.operations[operationName] != nil && *serviceDeployment.operations[operationName].State() == PROGRESSING {
 				return true
 			}
+			delete(serviceDeployment.updatingOperations, operationName)
 			serviceDeployment.updatingOperations[operationName] = false
 
 		}
@@ -266,22 +188,15 @@ func (serviceDeployment *ServiceDeployment) DoOperation(async bool, duration int
 	}
 	serviceDeployment.lastOperation = operation
 	serviceDeployment.operations[operationID] = operation
-	serviceDeployment.nextOperationNumber++ // = serviceDeployment.nextOperationNumber + 1
+	serviceDeployment.nextOperationNumber++
 	<-serviceDeployment.doOperationChan
-	//WAIT HERE IF !ASYNC???!
 	if !async {
-		//CHECK=!
 		time.Sleep(time.Duration(duration) * time.Second)
 	}
 	if deploymentUsable != nil && *shouldFail && !*deploymentUsable {
 		serviceDeployment.deploymentUsable = *deploymentUsable
 	}
-	//async check necessary??? checking now somewhere else if async (and therefore if operationID should be in response)
 	return &operationID
-	//fmt.Println(serviceDeployment.operations)
-	/*operation := "task_" + strconv.Itoa(serviceDeployment.nextOperationNumber)
-	serviceDeployment.lastOperation = &operation
-	serviceDeployment.nextOperationNumber++*/
 }
 
 func (serviceDeployment *ServiceDeployment) AddBinding(serviceBinding *ServiceBinding) {
@@ -293,14 +208,12 @@ func (serviceDeployment *ServiceDeployment) AddBinding(serviceBinding *ServiceBi
 }
 
 func (serviceDeployment *ServiceDeployment) GetBinding(bindingID *string) (*ServiceBinding, bool) {
-	//(*bindingService.serviceInstances)[*instanceID]
 	serviceBinding, exists := (serviceDeployment.bindings)[*bindingID]
 	return serviceBinding, exists
 }
 
 func (serviceDeployment *ServiceDeployment) RemoveBinding(bindingID *string) {
 	delete(serviceDeployment.bindings, *bindingID)
-	//serviceDeployment.bindings[*bindingID] = nil
 }
 
 func (serviceDeployment *ServiceDeployment) AmountOfBindings() int {

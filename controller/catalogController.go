@@ -1,13 +1,10 @@
 package controller
 
 import (
-	"encoding/json"
 	"github.com/MaxFuhrich/serviceBrokerDummy/model"
 	"github.com/MaxFuhrich/serviceBrokerDummy/service"
 	"github.com/gin-gonic/gin"
-	"io/ioutil"
 	"net/http"
-	"os"
 )
 
 type CatalogController struct {
@@ -27,10 +24,12 @@ func (catalogController *CatalogController) GetCatalog(context *gin.Context) {
 }
 
 func (catalogController *CatalogController) GenerateCatalog(context *gin.Context) {
-	s, _ := os.Open("config/catalogSettings.json")
-	byteVal, _ := ioutil.ReadAll(s)
-	var settings model.CatalogSettings
-	_ = json.Unmarshal(byteVal, &settings)
-	catalog, _ := model.NewCatalog(&settings)
+	settings, err := model.NewCatalogSettings()
+	if err != nil {
+		context.JSON(500, err)
+		return
+	}
+	catalog, _ := model.NewCatalog(settings)
+
 	context.JSON(http.StatusOK, catalog)
 }

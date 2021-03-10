@@ -3,13 +3,8 @@ package model
 import "github.com/MaxFuhrich/serviceBrokerDummy/generator"
 
 type DashboardClient struct {
-	//*The id of the OAuth client that the dashboard will use. If present, MUST be a non-empty string.
-	Id string `json:"id"`
-
-	//*A secret for the dashboard client. If present, MUST be a non-empty string.
-	Secret string `json:"secret"`
-
-	//A URI for the service dashboard. Validated by the OAuth token server when the dashboard requests a token.
+	Id          string  `json:"id"`
+	Secret      string  `json:"secret"`
 	RedirectUri *string `json:"redirect_uri,omitempty"`
 }
 

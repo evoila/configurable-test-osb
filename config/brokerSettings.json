@@ -35,7 +35,8 @@
     "show_metadata": true
   },
   "poll_instance_operation_settings": {
-    "description_in_response": true
+    "description_in_response": true,
+    "retry_poll_instance_operation_after_seconds": 0
   },
   "binding_settings":{
     "return_binding_information_once": false,
@@ -59,7 +60,8 @@
     },
     "return_parameters": true,
     "status_code_ok": true,
-    "return_description_last_operation": true
+    "return_description_last_operation": true,
+    "retry_poll_binding_operation_after_seconds": 0
   },
   "milliseconds_to_update": 500
 }

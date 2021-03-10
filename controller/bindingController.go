@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"log"
 	"net/http"
+	"time"
 )
 
 type BindingController struct {
@@ -23,6 +24,13 @@ func NewBindingController(bindingService *service.BindingService, settings *mode
 
 func (bindingController *BindingController) CreateBinding(context *gin.Context) {
 	instanceID := context.Param("instance_id")
+	if instanceID == "" {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"message": "error while parsing url parameter \"instance_id\"",
+			"error":   "invalid value, value must not be \"\" and unique",
+		})
+		return
+	}
 	bindingID := context.Param("binding_id")
 	if bindingID == "" {
 		context.JSON(http.StatusBadRequest, gin.H{
@@ -41,21 +49,8 @@ func (bindingController *BindingController) CreateBinding(context *gin.Context) 
 	}
 	var bindingRequest model.CreateBindingRequest
 	if err := context.ShouldBindBodyWith(&bindingRequest, binding.JSON); err != nil {
-		log.Println("err was != nil")
-		log.Println(err.Error())
-		/*err = context.ShouldBindJSON(&bindingRequest)
-		body := context.Request.Body
-		b
-		log.Println(err.Error())
-
-		*/
+		//checking, if the request was a binding request and if so, rotate the bindings
 		bindingController.rotateBinding(context)
-		/*context.JSON(http.StatusBadRequest, gin.H{
-			"message": "error while binding request body to struct",
-			"error":   err.Error(),
-		})
-
-		*/
 		return
 	}
 	var requestSettings *model.RequestSettings
@@ -157,9 +152,6 @@ func (bindingController *BindingController) PollOperationState(context *gin.Cont
 			log.Printf("service_id assigned valueServiceID: %v\n", *serviceID)
 		}
 	}
-	//*serviceID = context.Query("service_id")
-
-	//planID := context.Query("plan_id")
 	var planID *string
 	valuePlanID, exists := context.GetQuery("plan_id")
 	if exists {
@@ -189,6 +181,10 @@ func (bindingController *BindingController) PollOperationState(context *gin.Cont
 		context.JSON(statusCode, err)
 		return
 	}
+	if response.State == model.PROGRESSING && bindingController.settings.BindingSettings.RetryPollBindingOperationAfterSeconds > 0 {
+		retryAfter := time.Second * time.Duration(bindingController.settings.BindingSettings.RetryPollBindingOperationAfterSeconds)
+		context.Header("Retry-After", retryAfter.String())
+	}
 	context.JSON(statusCode, response)
 }
 
@@ -196,7 +192,6 @@ func (bindingController *BindingController) Unbind(context *gin.Context) {
 	instanceID := context.Param("instance_id")
 	bindingID := context.Param("binding_id")
 
-	//var serviceID *string
 	serviceOfferingID, exists := context.GetQuery("service_id")
 	if !exists {
 		context.JSON(http.StatusBadRequest, model.ServiceBrokerError{

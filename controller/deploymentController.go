@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 	"log"
 	"net/http"
+	"time"
 )
 
 type DeploymentController struct {
@@ -14,6 +15,8 @@ type DeploymentController struct {
 	deploymentService *service.DeploymentService
 }
 
+//NewDeploymentController is the constructor for the struct DeploymentController which ensures, that the
+//DeploymentController has access to the settings and the DeploymentService
 func NewDeploymentController(deploymentService *service.DeploymentService, settings *model.Settings) *DeploymentController {
 	return &DeploymentController{
 		settings:          settings,
@@ -21,17 +24,19 @@ func NewDeploymentController(deploymentService *service.DeploymentService, setti
 	}
 }
 
+//deploymentController.Provision is the handler for the "PUT /v2/service_instances/:instance_id" endpoint
+//The request is bound here, checked if required parameters are empty and. checked if async is required. The request
+//will then be passed to deployment.ProvideService(provisionRequest *model.ProvideServiceInstanceRequest,
+//instanceID *string) which deploys the service and returns a response, which is used by deploymentController.Provision
 func (deploymentController *DeploymentController) Provision(context *gin.Context) {
-	var provisionRequest model.ProvideServiceInstanceRequest
-	if err := context.ShouldBindJSON(&provisionRequest); err != nil {
+	instanceID := context.Param("instance_id")
+	if instanceID == "" {
 		context.JSON(http.StatusBadRequest, gin.H{
-			"message": "error while binding request body to struct",
-			"error":   err.Error(),
+			"message": "error while parsing url parameter \"instance_id\"",
+			"error":   "invalid value, value must not be \"\" and unique",
 		})
 		return
 	}
-	var requestSettings *model.RequestSettings
-	requestSettings, _ = model.GetRequestSettings(provisionRequest.Parameters)
 	acceptsIncomplete := context.DefaultQuery("accepts_incomplete", "false")
 	if acceptsIncomplete != "false" && acceptsIncomplete != "true" {
 		context.JSON(http.StatusBadRequest, gin.H{
@@ -43,6 +48,16 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 		})
 		return
 	}
+	var provisionRequest model.ProvideServiceInstanceRequest
+	if err := context.ShouldBindJSON(&provisionRequest); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"message": "error while binding request body to struct",
+			"error":   err.Error(),
+		})
+		return
+	}
+	var requestSettings *model.RequestSettings
+	requestSettings, _ = model.GetRequestSettings(provisionRequest.Parameters)
 
 	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint && acceptsIncomplete == "false" {
 		context.JSON(422, &model.ServiceBrokerError{
@@ -52,7 +67,6 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 		return
 	}
 
-	instanceID := context.Param("instance_id")
 	if provisionRequest.OrganizationGUID == "" {
 		context.JSON(http.StatusBadRequest, &model.ServiceBrokerError{
 			Error:       "EmptyOrganizationGUID",
@@ -68,7 +82,7 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 		return
 	}
 
-	statusCode, response, err := deploymentController.deploymentService.ProvideService(&provisionRequest, &instanceID) //accepts_incomplete used to be here but is not needed
+	statusCode, response, err := deploymentController.deploymentService.ProvideService(&provisionRequest, &instanceID)
 	if err != nil {
 		context.JSON(statusCode, err)
 		return
@@ -90,9 +104,6 @@ func (deploymentController *DeploymentController) FetchServiceInstance(context *
 			serviceID = &value
 		}
 	}
-	//*serviceID = context.Query("service_id")
-
-	//planID := context.Query("plan_id")
 	var planID *string
 	value, exists = context.GetQuery("plan_id")
 	if exists {
@@ -176,9 +187,6 @@ func (deploymentController *DeploymentController) PollOperationState(context *gi
 			log.Printf("service_id assigned valueServiceID: %v\n", *serviceID)
 		}
 	}
-	//*serviceID = context.Query("service_id")
-
-	//planID := context.Query("plan_id")
 	var planID *string
 	valuePlanID, exists := context.GetQuery("plan_id")
 	if exists {
@@ -203,20 +211,20 @@ func (deploymentController *DeploymentController) PollOperationState(context *gi
 			operation = &valueOperation
 		}
 	}
-	//log.Printf("service_id valueServiceID right before passing to poll operation: %v\n", *serviceID)
 	statusCode, response, err := deploymentController.deploymentService.PollOperationState(&instanceID, serviceID, planID, operation)
 	if err != nil {
 		context.JSON(statusCode, err)
 		return
 	}
+	if response.State == model.PROGRESSING && deploymentController.settings.PollInstanceOperationSettings.RetryPollInstanceOperationAfterSeconds > 0 {
+		retryAfter := time.Second * time.Duration(deploymentController.settings.PollInstanceOperationSettings.RetryPollInstanceOperationAfterSeconds)
+		context.Header("Retry-After", retryAfter.String())
+	}
 	context.JSON(statusCode, response)
-	//deploymentController.bindingService.UpdateServiceInstance(&updateRequest, &instanceID, header.RequestID)
 }
 
 func (deploymentController *DeploymentController) Delete(context *gin.Context) {
 	instanceID := context.Param("instance_id")
-
-	//var serviceID *string
 	serviceOfferingID, exists := context.GetQuery("service_id")
 	if !exists {
 		context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
@@ -260,13 +268,11 @@ func (deploymentController *DeploymentController) Delete(context *gin.Context) {
 	context.JSON(statusCode, response)
 }
 
-//BONUS, DOES NOT WORK ATM
+//BONUS
 func (deploymentController *DeploymentController) CurrentServiceInstances(context *gin.Context) {
 	resp := struct {
 		Instances *map[string]*model.ServiceDeployment `json:"instances"`
 	}{}
 	resp.Instances = deploymentController.deploymentService.CurrentServiceInstances()
-	//this won't show the fields inside a service instance, since it fields are not public (and not annotated)
-	//only the names (with empty values) will be shown
 	context.JSON(200, resp)
 }

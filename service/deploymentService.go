@@ -28,16 +28,8 @@ func NewDeploymentService(catalog *model.Catalog, serviceInstances *map[string]*
 func (deploymentService *DeploymentService) ProvideService(provisionRequest *model.ProvideServiceInstanceRequest,
 	instanceID *string) (int, *model.ProvideUpdateServiceInstanceResponse,
 	*model.ServiceBrokerError) {
-	//check: id already exists?
 	if deployment, exists := (*deploymentService.serviceInstances)[*instanceID]; exists == true {
 		if deploymentService.settings.ProvisionSettings.StatusCodeOK {
-			/*
-				log.Println("existing deployment")
-				log.Println(deployment)
-				log.Println("trying to print spaceID")
-				log.Println(deployment.SpaceID())
-
-			*/
 			if cmp.Equal(provisionRequest.Parameters, deployment.Parameters()) &&
 				deployment.ServiceID() == provisionRequest.ServiceID && deployment.PlanID() == provisionRequest.PlanID &&
 				*deployment.SpaceID() == provisionRequest.SpaceGUID &&
@@ -53,7 +45,6 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 		}
 	}
 
-	//check Service and Plan ID
 	serviceOffering, exists := deploymentService.catalog.GetServiceOfferingById(provisionRequest.ServiceID)
 	if !exists {
 		return 400, nil, &model.ServiceBrokerError{
@@ -68,15 +59,6 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 			Description: "The given plan_id does not exist for this service_id",
 		}
 	}
-	//Check
-
-	//s, _ := json.MarshalIndent(serviceOffering, "", "\t")
-	//log.Print(string(s))
-	//log.Println(servicePlan)
-	//s, _ = json.MarshalIndent(servicePlan, "", "\t")
-	//log.Print(string(s))
-
-	//NULL POINTER ERROR POSSIBLE???? IF YES, CHECK MAINTENANCE_INFO FIRST. NO, BECAUSE IT IS NOT A POINTER
 	if provisionRequest.MaintenanceInfo.Version != nil {
 		if servicePlan.MaintenanceInfo.Version == nil {
 			return 422, nil, &model.ServiceBrokerError{
@@ -94,66 +76,21 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 		}
 
 	}
-	/*if provisionRequest.MaintenanceInfo.Version != nil && servicePlan.MaintenanceInfo.Version != nil {
-		if *provisionRequest.MaintenanceInfo.Version != *servicePlan.MaintenanceInfo.Version {
-			log.Println(*provisionRequest.MaintenanceInfo.Version)
-			log.Println(*servicePlan.MaintenanceInfo.Version)
-			return 422, nil, &model.ServiceBrokerError{
-				Error:       "MaintenanceInfoConflict",
-				Description: model.MaintenanceInfoConflict,
-			}
-		}
-	}
-
-	*/
 	var requestSettings *model.RequestSettings
 	requestSettings, _ = model.GetRequestSettings(provisionRequest.Parameters)
-	//NEWLY ADDED
 	deployment, operationID := model.NewServiceDeployment(*instanceID, provisionRequest, deploymentService.settings)
+
 	(*deploymentService.serviceInstances)[*instanceID] = deployment
 	response := model.NewProvideServiceInstanceResponse(deployment.DashboardURL(),
 		operationID, deployment.Metadata(), deploymentService.settings)
-	//
 	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint == true {
-		/*
-			handled in controller
-			if !acceptsIncomplete {
-				return 422, nil, &model.ServiceBrokerError{
-					Error:       "AsyncRequired",
-					Description: "This Broker requires client support for asynchronous service operations.",
-				}
-			}
+		/*if *requestSettings.FailAtOperation {
+			remove deployment from map or leave it there (so that the platform has to deprovision it)?
+		}
 
 		*/
-		//pass whole request instead of only parmeters???
-		//var deployment *model.ServiceDeployment
-		//var operationID *string
-		//CREATE DEAPLOYMENT BEFORE IF REQUEST???!
-		/*ORIGINAL?!
-		deployment, operationID := model.NewServiceDeployment(*instanceID, provisionRequest, deploymentService.settings)
-		(*deploymentService.serviceInstances)[*instanceID] = deployment
-		response := model.NewProvideServiceInstanceResponse(deployment.DashboardURL(),
-			operationID, deployment.Metadata(), deploymentService.settings)
-		*/
-
 		return 202, response, nil
 	}
-	//wenn alles gut:
-	/* ORIGINAL?!
-	deployment, _ := model.NewServiceDeployment(*instanceID,
-		provisionRequest, deploymentService.settings)
-	(*deploymentService.serviceInstances)[*instanceID] = deployment
-
-	*/
-	/*log.Println("Current instances:")
-	log.Println(*deploymentService.serviceInstances)
-	marshalled, _ := json.Marshal(*deploymentService.serviceInstances)
-	log.Println(marshalled)*/
-	/* ORIGINAL?!
-	response := model.NewProvideServiceInstanceResponse(deployment.DashboardURL(),
-		deployment.LastOperationID(), deployment.Metadata(), deploymentService.settings)
-
-	*/
 	return 201, response, nil
 }
 
@@ -173,8 +110,6 @@ func (deploymentService *DeploymentService) FetchServiceInstance(instanceID *str
 			Description: "Service instances of this offering are not retrievable",
 		}
 	}
-	//if deploymentService.catalog.GetServiceOfferingById(deployment.ServiceID())
-	//if deployment.State() == "in progress" {
 	if deployment.UpdatesRunning() {
 		return 422, nil, &model.ServiceBrokerError{
 			Error:       "ConcurrencyError",
@@ -249,7 +184,6 @@ func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest 
 		RIGHT NOW THIS CHECK WILL BE DONE IF CONTEXT != NIL BUT SHOULD IT BE DONE ONLY IF OTHER FIELDS == NIL???
 	*/
 	serviceOffering, _ := deploymentService.catalog.GetServiceOfferingById(deployment.ServiceID())
-	//context given, offering has field AllowContextUpdates and is false
 	if updateRequest.Context != nil && serviceOffering.AllowContextUpdates != nil && !*serviceOffering.AllowContextUpdates {
 		return 400, nil, &model.ServiceBrokerError{
 			Error:       "InvalidData",
@@ -314,14 +248,9 @@ func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest 
 		}
 
 	}
-	//deploymentService.UpdateServiceInstance(updateRequest)
 	operationID, _ := deployment.Update(updateRequest, nil)
 	var updateServiceInstanceResponse model.ProvideUpdateServiceInstanceResponse
-	/*if dashboardURL := deployment.DashboardURL(); dashboardURL != nil {
-		updateServiceInstanceResponse.DashboardUrl = dashboardURL
-	}
 
-	*/
 	updateServiceInstanceResponse.DashboardUrl = deployment.DashboardURL()
 	requestSettings, err := model.GetRequestSettings(updateRequest.Parameters)
 	if err != nil {
@@ -345,12 +274,6 @@ func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest 
 			UpdateRepeatable: requestSettings.UpdateRepeatableAfterFail,
 		}
 	}
-	//var requestSettings *model.RequestSettings
-	//requestSettings, _ = model.GetRequestSettings(updateRequest.Parameters)
-	//if requestSettings.AsyncEndpoint
-	//var requestSettings *model.RequestSettings
-	//requestSettings, _ = model.GetRequestSettings(provisionRequest.Parameters)
-	//deployment.
 	return 200, &updateServiceInstanceResponse, nil
 }
 
@@ -360,9 +283,6 @@ func (deploymentService *DeploymentService) PollOperationState(instanceID *strin
 	var exists bool
 	deployment, exists = (*deploymentService.serviceInstances)[*instanceID]
 	if !exists {
-		log.Println("deployment does not exist, now checking deprovisioned service instances")
-		log.Println("list of deleted instances")
-		log.Println(deploymentService.lastOperationOfDeletedInstance)
 		operation, instanceDeleted := (*deploymentService).lastOperationOfDeletedInstance[*instanceID]
 		if instanceDeleted {
 			var responseDescription *string
@@ -398,8 +318,6 @@ func (deploymentService *DeploymentService) PollOperationState(instanceID *strin
 		}
 
 	}
-	//log.Println(*serviceID)
-	//log.Println(serviceID)
 	if serviceID != nil && *serviceID != deployment.ServiceID() {
 		log.Println("Service id of request: " + *serviceID)
 		log.Println("Service id of instance: " + deployment.ServiceID())
@@ -432,7 +350,6 @@ func (deploymentService *DeploymentService) PollOperationState(instanceID *strin
 			}
 		}
 	}
-	//var pollResponse model.InstanceOperationPollResponse
 	var responseDescription *string
 	if deploymentService.settings.PollInstanceOperationSettings.DescriptionInResponse {
 		description := "Default description"
@@ -444,6 +361,7 @@ func (deploymentService *DeploymentService) PollOperationState(instanceID *strin
 		InstanceUsable:   operation.InstanceUsable(),
 		UpdateRepeatable: operation.UpdateRepeatable(),
 	}
+
 	statusCode := 200 //ok
 	if operation.InstanceUsable() != nil && !*operation.InstanceUsable() && operation.SupposedToFail() {
 		statusCode = 410 //gone
@@ -499,7 +417,6 @@ func (deploymentService *DeploymentService) Delete(deleteRequest *model.DeleteRe
 
 		if deploymentService.settings.ProvisionSettings.ReturnOperationIfAsync {
 			response = *operationID
-			//this is still ok, the response in the binding is only used when not async created or when fetched
 		}
 		return 202, &response, nil
 	}
@@ -507,7 +424,7 @@ func (deploymentService *DeploymentService) Delete(deleteRequest *model.DeleteRe
 	return 200, &response, nil
 }
 
-//does not work atm
+//BONUS
 func (deploymentService *DeploymentService) CurrentServiceInstances() *map[string]*model.ServiceDeployment {
 	return deploymentService.serviceInstances
 }

@@ -16,17 +16,9 @@ import (
 	"strings"
 )
 
-/*
-TO DO
--Securing via TLS?
-	-Spec: "This specification does not specify how Platform and Service Brokers agree on other
-	methods of authentication"
-*/
-
 func Run() {
 
-	//Remove in future when other controllers exist?
-	testController := controller.New()
+	//testController := controller.New()
 	catalog, err := makeCatalog()
 	if err != nil {
 		log.Println("There has been an error while creating the catalog!", err.Error())
@@ -35,7 +27,6 @@ func Run() {
 		if err != nil {
 			log.Println("There has been an error while creating the settings!", err.Error())
 		} else {
-			//log.Println()
 			var serviceInstances map[string]*model.ServiceDeployment
 			serviceInstances = make(map[string]*model.ServiceDeployment)
 			catalogService := service.NewCatalogService(catalog)
@@ -52,6 +43,7 @@ func Run() {
 			//PUT THIS TO A DIFFERENT PLACE
 			//Default router, should be changed?
 			r := gin.Default()
+			//check if requestid is ALWAYS required and therefore the first check can be omitted???!!!!
 			if settings.HeaderSettings.RequestIDRequired && settings.HeaderSettings.LogRequestID {
 				r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
 					return fmt.Sprintf("%s\n",
@@ -60,17 +52,17 @@ func Run() {
 				}))
 			}
 			r.Use(middleware.BindAndCheckHeader)
-			//ENDPOINTS HERE
 
 			//Test
-			r.GET("/", testController.Hello)
-			r.POST("/", testController.TestBind)
+			//r.GET("/", testController.Hello)
+			//r.POST("/", testController.TestBind)
+
 			//BONUS
 			r.GET("/v2/catalog/generate", catalogController.GenerateCatalog)
 			r.GET("/v2/service_instances", deploymentController.CurrentServiceInstances)
 			r.GET("/v2/service_bindings", bindingController.CurrentBindings)
 
-			//new endpoints with new controllers
+			//catalog
 			r.GET("/v2/catalog", catalogController.GetCatalog)
 
 			//Provisioning (of service)
@@ -99,27 +91,7 @@ func Run() {
 
 			//Deprovisioning
 			r.DELETE("/v2/service_instances/:instance_id", deploymentController.Delete)
-			//Request (rotating service binding)
-			//r.PUT("/v2/service_instances/:instance_id/service_bindings/:binding_id", bindingController.RotateBinding)
-			//Replace when new controllers are implemented?
-			//Catalog
-			//r.GET("/v2/catalog", testController.GetCatalog)
-			/*
 
-
-				//PUT /v2/service_instances/:instance_id/service_bindings/:binding_id
-
-
-
-
-
-
-
-
-
-			*/
-			//Generating new random catalog from catalogSettings.json
-			//r.GET("/generate_catalog", testController.GenerateCatalog)
 			err = r.Run()
 			if err != nil {
 				log.Println("Error: " + err.Error())
@@ -151,7 +123,7 @@ func makeCatalog() (*model.Catalog, error) {
 
 func makeSettings() (*model.Settings, error) {
 	var settings model.Settings
-	//FILEPATH
+	//FILEPATH???!!!
 	brokerSettingsJson, err := os.Open("config/brokerSettings.json")
 	if err != nil {
 		return nil, errors.New("error while opening settings file! error: " + err.Error())

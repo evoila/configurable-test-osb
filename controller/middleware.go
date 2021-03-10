@@ -3,7 +3,6 @@ package controller
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"github.com/MaxFuhrich/serviceBrokerDummy/model"
 	"github.com/MaxFuhrich/serviceBrokerDummy/model/profiles"
 	"github.com/gin-gonic/gin"
@@ -30,11 +29,9 @@ func (middleware *Middleware) BindAndCheckHeader(context *gin.Context) {
 		return
 
 	}
-	if middleware.settings.HeaderSettings.RejectEmptyAPIVersion {
-		if header.APIVersionHeader == nil {
-			context.AbortWithStatusJSON(http.StatusBadRequest, "the header \"X-Broker-API-Version\" is required but missing")
-			return
-		}
+	if header.APIVersionHeader == nil {
+		context.AbortWithStatusJSON(http.StatusBadRequest, "the header \"X-Broker-API-Version\" is required but missing")
+		return
 	}
 	if middleware.settings.HeaderSettings.RejectWrongAPIVersion {
 		if middleware.settings.HeaderSettings.BrokerVersion != *header.APIVersionHeader {
@@ -49,7 +46,6 @@ func (middleware *Middleware) BindAndCheckHeader(context *gin.Context) {
 		}
 		separator := regexp.MustCompile(` `)
 		split := separator.Split(*header.OriginID, 2)
-		fmt.Println("GEORG")
 		if len(split) != 2 {
 			context.AbortWithStatusJSON(http.StatusBadRequest, "header X-Broker-API-Originating-Identity has "+
 				"malformed format! format must be \"platform value\"")
@@ -84,14 +80,8 @@ func (middleware *Middleware) BindAndCheckHeader(context *gin.Context) {
 						"X-Broker-API-Originating-Identity: "+err.Error())
 					return
 				}
-				/*
-					s, _ := json.MarshalIndent(k8, "", "\t")
-					log.Println(string(s))
-				*/
 			}
 		}
-		//fmt.Println(split[0])
-		//fmt.Println(split[1])
 	}
 	if middleware.settings.HeaderSettings.RequestIDRequired {
 		if header.RequestID == nil {

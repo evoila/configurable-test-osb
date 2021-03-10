@@ -59,7 +59,6 @@ func SelectRandomTags(tags []string, min int, max int) []string {
 }
 
 func RandomRequires(requires []string, min int) []string {
-	//requires := [3]string{"syslog_drain", "route_forwarding", "volume_mount"}
 	amount := rand.Intn(len(requires)+1-min) + min
 	var result []string
 	for i := 0; i < amount; i++ {

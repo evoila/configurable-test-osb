@@ -18,14 +18,7 @@ type ServiceBinding struct {
 	operations          map[string]*Operation
 	doOperationChan     chan int
 	nextOperationNumber int
-
-	lastOperation *Operation
-	/*
-		BindingMetadata *BindingMetadata
-		Credentials *interface{}
-		SyslogDrainUrl *string
-		better idea:
-	*/
+	lastOperation       *Operation
 	response            *CreateRotateFetchBindingResponse
 	settings            *Settings
 	catalog             *Catalog
@@ -97,9 +90,7 @@ func NewServiceBinding(bindingID *string, bindingRequest *CreateBindingRequest, 
 		settings:            settings,
 		catalog:             catalog,
 		informationReturned: false,
-		//serviceID: &bindingRequest.ServiceID,
-		//planID: &bindingRequest.PlanID,
-		response: &CreateRotateFetchBindingResponse{},
+		response:            &CreateRotateFetchBindingResponse{},
 	}
 	deployment.AddBinding(&serviceBinding)
 	serviceBinding.serviceOffering, _ = catalog.GetServiceOfferingById(*bindingRequest.ServiceID)
@@ -144,42 +135,24 @@ func (serviceBinding *ServiceBinding) DoOperation(async bool, duration int, shou
 	deploymentUsable *bool, lastOperationOfDeletedInstance *map[string]*Operation, id *string) *string {
 	serviceBinding.doOperationChan <- 1
 	operationID := "task_" + strconv.Itoa(serviceBinding.nextOperationNumber)
-	//serviceBinding.updatingOperations[operationID] = true
-	//deploymentUsable not needed as the binding will always be "usable"???
-	//updateRepeatable also not needed as bindings operations don't have a field update_repeatable
 	operation := NewOperation(operationID, float64(duration), *shouldFail, nil, nil, async)
 	if lastOperationOfDeletedInstance != nil && id != nil {
 		(*lastOperationOfDeletedInstance)[*id] = operation
 	}
 	serviceBinding.lastOperation = operation
 	serviceBinding.operations[operationID] = operation
-	//fmt.Printf("nextoperationnumber before increment %v\n", serviceBinding.nextOperationNumber)
 	serviceBinding.nextOperationNumber++ // = serviceBinding.nextOperationNumber + 1
-	//fmt.Printf("nextoperationnumber after increment %v\n", serviceBinding.nextOperationNumber)
-	//fmt.Println("operations:")
-	//fmt.Println(serviceBinding.operations)
 	<-serviceBinding.doOperationChan
 	//WAIT HERE IF !ASYNC???!
 	if !async {
-		//CHECK=!
 		time.Sleep(time.Duration(duration) * time.Second)
 	}
-	//NOT NEEDED BECAUSE THE BINDING IS ALWAYS "USABLE"???
-	/*if deploymentUsable != nil && *shouldFail && !*deploymentUsable {
-		serviceBinding.deploymentUsable = *deploymentUsable
-	}*/
-	//async check necessary??? checking now somewhere else if async (and therefore if operationID should be in response)
 	return &operationID
-	//fmt.Println(serviceBinding.operations)
-	/*operation := "task_" + strconv.Itoa(serviceBinding.nextOperationNumber)
-	serviceBinding.lastOperation = &operation
-	serviceBinding.nextOperationNumber++*/
 }
 
 func (serviceBinding *ServiceBinding) setResponse() {
 
 	if serviceBinding.settings.BindingSettings.BindingMetadataSettings.ReturnMetadata {
-		//make metadata
 		metadata := BindingMetadata{}
 		serviceBinding.response.Metadata = &metadata
 
@@ -195,18 +168,8 @@ func (serviceBinding *ServiceBinding) setResponse() {
 		}
 	}
 	if serviceBinding.settings.BindingSettings.ReturnCredentials {
-		//make credentials
-		//credentials := interface
 		var credentials interface{}
 
-		/*content := "\"Uri\": \"mysql://mysqluser:pass@mysqlhost:3306/dbname\",\n    \"Username\": \"mysqluser\",\n    " +
-			"\"Password\": \"pass\",\n    \"Host\": \"mysqlhost\",\n    \"Port\": 3306,\n    \"Database\": \"dbname\""
-		if err := json.Unmarshal([]byte(content), &credentials); err != nil {
-			log.Println("ERROR while creating credentials!")
-			log.Println(err.Error())
-		}
-
-		*/
 		credentials = struct {
 			Uri      *string `json:"Uri"`
 			Username string  `json:"Username"`
@@ -222,18 +185,6 @@ func (serviceBinding *ServiceBinding) setResponse() {
 			Port:     1234,
 			Database: "myDatabase",
 		}
-		/*credentials = credStruct
-		content, err := json.Marshal(credStruct)
-		if err != nil {
-			log.Println("ERROR while marshalling credStruct!")
-			log.Println(err.Error())
-		}
-		if err = json.Unmarshal(content, &credentials); err != nil {
-			log.Println("ERROR while creating credentials!")
-			log.Println(err.Error())
-		}
-
-		*/
 		serviceBinding.response.Credentials = &credentials
 	}
 	if serviceBinding.settings.BindingSettings.ReturnSyslogDrainURL && serviceBinding.serviceOffering.Requires != nil &&
@@ -248,7 +199,6 @@ func (serviceBinding *ServiceBinding) setResponse() {
 	}
 	if serviceBinding.settings.BindingSettings.BindingVolumeMountSettings.ReturnVolumeMounts && serviceBinding.serviceOffering.Requires != nil &&
 		sort.SearchStrings(serviceBinding.serviceOffering.Requires, "volume_mount") < len(serviceBinding.serviceOffering.Requires) {
-		//make volume mounts
 		volumeMount := VolumeMount{
 			Driver:       "driverName",
 			ContainerDir: "/hello/world",
@@ -270,20 +220,17 @@ func (serviceBinding *ServiceBinding) setResponse() {
 		serviceBinding.response.VolumeMounts = &volumeMounts
 	}
 	if serviceBinding.settings.BindingSettings.BindingEndpointSettings.ReturnEndpoints {
-		//make endpoints
 		endpoint := Endpoint{
 			Host:  "myHost",
 			Ports: []string{"1234", "5678"},
 		}
 		if serviceBinding.settings.BindingSettings.BindingEndpointSettings.ReturnProtocol {
-			//use protocol value in settings here
 			endpoint.Protocol = &serviceBinding.settings.BindingSettings.BindingEndpointSettings.ProtocolValue
 		}
 		endpoints := []Endpoint{endpoint}
 		serviceBinding.response.Endpoints = &endpoints
 	}
 	if serviceBinding.settings.BindingSettings.ReturnParameters {
-		//set parameters pointer of response to parameter pointer of binding
 		serviceBinding.response.Parameters = serviceBinding.parameters
 
 	}

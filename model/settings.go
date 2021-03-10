@@ -50,22 +50,23 @@ type FetchServiceInstanceSettings struct {
 }
 
 type PollInstanceOperationSettings struct {
-	DescriptionInResponse bool `json:"description_in_response" binding:"required"`
+	DescriptionInResponse                  bool `json:"description_in_response" binding:"required"`
+	RetryPollInstanceOperationAfterSeconds int  `json:"retry_poll_instance_operation_after_seconds" binding:"required"`
 }
 
 type BindingSettings struct {
-	ReturnBindingInformationOnce bool                    `json:"return_binding_information_once" binding:"required"`
-	ReturnOperationIfAsync       bool                    `json:"return_operation_if_async" binding:"required"`
-	BindingMetadataSettings      BindingMetadataSettings `json:"binding_metadata_settings" binding:"required"`
-	//ReturnMetadata bool `json:"return_metadata" binding:"required"`
-	ReturnCredentials              bool                       `json:"return_credentials" binding:"required"`
-	ReturnSyslogDrainURL           bool                       `json:"return_syslog_drain_url" binding:"required"`
-	ReturnRouteServiceURL          bool                       `json:"return_route_service_url" binding:"required"`
-	BindingVolumeMountSettings     BindingVolumeMountSettings `json:"binding_volume_mount_settings" binding:"required"`
-	BindingEndpointSettings        BindingEndpointSettings    `json:"binding_endpoint_settings" binding:"required"`
-	ReturnParameters               bool                       `json:"return_parameters" binding:"required"`
-	StatusCodeOK                   bool                       `json:"status_code_ok" binding:"required"`
-	ReturnDescriptionLastOperation bool                       `json:"return_description_last_operation" binding"required"`
+	ReturnBindingInformationOnce          bool                       `json:"return_binding_information_once" binding:"required"`
+	ReturnOperationIfAsync                bool                       `json:"return_operation_if_async" binding:"required"`
+	BindingMetadataSettings               BindingMetadataSettings    `json:"binding_metadata_settings" binding:"required"`
+	ReturnCredentials                     bool                       `json:"return_credentials" binding:"required"`
+	ReturnSyslogDrainURL                  bool                       `json:"return_syslog_drain_url" binding:"required"`
+	ReturnRouteServiceURL                 bool                       `json:"return_route_service_url" binding:"required"`
+	BindingVolumeMountSettings            BindingVolumeMountSettings `json:"binding_volume_mount_settings" binding:"required"`
+	BindingEndpointSettings               BindingEndpointSettings    `json:"binding_endpoint_settings" binding:"required"`
+	ReturnParameters                      bool                       `json:"return_parameters" binding:"required"`
+	StatusCodeOK                          bool                       `json:"status_code_ok" binding:"required"`
+	ReturnDescriptionLastOperation        bool                       `json:"return_description_last_operation" binding"required"`
+	RetryPollBindingOperationAfterSeconds int                        `json:"retry_poll_binding_operation_after_seconds" binding:"required"`
 }
 
 type BindingMetadataSettings struct {

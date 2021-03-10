@@ -41,46 +41,6 @@ func ValidateCatalogSettings(settings *model.CatalogSettings) error {
 	if len(settings.Requires) < settings.RequiresMin {
 		return errors.New("len(requires) must be >= requires_min")
 	}
-	/*if invalidFrequency(&config.OfferingBindable) {
-		return errors.New("invalid value for offering_bindable")
-	}
-	if invalidFrequency(&config.InstancesRetrievable) {
-		return errors.New("invalid value for instances_retrievable")
-	}
-	if invalidFrequency(&config.BindingsRetrievable) {
-		return errors.New("invalid value for bindings_retrievable")
-	}
-	if invalidFrequency(&config.AllowContextUpdates) {
-		return errors.New("invalid value for allow_context_updates")
-	}
-	if invalidFrequency(&config.OfferingMetadata) {
-		return errors.New("invalid value for offering_metadata")
-	}
-	if invalidFrequency(&config.DashboardClient) {
-		return errors.New("invalid value for dashboard_client")
-	}
-	if invalidFrequency(&config.OfferingPlanUpdateable) {
-		return errors.New("invalid value for offering_plan_updateable")
-	}
-	if config.PlansMin < 1 {
-		return errors.New("plans_min must be > 0")
-	}
-	if config.PlansMax < config.PlansMin {
-		return errors.New("plans_max must be >= plans_min")
-	}
-	if invalidFrequency(&config.PlanMetadata) {
-		return errors.New("invalid value for plan_metadata")
-	}
-	if invalidFrequency(&config.Free) {
-		return errors.New("invalid value for free")
-	}
-	if invalidFrequency(&config.PlanBindable) {
-		return errors.New("invalid value for plan_bindable")
-	}
-	if invalidFrequency(&config.BindingRotatable) {
-		return errors.New("invalid value for binding_rotatable")
-	}
-	*/
 	if settings.MaxPollingDurationMin < 0 {
 		return errors.New("max_polling_duration_min must be >= 0")
 	}
@@ -134,17 +94,3 @@ func numberOfDuplicates(elements []string) int {
 	}
 	return result - len(elements)
 }
-
-/*
-func init() {
-	//WILL PROBABLY NOT WORK BECAUSE GIN WON'T BE USE FOR THIS STRUCT
-	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		err := v.RegisterValidation("RFC3986", validateRfc3986)
-		if err != nil {
-			log.Println("Error while registering rfc3986Validator to validations! error: " + err.Error())
-		}
-	}
-
-}
-
-*/

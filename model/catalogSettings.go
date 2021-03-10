@@ -88,15 +88,8 @@ func NewCatalogSettings() (*CatalogSettings, error) {
 	if err = ValidateCatalogSettings(&catalogSettings); err != nil {
 		return nil, err
 	}
-	log.Println("Catalog config validated!")
 
-	s, _ := json.MarshalIndent(catalogSettings, "", "\t")
-	log.Print(string(s))
 	return &catalogSettings, nil
-	//catalog, err := generateCatalog(&catalogSettings)
-	//log.Println(catalog)
-
-	//return catalog, err
 }
 
 func ValidateCatalogSettings(settings *CatalogSettings) error {
