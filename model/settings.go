@@ -28,7 +28,7 @@ type GeneralSettings struct {
 type ProvisionSettings struct {
 	StatusCodeOKPossible         bool `json:"status_code_ok_possible" binding:"required"`
 	CreateDashboardURL           bool `json:"create_dashboard_url" binding:"required"`
-	ReturnOperationIfAsync       bool `json:"return_operation_if_async" binding:"required"`
+	ReturnOperationIfAsync       bool `json:"return_hoperation_if_async" binding:"required"`
 	CreateMetadata               bool `json:"create_metadata" binding:"required"`
 	ReturnDashboardURL           bool `json:"return_dashboard_url" binding:"required"`
 	ReturnOperation              bool `json:"return_operation" binding:"required"`
