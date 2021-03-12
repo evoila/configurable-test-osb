@@ -20,7 +20,7 @@ type CreateRotateBindingAcceptedResponse struct {
 	Operation string `json:"operation,omitempty"`
 }
 
-//changed name, because this contains also the accepted response
+//changed name, because this contains also the accepted fetchResponse
 type CreateRotateBindingResponse struct {
 	Metadata        *BindingMetadata `json:"metadata,omitempty"`
 	Credentials     *interface{}     `json:"credentials,omitempty"`

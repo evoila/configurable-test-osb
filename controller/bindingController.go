@@ -22,15 +22,24 @@ func NewBindingController(bindingService *service.BindingService, settings *mode
 	}
 }
 
+//deploymentController.CreateBinding is the handler for the "PUT /v2/service_instances/:instance_id/service_bindings/:binding_id" endpoint
+//The request is bound here, checked if required parameters are empty and checked if async is required.
+//If the request can't be bound to the corresponding struct, the context will be passed to
+//bindingController.rotateBinding(context *gin.Context) which has the same endpoint.
+//The request will then be passed to bindingService.CreateBinding(bindingRequest *model.CreateBindingRequest, instanceID *string, bindingID *string)
+//which creates a binding and returns a response, which is used by deploymentController.FetchServiceInstance.
+
 func (bindingController *BindingController) CreateBinding(context *gin.Context) {
 	instanceID := context.Param("instance_id")
-	if instanceID == "" {
+	/*if instanceID == "" {
 		context.JSON(http.StatusBadRequest, gin.H{
 			"message": "error while parsing url parameter \"instance_id\"",
 			"error":   "invalid value, value must not be \"\" and unique",
 		})
 		return
 	}
+
+	*/
 	bindingID := context.Param("binding_id")
 	if bindingID == "" {
 		context.JSON(http.StatusBadRequest, gin.H{
@@ -58,7 +67,14 @@ func (bindingController *BindingController) CreateBinding(context *gin.Context) 
 	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint && acceptsIncomplete == "false" {
 		context.JSON(422, &model.ServiceBrokerError{
 			Error:       "AsyncRequired",
-			Description: "This Broker requires client support for asynchronous service operations.",
+			Description: model.AsyncRequired,
+		})
+		return
+	}
+	if bindingController.settings.BindingSettings.AppGUIDRequired && bindingRequest.AppGUID == nil {
+		context.JSON(422, model.ServiceBrokerError{
+			Error:       "RequiresApp",
+			Description: model.RequiresApp,
 		})
 		return
 	}
@@ -110,7 +126,7 @@ func (bindingController *BindingController) rotateBinding(context *gin.Context) 
 	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint && acceptsIncomplete == "false" {
 		context.JSON(422, &model.ServiceBrokerError{
 			Error:       "AsyncRequired",
-			Description: "This Broker requires client support for asynchronous service operations.",
+			Description: model.AsyncRequired,
 		})
 		return
 	}
@@ -223,7 +239,7 @@ func (bindingController *BindingController) Unbind(context *gin.Context) {
 	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint && acceptsIncomplete == "false" {
 		context.JSON(422, &model.ServiceBrokerError{
 			Error:       "AsyncRequired",
-			Description: "This Broker requires client support for asynchronous service operations.",
+			Description: model.AsyncRequired,
 		})
 		return
 	}
@@ -240,7 +256,7 @@ func (bindingController *BindingController) CurrentBindings(context *gin.Context
 		Bindings *map[string]*model.ServiceBinding `json:"service_bindings"`
 	}{}
 	resp.Bindings = bindingController.bindingService.CurrentBindings()
-	//this won't show the fields inside a service instance, since it fields are not public (and not annotated)
+	//this won't show the fields inside a service instance, since its fields are not public (and not annotated)
 	//only the names (with empty values) will be shown
 	context.JSON(200, resp)
 }

@@ -26,27 +26,23 @@ type GeneralSettings struct {
 }
 
 type ProvisionSettings struct {
-	StatusCodeOK                 bool `json:"status_code_ok" binding:"required"`
-	Async                        bool `json:"async" binding:"required"`
-	DashboardURL                 bool `json:"dashboard_url" binding:"required"`
+	StatusCodeOKPossible         bool `json:"status_code_ok_possible" binding:"required"`
+	CreateDashboardURL           bool `json:"create_dashboard_url" binding:"required"`
 	ReturnOperationIfAsync       bool `json:"return_operation_if_async" binding:"required"`
-	Metadata                     bool `json:"metadata" binding:"required"`
-	SecondsToFinish              int  `json:"seconds_to_finish" binding:"required"`
-	ShowDashboardURL             bool `json:"show_dashboard_url" binding:"required"`
-	ShowOperation                bool `json:"show_operation" binding:"required"`
-	ShowMetadata                 bool `json:"show_metadata" binding:"required"`
+	CreateMetadata               bool `json:"create_metadata" binding:"required"`
+	ReturnDashboardURL           bool `json:"return_dashboard_url" binding:"required"`
+	ReturnOperation              bool `json:"return_operation" binding:"required"`
+	ReturnMetadata               bool `json:"return_metadata" binding:"required"`
 	AllowDeprovisionWithBindings bool `json:"allow_deprovision_with_bindings" binding:"required"`
 }
 
 type FetchServiceInstanceSettings struct {
-	OfferingIDMustMatch bool `json:"offering_id_must_match" binding:"required"`
-	PlanIDMustMatch     bool `json:"plan_id_must_match" binding:"required"`
-	ShowServiceID       bool `json:"show_service_id" binding:"required"`
-	ShowPlanID          bool `json:"show_plan_id" binding:"required"`
-	ShowDashboardURL    bool `json:"show_dashboard_url" binding:"required"`
-	ShowParameters      bool `json:"show_parameters" binding:"required"`
-	ShowMaintenanceInfo bool `json:"show_maintenance_info" binding:"required"`
-	ShowMetadata        bool `json:"show_metadata" binding:"required"`
+	ReturnServiceID       bool `json:"return_service_id" binding:"required"`
+	ReturnPlanID          bool `json:"return_plan_id" binding:"required"`
+	ReturnDashboardURL    bool `json:"return_dashboard_url" binding:"required"`
+	ReturnParameters      bool `json:"return_parameters" binding:"required"`
+	ReturnMaintenanceInfo bool `json:"return_maintenance_info" binding:"required"`
+	ReturnMetadata        bool `json:"return_metadata" binding:"required"`
 }
 
 type PollInstanceOperationSettings struct {
@@ -55,6 +51,7 @@ type PollInstanceOperationSettings struct {
 }
 
 type BindingSettings struct {
+	AppGUIDRequired                       bool                       `json:"app_guid_required" binding:"required"`
 	ReturnBindingInformationOnce          bool                       `json:"return_binding_information_once" binding:"required"`
 	ReturnOperationIfAsync                bool                       `json:"return_operation_if_async" binding:"required"`
 	BindingMetadataSettings               BindingMetadataSettings    `json:"binding_metadata_settings" binding:"required"`
@@ -64,8 +61,8 @@ type BindingSettings struct {
 	BindingVolumeMountSettings            BindingVolumeMountSettings `json:"binding_volume_mount_settings" binding:"required"`
 	BindingEndpointSettings               BindingEndpointSettings    `json:"binding_endpoint_settings" binding:"required"`
 	ReturnParameters                      bool                       `json:"return_parameters" binding:"required"`
-	StatusCodeOK                          bool                       `json:"status_code_ok" binding:"required"`
-	ReturnDescriptionLastOperation        bool                       `json:"return_description_last_operation" binding"required"`
+	StatusCodeOKPossible                  bool                       `json:"status_code_ok_possible" binding:"required"`
+	ReturnDescriptionLastOperation        bool                       `json:"return_description_last_operation" binding:"required"`
 	RetryPollBindingOperationAfterSeconds int                        `json:"retry_poll_binding_operation_after_seconds" binding:"required"`
 }
 
@@ -82,7 +79,6 @@ type BindingVolumeMountSettings struct {
 
 type BindingEndpointSettings struct {
 	ReturnEndpoints bool `json:"return_endpoints" binding:"required"`
-	//???
 	//the next two fields could be grouped by using *string and not requiring a binding
 	//nil -> don't return protocol; value set -> return protocol
 	//this is currently not done because of consistency with the rest of the settings

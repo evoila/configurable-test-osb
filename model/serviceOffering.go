@@ -50,7 +50,7 @@ func newServiceOffering(catalogSettings *CatalogSettings, catalog *Catalog, tags
 			catalogSettings.BindingsRetrievable), //returnBoolean(catalogSettings.BindingsRetrievable),
 		AllowContextUpdates: generator.ReturnFieldByBoolean(generator.ReturnBoolean(catalogSettings.AllowContextUpdatesExists),
 			catalogSettings.AllowContextUpdates), //AllowContextUpdates: returnBoolean(catalogSettings.AllowContextUpdates),
-		Metadata:        generator.MetadataByBool(generator.ReturnBoolean(catalogSettings.OfferingMetadata)),                                           //Metadata: metadataByBool(returnBoolean(catalogSettings.OfferingMetadata )),
+		Metadata:        generator.MetadataByBool(generator.ReturnBoolean(catalogSettings.OfferingMetadata)),                                           //CreateMetadata: metadataByBool(returnBoolean(catalogSettings.OfferingMetadata )),
 		DashboardClient: NewDashboardClient(catalogSettings),                                                                                           //DashboardClient:
 		PlanUpdateable:  generator.ReturnFieldByBoolean(generator.ReturnBoolean(catalogSettings.PlanUpdateableExists), catalogSettings.PlanUpdateable), //PlanUpdateable: returnBoolean(catalogSettings.PlanUpdateable),
 		Plans:           makePlans(catalogSettings, catalog),

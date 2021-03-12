@@ -33,7 +33,7 @@ type Header struct {
 		-Wenn vorhanden
 		-For any OSBAPI request, there MUST be an associated X-Broker-API-Request-Identity header on the HTTP request.
 		-The Service Broker MAY include this value in log messages generated as a result of the request.
-		-The Service Broker SHOULD include this header in the response to the request.
+		-The Service Broker SHOULD include this header in the fetchResponse to the request.
 		-value MUST be a non-empty string indicating the identity of the request being sent. The specific value MAY
 		be unique for each request sent to the broker. Using a GUID is RECOMMENDED.
 	*/

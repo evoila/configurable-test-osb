@@ -3,7 +3,6 @@ package model
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 )
 
@@ -18,7 +17,6 @@ type RequestSettings struct {
 func GetRequestSettings(params *interface{}) (*RequestSettings, error) {
 	var requestSettings RequestSettings
 	if params != nil {
-		//fmt.Println("params is not nil")
 		paramMap := (*params).(map[string]interface{})
 		settingsInterface := paramMap["config_broker_settings"]
 		if settingsInterface == nil {
@@ -27,35 +25,20 @@ func GetRequestSettings(params *interface{}) (*RequestSettings, error) {
 		settingsMap := settingsInterface.(map[string]interface{})
 		jsonBody, err := json.Marshal(settingsMap)
 		if err != nil {
-			fmt.Println("error: " + err.Error())
+			return nil, err
 		}
 		if err = json.Unmarshal(jsonBody, &requestSettings); err != nil {
-			// do error check
-			fmt.Println(err)
 			return nil, err
 		}
 	}
-	//fmt.Println("right after checking params")
 	if requestSettings.AsyncEndpoint == nil {
-		fmt.Println("settings asyncendpoint to false")
 		val := false
 		requestSettings.AsyncEndpoint = &val
-	} else {
-		fmt.Println("asyncendpoint:")
-		fmt.Println(requestSettings.AsyncEndpoint)
 	}
 	if requestSettings.FailAtOperation == nil {
 		val := false
 		requestSettings.FailAtOperation = &val
 	}
-	/*if requestSettings.InstanceUsableAfterFail == nil {
-		val := true
-		requestSettings.InstanceUsableAfterFail = &val
-	}
-	if requestSettings.UpdateRepeatableAfterFail == nil {
-		val := true
-		requestSettings.UpdateRepeatableAfterFail = &val
-	}*/
 	if requestSettings.SecondsToComplete == nil {
 		val := 0
 		requestSettings.SecondsToComplete = &val

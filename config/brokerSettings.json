@@ -13,32 +13,29 @@
     "etag_if_modified_since_in_response": false
   },
   "provision_settings": {
-    "status_code_ok": true,
-    "async": true,
-    "dashboard_url": true,
+    "status_code_ok_possible": true,
+    "create_dashboard_url": true,
     "return_operation_if_async": true,
-    "metadata": true,
-    "seconds_to_finish": 0,
-    "show_dashboard_url": true,
-    "show_operation": true,
-    "show_metadata": true,
+    "create_metadata": true,
+    "return_dashboard_url": true,
+    "return_operation": true,
+    "return_metadata": true,
     "allow_deprovision_with_bindings": false
   },
   "fetch_service_instance_settings": {
-    "offering_id_must_match": true,
-    "plan_id_must_match": true,
-    "show_service_id": false,
-    "show_plan_id": true,
-    "show_dashboard_url": true,
-    "show_parameters": true,
-    "show_maintenance_info": true,
-    "show_metadata": true
+    "return_service_id": false,
+    "return_plan_id": true,
+    "return_dashboard_url": true,
+    "return_parameters": true,
+    "return_maintenance_info": true,
+    "return_metadata": true
   },
   "poll_instance_operation_settings": {
     "description_in_response": true,
     "retry_poll_instance_operation_after_seconds": 0
   },
   "binding_settings":{
+    "app_guid_required": true,
     "return_binding_information_once": false,
     "return_operation_if_async": true,
     "binding_metadata_settings": {
@@ -59,7 +56,7 @@
       "protocol_value": "tcp"
     },
     "return_parameters": true,
-    "status_code_ok": true,
+    "status_code_ok_possible": true,
     "return_description_last_operation": true,
     "retry_poll_binding_operation_after_seconds": 0
   },

@@ -8,8 +8,7 @@ import (
 
 type BindingService struct {
 	//POINTER TO SERVICE INSTANCES/DEPLOYMENTS???? PRETTY SURE YES
-	serviceInstances *map[string]*model.ServiceDeployment
-	//key = binding_id
+	serviceInstances              *map[string]*model.ServiceDeployment
 	bindingInstances              *map[string]*model.ServiceBinding
 	lastOperationOfDeletedBinding map[string]*model.Operation
 	settings                      *model.Settings
@@ -27,6 +26,13 @@ func NewBindingService(serviceInstances *map[string]*model.ServiceDeployment,
 	}
 }
 
+//bindingService.CreateBinding first checks if the request is valid. It is checked if the instance_id exists,
+//if the instance is bindable, if the bindingID is already in use (and if so it will check, if the service to deploy
+//and the existing one are identical) and if serviceID and planID match. If the request is valid,
+//model.NewServiceBinding(bindingID *string, bindingRequest *CreateBindingRequest, settings *Settings,
+//catalog *Catalog, bindingInstances *map[string]*ServiceBinding, deployment *ServiceDeployment)
+//will be called, which creates a binding to a deployment.
+//Returns an int (http status), the actual response and an error if one occurs
 func (bindingService *BindingService) CreateBinding(bindingRequest *model.CreateBindingRequest, instanceID *string,
 	bindingID *string) (int, *model.CreateRotateFetchBindingResponse, *model.ServiceBrokerError) {
 	deployment, exists := (*bindingService.serviceInstances)[*instanceID]
@@ -36,10 +42,16 @@ func (bindingService *BindingService) CreateBinding(bindingRequest *model.Create
 			Description: "given instance_id was not found",
 		}
 	}
+	if deployment.Blocked() {
+		return 422, nil, &model.ServiceBrokerError{
+			Error:       "ConcurrencyError",
+			Description: model.ConcurrencyError,
+		}
+	}
 	var requestSettings *model.RequestSettings
 	requestSettings, _ = model.GetRequestSettings(bindingRequest.Parameters)
 	if binding, exists := (*bindingService.bindingInstances)[*bindingID]; exists == true {
-		if bindingService.settings.BindingSettings.StatusCodeOK && !*requestSettings.AsyncEndpoint {
+		if bindingService.settings.BindingSettings.StatusCodeOKPossible && !*requestSettings.AsyncEndpoint {
 			log.Println("binding with given id exists. now comparing equality of requested binding and existing binding")
 			if cmp.Equal(bindingRequest.Parameters, binding.Parameters()) &&
 				cmp.Equal(bindingRequest.Context, binding.Context()) &&
@@ -47,7 +59,6 @@ func (bindingService *BindingService) CreateBinding(bindingRequest *model.Create
 				*bindingRequest.PlanID == *binding.PlanID() &&
 				cmp.Equal(bindingRequest.AppGUID, binding.AppGuid()) &&
 				cmp.Equal(bindingRequest.BindResource, binding.BindResource()) {
-				log.Println("requested binding and existing binding are identical")
 				if bindingService.settings.BindingSettings.ReturnBindingInformationOnce && binding.InformationReturned() {
 					return 200, &model.CreateRotateFetchBindingResponse{}, nil
 				}
@@ -55,70 +66,41 @@ func (bindingService *BindingService) CreateBinding(bindingRequest *model.Create
 				response.Parameters = nil
 				return 200, response, nil
 			}
-			log.Println("requested binding and existing binding are different")
-			if bindingRequest.BindResource != nil && binding.BindResource() != nil {
-				log.Println(*bindingRequest.BindResource, *binding.BindResource())
-			} else {
-				log.Println("bindResource in request or in existing binding is nil")
-			}
-
 		}
-
 		return 409, nil, &model.ServiceBrokerError{
 			Error:       "InstanceIDConflict",
 			Description: "The given binding_id is already in use",
 		}
 	}
-	if *bindingRequest.ServiceID != deployment.ServiceID() {
-		//log.Println("this should not be here...")
+	if *bindingRequest.ServiceID != *deployment.ServiceID() {
 		return 400, nil, &model.ServiceBrokerError{
 			Error:       "ServiceIDMatch",
 			Description: "The given service_id does not match the service_id of the instance",
 		}
 	}
-	if *bindingRequest.PlanID != deployment.PlanID() {
+	if *bindingRequest.PlanID != *deployment.PlanID() {
 		return 400, nil, &model.ServiceBrokerError{
 			Error:       "PlanIDMatch",
 			Description: "The given plan_id does not match the plan_id of the instance",
 		}
 	}
-	/*shouldFail := false
-	operationID := newServiceBinding.doOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, &shouldFail, nil, nil)*/
-	//var binding *model.ServiceBinding
-	/*binding := &model.ServiceBinding{bindingID: bindingID}
-
-	 */
-	//deployment.AddBinding(binding)
+	offering, _ := bindingService.catalog.GetServiceOfferingById(*bindingRequest.ServiceID)
+	plan, _ := offering.GetPlanByID(*bindingRequest.PlanID)
+	if *offering.Bindable == false || plan.Bindable != nil && *plan.Bindable == false {
+		return 400, nil, &model.ServiceBrokerError{
+			Error:       "InstanceNotBindable",
+			Description: "Service instances of this offering are not bindable",
+		}
+	}
 	binding, operationID := model.NewServiceBinding(bindingID, bindingRequest, bindingService.settings, bindingService.catalog, bindingService.bindingInstances, deployment)
-	//this is now done in model.NewServiceBinding)
-	//(*bindingService.bindingInstances)[*bindingID] = binding
-
-	//is just using var ok here or do i actually need to create CrateRotateBindingResponse{} ???
-	//response.ReturnOperationIfAsync = "hello"
-
 	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint == true {
 		var response model.CreateRotateFetchBindingResponse
 		if bindingService.settings.BindingSettings.ReturnOperationIfAsync {
 			response.Operation = operationID
-			//this is still ok, the response in the binding is only used when not async created or when fetched
 		}
 		return 202, &response, nil
 	}
-	//CREATE OWN FUNCTION???! THIS RESPONSE IS ALSO CREATED WHEN THE BINDING IS FETCHED
-	//ONLY DIFFERENCE IS, THAT FETCHING CAN ALSO RETURN PARAMETERS (which could be changed to nil here afterwards)
-	/*if bindingService.settings.BindingSettings.BindingMetadataSettings.ReturnMetadata{
-		//make metadata
-	}
-	if bindingService.settings.BindingSettings.ReturnCredentials {
-		//make credentials
-	}
-	if bindingService.settings.BindingSettings.ReturnSyslogDrainURL{
-
-	}
-
-	*/
 	binding.SetInformationReturned(true)
-	//should not be necessary??? when parameters shall be returned by fetch, they are set to nil afterwards
 	response := binding.Response()
 	response.Parameters = nil
 	return 201, binding.Response(), nil
@@ -183,11 +165,8 @@ func (bindingService *BindingService) FetchBinding(instanceID *string, bindingID
 			Description: "this service instance does not use a binding with the given binding_id",
 		}
 	}
-	log.Println("binding \"exists\":")
-	log.Println(binding)
-	log.Println(*binding)
 	if serviceID != nil && *serviceID != "" {
-		if deployment.ServiceID() != *serviceID {
+		if *deployment.ServiceID() != *serviceID {
 			return 400, nil, &model.ServiceBrokerError{
 				Error:       "ServiceIDMatch",
 				Description: "The given service_id does not match the service_id of the instance",
@@ -195,14 +174,20 @@ func (bindingService *BindingService) FetchBinding(instanceID *string, bindingID
 		}
 	}
 	if planID != nil && *planID != "" {
-		if deployment.PlanID() != *planID {
+		if *deployment.PlanID() != *planID {
 			return 400, nil, &model.ServiceBrokerError{
 				Error:       "ServiceIDMatch",
 				Description: "The given plan_id does not match the plan_id of the instance",
 			}
 		}
 	}
-
+	offering, _ := bindingService.catalog.GetServiceOfferingById(*deployment.ServiceID())
+	if offering.BindingsRetrievable != nil && *offering.BindingsRetrievable == false {
+		return 400, nil, &model.ServiceBrokerError{
+			Error:       "BindingNotRetrievable",
+			Description: "Service bindings of this offering are not retrievable",
+		}
+	}
 	if bindingService.settings.BindingSettings.ReturnBindingInformationOnce && binding.InformationReturned() {
 		return 200, &model.CreateRotateFetchBindingResponse{}, nil
 	}
@@ -214,13 +199,27 @@ func (bindingService *BindingService) FetchBinding(instanceID *string, bindingID
 	return 200, response, nil
 }
 
-func (bindingService *BindingService) PollOperationState(instanceID *string, bindingID *string, serviceID *string, planID *string, operationName *string) (int, *model.InstanceOperationPollResponse, *model.ServiceBrokerError) {
+func (bindingService *BindingService) PollOperationState(instanceID *string, bindingID *string, serviceID *string,
+	planID *string, operationName *string) (int, *model.InstanceOperationPollResponse, *model.ServiceBrokerError) {
 	var deployment *model.ServiceDeployment
 	var exists bool
+	deployment, exists = (*bindingService.serviceInstances)[*instanceID]
+	if !exists {
+		return 404, nil, &model.ServiceBrokerError{
+			Error:       "NotFound",
+			Description: "given instance_id was not found",
+		}
+	}
 	if _, bindingExists := (*bindingService.bindingInstances)[*bindingID]; !bindingExists {
 		log.Println("binding does not exist, now checking deleted bindings")
 		operation, bindingDeleted := (*bindingService).lastOperationOfDeletedBinding[*bindingID]
 		if bindingDeleted {
+			if !deployment.BindingDeleted(bindingID) {
+				return 404, nil, &model.ServiceBrokerError{
+					Error:       "NotFound",
+					Description: "given binding_id was not found for this instance_id",
+				}
+			}
 			var responseDescription *string
 			if bindingService.settings.BindingSettings.ReturnDescriptionLastOperation {
 				description := "Default description"
@@ -247,16 +246,8 @@ func (bindingService *BindingService) PollOperationState(instanceID *string, bin
 				return 200, &pollResponse, nil
 			}
 		}
-	} else {
-		log.Println((*bindingService.bindingInstances)[*bindingID])
 	}
-	deployment, exists = (*bindingService.serviceInstances)[*instanceID]
-	if !exists {
-		return 404, nil, &model.ServiceBrokerError{
-			Error:       "NotFound",
-			Description: "given instance_id was not found",
-		}
-	}
+
 	binding, exists := deployment.GetBinding(bindingID)
 	if !exists {
 		return 404, nil, &model.ServiceBrokerError{
@@ -264,15 +255,15 @@ func (bindingService *BindingService) PollOperationState(instanceID *string, bin
 			Description: "given binding_id was not found for this instance_id",
 		}
 	}
-	if serviceID != nil && *serviceID != deployment.ServiceID() {
+	if serviceID != nil && *serviceID != *deployment.ServiceID() {
 		log.Println("Service id of request: " + *serviceID)
-		log.Println("Service id of instance: " + deployment.ServiceID())
+		log.Println("Service id of instance: " + *deployment.ServiceID())
 		return 400, nil, &model.ServiceBrokerError{
 			Error:       "ServiceIDMatch",
 			Description: "The given service_id does not match the service_id of the instance",
 		}
 	}
-	if planID != nil && *planID != deployment.PlanID() {
+	if planID != nil && *planID != *deployment.PlanID() {
 		return 400, nil, &model.ServiceBrokerError{
 			Error:       "PlanIDMatch",
 			Description: "The given plan_id does not match the plan_id of the instance",
@@ -337,15 +328,15 @@ func (bindingService *BindingService) Unbind(deleteRequest *model.DeleteRequest,
 			Description: "service binding does not exist",
 		}
 	}
-	if serviceID != nil && *serviceID != deployment.ServiceID() {
+	if serviceID != nil && *serviceID != *deployment.ServiceID() {
 		log.Println("Service id of request: " + *serviceID)
-		log.Println("Service id of instance: " + deployment.ServiceID())
+		log.Println("Service id of instance: " + *deployment.ServiceID())
 		return 400, nil, &model.ServiceBrokerError{
 			Error:       "ServiceIDMatch",
 			Description: "The given service_id does not match the service_id of the instance",
 		}
 	}
-	if planID != nil && *planID != deployment.PlanID() {
+	if planID != nil && *planID != *deployment.PlanID() {
 		return 400, nil, &model.ServiceBrokerError{
 			Error:       "PlanIDMatch",
 			Description: "The given plan_id does not match the plan_id of the instance",
@@ -359,11 +350,9 @@ func (bindingService *BindingService) Unbind(deleteRequest *model.DeleteRequest,
 	if !*requestSettings.FailAtOperation { //not fail = success lol
 		deployment.RemoveBinding(bindingID)
 		delete(*bindingService.bindingInstances, *bindingID)
-		operationID = binding.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, requestSettings.FailAtOperation, nil,
-			nil, &bindingService.lastOperationOfDeletedBinding, bindingID)
+		operationID = binding.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, requestSettings.FailAtOperation, &bindingService.lastOperationOfDeletedBinding, bindingID)
 	} else {
-		operationID = binding.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, requestSettings.FailAtOperation, nil,
-			nil, nil, nil)
+		operationID = binding.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, requestSettings.FailAtOperation, nil, nil)
 	}
 
 	//(*bindingService.bindingInstances)[*bindingID] = nil

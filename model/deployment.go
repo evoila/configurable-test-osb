@@ -8,37 +8,42 @@ import (
 )
 
 type ServiceDeployment struct {
-	serviceID            string
-	planID               string
+	serviceID            *string
+	planID               *string
 	instanceID           string
 	parameters           *interface{}
 	dashboardURL         *string
 	metadata             *ServiceInstanceMetadata
 	bindings             map[string]*ServiceBinding
+	deletedBindings      []string
 	lastOperation        *Operation
 	operations           map[string]*Operation
 	requestIDToOperation map[string]*Operation
 	nextOperationNumber  int
-
-	//use
-	//this to indicate if still usable
-	state string
-	//and
-	//this to indicate if update running
-	//CHANGE TYPE ?! LOOK DOWN FURTHER FOR MORE INFORMATION
-	updatingOperations map[string]bool //if an operation is updating the instance, its name is in this string, otherwise nil
-	/*
-		if fetching instance and updatingOperation != nil: get the state of the ReturnOperationIfAsync (by using the name from updatingOperation)
-		set updatingOperation to nil and continue (return true - instance fetchable), if ReturnOperationIfAsync is finished. otherwise
-		leave updatingOperation as is and return (return false - instance not fetchable?)
-	*/
-
+	//indicates if update(s) running
+	updatingOperations       map[string]bool
 	async                    bool
 	secondsToFinishOperation int
 	organizationID           *string
 	spaceID                  *string
 	doOperationChan          chan int
 	deploymentUsable         bool
+	fetchResponse            *FetchingServiceInstanceResponse
+	settings                 *Settings
+	catalog                  *Catalog
+}
+
+func (serviceDeployment *ServiceDeployment) BindingDeleted(bindingToFind *string) bool {
+	for _, bindingID := range serviceDeployment.deletedBindings {
+		if bindingID == *bindingToFind {
+			return true
+		}
+	}
+	return false
+}
+
+func (serviceDeployment *ServiceDeployment) FetchResponse() *FetchingServiceInstanceResponse {
+	return serviceDeployment.fetchResponse
 }
 
 func (serviceDeployment *ServiceDeployment) DeploymentUsable() bool {
@@ -61,17 +66,19 @@ func (serviceDeployment *ServiceDeployment) OrganizationID() *string {
 	return serviceDeployment.organizationID
 }
 
-func (serviceDeployment *ServiceDeployment) PlanID() string {
+func (serviceDeployment *ServiceDeployment) PlanID() *string {
 	return serviceDeployment.planID
 }
 
-func (serviceDeployment *ServiceDeployment) ServiceID() string {
+func (serviceDeployment *ServiceDeployment) ServiceID() *string {
 	return serviceDeployment.serviceID
 }
 
-func (serviceDeployment *ServiceDeployment) State() string {
+/*func (serviceDeployment *ServiceDeployment) State() string {
 	return serviceDeployment.state
 }
+
+*/
 
 func (serviceDeployment *ServiceDeployment) Metadata() *ServiceInstanceMetadata {
 	return serviceDeployment.metadata
@@ -91,10 +98,11 @@ func (serviceDeployment *ServiceDeployment) Parameters() *interface{} {
 	}
 	return serviceDeployment.parameters
 }
-func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceInstanceRequest, settings *Settings) (*ServiceDeployment, *string) {
+func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceInstanceRequest, settings *Settings,
+	catalog *Catalog) (*ServiceDeployment, *string) {
 	serviceDeployment := ServiceDeployment{
-		serviceID:           provisionRequest.ServiceID,
-		planID:              provisionRequest.PlanID,
+		serviceID:           &provisionRequest.ServiceID,
+		planID:              &provisionRequest.PlanID,
 		instanceID:          instanceID,
 		parameters:          provisionRequest.Parameters,
 		organizationID:      &provisionRequest.OrganizationGUID,
@@ -105,13 +113,17 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 		updatingOperations:  make(map[string]bool),
 		doOperationChan:     make(chan int, 1),
 		deploymentUsable:    true,
+		//fetchResponse:       &FetchingServiceInstanceResponse{},
+		settings:        settings,
+		catalog:         catalog,
+		deletedBindings: make([]string, 0),
 	}
 	var requestSettings *RequestSettings
 	requestSettings, _ = GetRequestSettings(provisionRequest.Parameters)
-	if settings.ProvisionSettings.DashboardURL {
+	if settings.ProvisionSettings.CreateDashboardURL {
 		serviceDeployment.buildDashboardURL()
 	}
-	if settings.ProvisionSettings.Metadata {
+	if settings.ProvisionSettings.CreateMetadata {
 		serviceDeployment.metadata = &ServiceInstanceMetadata{
 			Labels: map[string]string{
 				"labelKey": "labelValue",
@@ -121,43 +133,31 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 			},
 		}
 	}
-	operationID := serviceDeployment.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete,
-		requestSettings.FailAtOperation, nil, nil, nil, nil)
+	offering, _ := catalog.GetServiceOfferingById(provisionRequest.ServiceID)
+	if *offering.InstancesRetrievable {
+		serviceDeployment.setResponse()
+	}
+	operationID := serviceDeployment.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, requestSettings.FailAtOperation, nil, nil, nil, nil, true)
 	return &serviceDeployment, operationID
 }
 
-func (serviceDeployment *ServiceDeployment) Update(updateServiceInstanceRequest *UpdateServiceInstanceRequest,
-	settings *Settings) (*string, *ServiceBrokerError) { //}, requestSettings *RequestSettings)  {
-
-	//check even before if instance usable?!
-	//not here? the spec is saying that fetching while updating is forbidden, not updating while updating (which will be a different issue lol)???
-	/*
-		if serviceDeployment.updatingOperation != nil && serviceDeployment.operations[*serviceDeployment.updatingOperation] != nil {
-			if state := serviceDeployment.operations[*serviceDeployment.updatingOperation].State(); *state != PROGRESSING {
-
-			}
-		}
-
-	*/
-
+//right now, updating while an update is running is allowed
+func (serviceDeployment *ServiceDeployment) Update(updateServiceInstanceRequest *UpdateServiceInstanceRequest) (*string, *ServiceBrokerError) {
 	requestSettings, _ := GetRequestSettings(updateServiceInstanceRequest.Parameters)
 	//change ONLY parameters and planid???
 	if !*requestSettings.FailAtOperation {
 		if updateServiceInstanceRequest.PlanId != nil {
-			serviceDeployment.planID = *updateServiceInstanceRequest.PlanId
+			serviceDeployment.planID = updateServiceInstanceRequest.PlanId
 		}
 		if updateServiceInstanceRequest.Parameters != nil {
 			serviceDeployment.parameters = updateServiceInstanceRequest.Parameters
 		}
 	}
-
-	operationID := serviceDeployment.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete,
-		requestSettings.FailAtOperation, requestSettings.UpdateRepeatableAfterFail,
-		requestSettings.InstanceUsableAfterFail, nil, nil)
+	operationID := serviceDeployment.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, requestSettings.FailAtOperation, requestSettings.UpdateRepeatableAfterFail, requestSettings.InstanceUsableAfterFail, nil, nil, true)
 	return operationID, nil
 }
 
-func (serviceDeployment *ServiceDeployment) UpdatesRunning() bool {
+func (serviceDeployment *ServiceDeployment) Blocked() bool {
 	/*
 		entry will now be removed if state != progressing
 		-> true false check not necessary? only look, if entry in slice (instead of a map)???
@@ -177,11 +177,12 @@ func (serviceDeployment *ServiceDeployment) UpdatesRunning() bool {
 }
 
 func (serviceDeployment *ServiceDeployment) DoOperation(async bool, duration int, shouldFail *bool,
-	updateRepeatable *bool, deploymentUsable *bool, lastOperationOfDeletedInstance *map[string]*Operation,
-	id *string) *string {
+	updateRepeatable *bool, deploymentUsable *bool, lastOperationOfDeletedInstance *map[string]*Operation, id *string, blocked bool) *string {
 	serviceDeployment.doOperationChan <- 1
 	operationID := "task_" + strconv.Itoa(serviceDeployment.nextOperationNumber)
-	serviceDeployment.updatingOperations[operationID] = true
+	if blocked {
+		serviceDeployment.updatingOperations[operationID] = true
+	}
 	operation := NewOperation(operationID, float64(duration), *shouldFail, updateRepeatable, deploymentUsable, async)
 	if lastOperationOfDeletedInstance != nil && id != nil {
 		(*lastOperationOfDeletedInstance)[*id] = operation
@@ -213,6 +214,8 @@ func (serviceDeployment *ServiceDeployment) GetBinding(bindingID *string) (*Serv
 }
 
 func (serviceDeployment *ServiceDeployment) RemoveBinding(bindingID *string) {
+	binding := serviceDeployment.bindings[*bindingID]
+	serviceDeployment.deletedBindings = append(serviceDeployment.deletedBindings, *binding.bindingID)
 	delete(serviceDeployment.bindings, *bindingID)
 }
 
@@ -223,4 +226,28 @@ func (serviceDeployment *ServiceDeployment) AmountOfBindings() int {
 func (serviceDeployment *ServiceDeployment) buildDashboardURL() {
 	url := "http://" + generator.RandomString(4) + ".com/" + generator.RandomString(4)
 	serviceDeployment.dashboardURL = &url
+}
+
+func (serviceDeployment *ServiceDeployment) setResponse() {
+	serviceDeployment.fetchResponse = &FetchingServiceInstanceResponse{}
+	if serviceDeployment.settings.FetchServiceInstanceSettings.ReturnServiceID {
+		serviceDeployment.fetchResponse.ServiceId = serviceDeployment.serviceID
+	}
+	if serviceDeployment.settings.FetchServiceInstanceSettings.ReturnPlanID {
+		serviceDeployment.fetchResponse.PlanId = serviceDeployment.planID
+	}
+	if serviceDeployment.settings.FetchServiceInstanceSettings.ReturnDashboardURL {
+		serviceDeployment.fetchResponse.DashboardUrl = serviceDeployment.dashboardURL
+	}
+	if serviceDeployment.settings.FetchServiceInstanceSettings.ReturnParameters {
+		serviceDeployment.fetchResponse.Parameters = serviceDeployment.parameters
+	}
+	if serviceDeployment.settings.FetchServiceInstanceSettings.ReturnMaintenanceInfo {
+		serviceOffering, _ := serviceDeployment.catalog.GetServiceOfferingById(*serviceDeployment.serviceID)
+		servicePlan, _ := serviceOffering.GetPlanByID(*serviceDeployment.planID)
+		serviceDeployment.fetchResponse.MaintenanceInfo = servicePlan.MaintenanceInfo
+	}
+	if serviceDeployment.settings.FetchServiceInstanceSettings.ReturnMetadata {
+		serviceDeployment.fetchResponse.Metadata = serviceDeployment.metadata
+	}
 }

@@ -58,6 +58,8 @@ func (serviceBinding *ServiceBinding) InformationReturned() bool {
 	return serviceBinding.informationReturned
 }
 
+//serviceBinding.SetInformationReturned marks that the binding information has been returned in case the information
+//should only be returned once
 func (serviceBinding *ServiceBinding) SetInformationReturned(informationReturned bool) {
 	serviceBinding.informationReturned = informationReturned
 }
@@ -74,6 +76,9 @@ func (serviceBinding *ServiceBinding) GetLastOperation() *Operation {
 	return serviceBinding.lastOperation
 }
 
+//NewServiceBinding creates a new Service Binding and adds the binding to the map of existing Bindings and to the
+//corresponding deployment
+//Returns a pointer to the new binding and the operationID in case the endpoint is called async
 func NewServiceBinding(bindingID *string, bindingRequest *CreateBindingRequest, settings *Settings,
 	catalog *Catalog, bindingInstances *map[string]*ServiceBinding, deployment *ServiceDeployment) (*ServiceBinding, *string) {
 	serviceBinding := ServiceBinding{
@@ -99,8 +104,7 @@ func NewServiceBinding(bindingID *string, bindingRequest *CreateBindingRequest, 
 	var requestSettings *RequestSettings
 	requestSettings, _ = GetRequestSettings(bindingRequest.Parameters)
 	shouldFail := false
-	operationID := serviceBinding.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete,
-		&shouldFail, nil, nil, nil, nil)
+	operationID := serviceBinding.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, &shouldFail, nil, nil)
 	return &serviceBinding, operationID
 }
 
@@ -126,13 +130,11 @@ func (serviceBinding *ServiceBinding) RotateBinding(rotateBindingRequest *Rotate
 	var requestSettings *RequestSettings
 	requestSettings, _ = GetRequestSettings(rotateBindingRequest.Parameters)
 	shouldFail := false
-	operationID := newServiceBinding.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete,
-		&shouldFail, nil, nil, nil, nil)
+	operationID := newServiceBinding.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, &shouldFail, nil, nil)
 	return &newServiceBinding, operationID
 }
 
-func (serviceBinding *ServiceBinding) DoOperation(async bool, duration int, shouldFail *bool, updateRepeatable *bool,
-	deploymentUsable *bool, lastOperationOfDeletedInstance *map[string]*Operation, id *string) *string {
+func (serviceBinding *ServiceBinding) DoOperation(async bool, duration int, shouldFail *bool, lastOperationOfDeletedInstance *map[string]*Operation, id *string) *string {
 	serviceBinding.doOperationChan <- 1
 	operationID := "task_" + strconv.Itoa(serviceBinding.nextOperationNumber)
 	operation := NewOperation(operationID, float64(duration), *shouldFail, nil, nil, async)

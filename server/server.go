@@ -7,7 +7,6 @@ import (
 	"github.com/MaxFuhrich/serviceBrokerDummy/controller"
 	"github.com/MaxFuhrich/serviceBrokerDummy/model"
 	"github.com/MaxFuhrich/serviceBrokerDummy/service"
-	_ "github.com/MaxFuhrich/serviceBrokerDummy/validators"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"log"
@@ -17,8 +16,6 @@ import (
 )
 
 func Run() {
-
-	//testController := controller.New()
 	catalog, err := makeCatalog()
 	if err != nil {
 		log.Println("There has been an error while creating the catalog!", err.Error())
@@ -52,10 +49,6 @@ func Run() {
 				}))
 			}
 			r.Use(middleware.BindAndCheckHeader)
-
-			//Test
-			//r.GET("/", testController.Hello)
-			//r.POST("/", testController.TestBind)
 
 			//BONUS
 			r.GET("/v2/catalog/generate", catalogController.GenerateCatalog)

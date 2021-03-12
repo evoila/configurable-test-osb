@@ -13,9 +13,9 @@ type ProvisionRequest struct {
 }
 
 type ProvisionResponse struct {
-	DashboardURL string                  `json:"dashboard_url,omitempty"`
+	CreateDashboardURL string                  `json:"dashboard_url,omitempty"`
 	LastOperationID    string                  `json:"lastOperation,omitempty"`
-	Metadata     ServiceInstanceMetadata `json:"metadata,omitempty"`
+	CreateMetadata     ServiceInstanceMetadata `json:"metadata,omitempty"`
 }
 
 */

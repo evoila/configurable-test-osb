@@ -10,7 +10,7 @@ type Operation struct {
 	shouldFail bool
 	/*
 		this should be a pointer because it is read from poll_last_operation which does not know if this field should not exist
-		in the response in case the operation was not an update
+		in the fetchResponse in case the operation was not an update
 	*/
 	updateRepeatableAfterFail *bool
 	updateRepeatable          *bool

@@ -13,7 +13,7 @@ type ProvideServiceInstanceRequest struct {
 	//RequestSettings RequestSettings `json:"request_settings"`
 }
 
-//Provision and Update have the same response form
+//Provision and Update have the same fetchResponse form
 type ProvideUpdateServiceInstanceResponse struct {
 	DashboardUrl *string                  `json:"dashboard_url,omitempty"`
 	Operation    *string                  `json:"operation,omitempty"`
@@ -25,13 +25,13 @@ type ProvideUpdateServiceInstanceResponse struct {
 func NewProvideServiceInstanceResponse(dashboardUrl *string, operation *string,
 	metadata *ServiceInstanceMetadata, settings *Settings) *ProvideUpdateServiceInstanceResponse {
 	response := ProvideUpdateServiceInstanceResponse{}
-	if settings.ProvisionSettings.ShowDashboardURL {
+	if settings.ProvisionSettings.ReturnDashboardURL {
 		response.DashboardUrl = dashboardUrl
 	}
-	if settings.ProvisionSettings.ShowOperation {
+	if settings.ProvisionSettings.ReturnOperation {
 		response.Operation = operation
 	}
-	if settings.ProvisionSettings.ShowMetadata {
+	if settings.ProvisionSettings.ReturnMetadata {
 		response.Metadata = metadata
 	}
 	return &response
@@ -44,8 +44,8 @@ func NewUpdateServiceInstanceResponse() {
 */
 
 type FetchingServiceInstanceResponse struct {
-	ServiceId       string                   `json:"service_id,omitempty"`
-	PlanId          string                   `json:"plan_id,omitempty"`
+	ServiceId       *string                  `json:"service_id,omitempty"`
+	PlanId          *string                  `json:"plan_id,omitempty"`
 	DashboardUrl    *string                  `json:"dashboard_url,omitempty"`
 	Parameters      *interface{}             `json:"parameters,omitempty"`
 	MaintenanceInfo *MaintenanceInfo         `json:"maintenance_info,omitempty"`
@@ -74,7 +74,7 @@ type PreviousValues struct {
 type UpdateInstanceResponse struct {
 	DashboardUrl string
 	LastOperationID string
-	Metadata ServiceInstanceMetadata
+	CreateMetadata ServiceInstanceMetadata
 }
 */
 
