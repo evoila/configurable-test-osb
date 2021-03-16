@@ -16,6 +16,8 @@ func NewCatalogService(catalog *model.Catalog) CatalogService {
 	}
 }
 
+//GetCatalog() returns the catalog used by this service broker.
+//Returns *model.Catalog
 func (catalogService *CatalogService) GetCatalog() *model.Catalog {
 	return catalogService.catalog
 }

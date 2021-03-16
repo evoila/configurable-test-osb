@@ -1,26 +1,18 @@
 package model
 
 type CreateBindingRequest struct {
-	Context *interface{} `json:"context"`
-	//*
-	ServiceID *string `json:"service_id" binding:"required"`
-	//*
+	Context      *interface{}  `json:"context"`
+	ServiceID    *string       `json:"service_id" binding:"required"`
 	PlanID       *string       `json:"plan_id" binding:"required"`
 	AppGUID      *string       `json:"app_guid"`
 	BindResource *BindResource `json:"bind_resource"`
 	Parameters   *interface{}  `json:"parameters"`
 }
 
-/*
-NOT NEEDED???!
-the operation field could be in CreateRotateBindingResponse and just be omitted, if empty (and if 202 should
-be returned, the other fields can be left empty, which will then be omitted)
-*/
 type CreateRotateBindingAcceptedResponse struct {
 	Operation string `json:"operation,omitempty"`
 }
 
-//changed name, because this contains also the accepted fetchResponse
 type CreateRotateBindingResponse struct {
 	Metadata        *BindingMetadata `json:"metadata,omitempty"`
 	Credentials     *interface{}     `json:"credentials,omitempty"`
@@ -32,10 +24,7 @@ type CreateRotateBindingResponse struct {
 }
 
 type BindingOperationPollResponse struct {
-	//Valid values are in progress, succeeded, and failed
-	//REQUIRED
-	State string `json:"state"`
-
+	State       string `json:"state"`
 	Description string `json:"description,omitempty"`
 }
 
@@ -66,29 +55,20 @@ type BindingMetadata struct {
 }
 
 type VolumeMount struct {
-	//REQUIRED
-	Driver string `json:"driver"`
-	//REQUIRED
-	ContainerDir string `json:"container_dir"`
-	//REQUIRED
-	Mode string `json:"mode"`
-	//REQUIRED
-	DeviceType string `json:"device_type"`
-	//REQUIRED
-	Device *Device `json:"device"`
+	Driver       string  `json:"driver"`
+	ContainerDir string  `json:"container_dir"`
+	Mode         string  `json:"mode"`
+	DeviceType   string  `json:"device_type"`
+	Device       *Device `json:"device"`
 }
 
 type Device struct {
-	//REQUIRED
-	VolumeId string `json:"volume_id"`
-
+	VolumeId    string       `json:"volume_id"`
 	MountConfig *interface{} `json:"mount_config,omitempty"`
 }
 
 type Endpoint struct {
-	//REQUIRED
-	Host string `json:"Host"`
-	//REQUIRED
+	Host     string   `json:"Host"`
 	Ports    []string `json:"ports"`
 	Protocol *string  `json:"protocol,omitempty"`
 }

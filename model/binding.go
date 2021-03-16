@@ -108,10 +108,11 @@ func NewServiceBinding(bindingID *string, bindingRequest *CreateBindingRequest, 
 	return &serviceBinding, operationID
 }
 
-//is this ok??? what happens, if the original service binding is deleted??? is the garbage collector "smart" enough to
-//store the field of the new serviceBinding separately even though it is created from the old one?
-func (serviceBinding *ServiceBinding) RotateBinding(rotateBindingRequest *RotateBindingRequest, deployment *ServiceDeployment) (*ServiceBinding, *string) {
+//serviceBinding.RotateBinding creates a new binding with values from an existing one and adds itself to the deployment.
+//Returns *ServiceBinding (pointer to the new binding) and *string (ID of the rotate/create operation)
+func (serviceBinding *ServiceBinding) RotateBinding(rotateBindingRequest *RotateBindingRequest, deployment *ServiceDeployment, bindingID *string) (*ServiceBinding, *string) {
 	newServiceBinding := ServiceBinding{
+		bindingID:           bindingID,
 		context:             serviceBinding.context,
 		appGuid:             serviceBinding.appGuid,
 		bindResource:        serviceBinding.bindResource,
@@ -119,7 +120,6 @@ func (serviceBinding *ServiceBinding) RotateBinding(rotateBindingRequest *Rotate
 		operations:          make(map[string]*Operation),
 		doOperationChan:     make(chan int, 1),
 		nextOperationNumber: 0,
-		//lastOperation:       nil,
 		response:            serviceBinding.response,
 		settings:            serviceBinding.settings,
 		catalog:             serviceBinding.catalog,
@@ -134,18 +134,21 @@ func (serviceBinding *ServiceBinding) RotateBinding(rotateBindingRequest *Rotate
 	return &newServiceBinding, operationID
 }
 
-func (serviceBinding *ServiceBinding) DoOperation(async bool, duration int, shouldFail *bool, lastOperationOfDeletedInstance *map[string]*Operation, id *string) *string {
+//serviceBinding.DoOperation creates a new Operation for the binding and adds it to the map of operations (key: operationID, value: operation).
+//Additionaly, if lastOperationOfDeletedInstances and bindingID are != nil the operation will be added to a map, that stores the state of the last operation of
+//deleted instances.
+//Returns *string (operationID)
+func (serviceBinding *ServiceBinding) DoOperation(async bool, duration int, shouldFail *bool, lastOperationOfDeletedInstance *map[string]*Operation, bindingID *string) *string {
 	serviceBinding.doOperationChan <- 1
 	operationID := "task_" + strconv.Itoa(serviceBinding.nextOperationNumber)
 	operation := NewOperation(operationID, float64(duration), *shouldFail, nil, nil, async)
-	if lastOperationOfDeletedInstance != nil && id != nil {
-		(*lastOperationOfDeletedInstance)[*id] = operation
+	if lastOperationOfDeletedInstance != nil && bindingID != nil {
+		(*lastOperationOfDeletedInstance)[*bindingID] = operation
 	}
 	serviceBinding.lastOperation = operation
 	serviceBinding.operations[operationID] = operation
-	serviceBinding.nextOperationNumber++ // = serviceBinding.nextOperationNumber + 1
+	serviceBinding.nextOperationNumber++
 	<-serviceBinding.doOperationChan
-	//WAIT HERE IF !ASYNC???!
 	if !async {
 		time.Sleep(time.Duration(duration) * time.Second)
 	}

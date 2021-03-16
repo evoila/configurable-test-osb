@@ -7,8 +7,7 @@ import (
 )
 
 type DeploymentService struct {
-	catalog *model.Catalog
-	//pointer to settings?
+	catalog                        *model.Catalog
 	serviceInstances               *map[string]*model.ServiceDeployment
 	settings                       *model.Settings
 	lastOperationOfDeletedInstance map[string]*model.Operation
@@ -109,8 +108,6 @@ func (deploymentService *DeploymentService) FetchServiceInstance(instanceID *str
 		}
 	}
 	if serviceID != nil && *serviceID != *deployment.ServiceID() {
-		log.Println("Service id of request: " + *serviceID)
-		log.Println("Service id of instance: " + *deployment.ServiceID())
 		return 400, nil, &model.ServiceBrokerError{
 			Error:       "ServiceIDMatch",
 			Description: "The given service_id does not match the service_id of the instance",
@@ -136,33 +133,38 @@ func (deploymentService *DeploymentService) FetchServiceInstance(instanceID *str
 		}
 	}
 	/*
-		response := model.FetchingServiceInstanceResponse{}
-		if deploymentService.settings.FetchServiceInstanceSettings.ReturnServiceID {
-			response.ServiceId = deployment.ServiceID()
-		}
-		if deploymentService.settings.FetchServiceInstanceSettings.ReturnPlanID {
-			response.PlanId = deployment.PlanID()
-		}
-		if deploymentService.settings.FetchServiceInstanceSettings.ReturnDashboardURL {
-			response.DashboardUrl = deployment.DashboardURL()
-		}
-		if deploymentService.settings.FetchServiceInstanceSettings.ReturnParameters {
-			response.Parameters = deployment.Parameters()
-		}
-		if deploymentService.settings.FetchServiceInstanceSettings.ReturnMaintenanceInfo {
-			serviceOffering, _ := deploymentService.catalog.GetServiceOfferingById(*deployment.ServiceID())
-			servicePlan, _ := serviceOffering.GetPlanByID(*deployment.PlanID())
-			response.MaintenanceInfo = servicePlan.MaintenanceInfo
-		}
-		if deploymentService.settings.FetchServiceInstanceSettings.ReturnMetadata {
-			response.Metadata = deployment.Metadata()
-		}
+		this is the old approach to create the response and left here, in case the other approach turns out to be not as good
+			response := model.FetchingServiceInstanceResponse{}
+			if deploymentService.settings.FetchServiceInstanceSettings.ReturnServiceID {
+				response.ServiceId = deployment.ServiceID()
+			}
+			if deploymentService.settings.FetchServiceInstanceSettings.ReturnPlanID {
+				response.PlanId = deployment.PlanID()
+			}
+			if deploymentService.settings.FetchServiceInstanceSettings.ReturnDashboardURL {
+				response.DashboardUrl = deployment.DashboardURL()
+			}
+			if deploymentService.settings.FetchServiceInstanceSettings.ReturnParameters {
+				response.Parameters = deployment.Parameters()
+			}
+			if deploymentService.settings.FetchServiceInstanceSettings.ReturnMaintenanceInfo {
+				serviceOffering, _ := deploymentService.catalog.GetServiceOfferingById(*deployment.ServiceID())
+				servicePlan, _ := serviceOffering.GetPlanByID(*deployment.PlanID())
+				response.MaintenanceInfo = servicePlan.MaintenanceInfo
+			}
+			if deploymentService.settings.FetchServiceInstanceSettings.ReturnMetadata {
+				response.Metadata = deployment.Metadata()
+			}
 
 	*/
 
 	return 200, deployment.FetchResponse(), nil
 }
 
+//deploymentService.UpdateServiceInstance first checks if the request is valid. It is checked if the instance_id exists,
+//serviceIDs match, context updates are allowed and planID match (if given). If the request is valid,
+//serviceDeployment.Update(updateServiceInstanceRequest *UpdateServiceInstanceRequest) will be called, which updates the service instance.
+//Returns an int (http status), the actual response and an error if one occurs
 func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest *model.UpdateServiceInstanceRequest,
 	instanceID *string) (int, *model.ProvideUpdateServiceInstanceResponse, *model.ServiceBrokerError) {
 	var deployment *model.ServiceDeployment
@@ -225,7 +227,6 @@ func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest 
 				Description: "this service instance uses a different space_id",
 			}
 		}
-		//NO INFORMATION ABOUT WHAT TO TO WITH PREVIOUS_VALUES.MAINTENANCE_INFO???
 	}
 	if updateRequest.MaintenanceInfo != nil && updateRequest.MaintenanceInfo.Version != nil {
 		servicePlan, _ := serviceOffering.GetPlanByID(*updateRequest.PlanId)
@@ -236,8 +237,6 @@ func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest 
 			}
 		}
 		if *updateRequest.MaintenanceInfo.Version != *servicePlan.MaintenanceInfo.Version {
-			log.Println(*updateRequest.MaintenanceInfo.Version)
-			log.Println(*servicePlan.MaintenanceInfo.Version)
 			return 422, nil, &model.ServiceBrokerError{
 				Error:       "MaintenanceInfoConflict",
 				Description: model.MaintenanceInfoConflict,
@@ -247,7 +246,6 @@ func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest 
 	}
 	operationID, _ := deployment.Update(updateRequest)
 	var updateServiceInstanceResponse model.ProvideUpdateServiceInstanceResponse
-
 	updateServiceInstanceResponse.DashboardUrl = deployment.DashboardURL()
 	requestSettings, err := model.GetRequestSettings(updateRequest.Parameters)
 	if err != nil {
@@ -274,6 +272,15 @@ func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest 
 	return 200, &updateServiceInstanceResponse, nil
 }
 
+//deploymentService.PollOperationState first checks if the request is valid. It is checked if the instance_id exists
+//and if service and plan id match with the ones of the service instance, if given.
+//If an operationName is given, the function will try to look up the operation with the operationName as key.
+//If the setting to return the operation if async (like when provisioning async) is true and the last operation was
+//async, the correct operationName is REQUIRED in order to return the last operation.
+//If the request is valid and the service instance exists, the state of the operation will be returned.
+//If deleted, the last operation can still be accessed through deploymentService.lastOperationOfDeletedInstance to get
+//information about the deletion process.
+//Returns an int (http status), the actual response and an error if one occurs
 func (deploymentService *DeploymentService) PollOperationState(instanceID *string, serviceID *string, planID *string,
 	operationName *string) (int, *model.InstanceOperationPollResponse, *model.ServiceBrokerError) {
 	var deployment *model.ServiceDeployment
@@ -292,31 +299,21 @@ func (deploymentService *DeploymentService) PollOperationState(instanceID *strin
 					State:       *operation.State(),
 					Description: responseDescription,
 				}
-				//ALWAYS RETURN 410 IF ASYNC DELETION OR ONLY IF OPERATION STATE == "succeeded" (OR != "in progress") ????!!!!
 				return 410, &pollResponse, nil
 			} else {
-				/*
-					CORRECT BEHAVIOUR ???!!!
-					ALWAYS RETURN FAILED BECAUSE THE DELETION WAS NOT CALLED ASYNC???!
-					COULD THIS MEAN THAT ADDING A NEW OPERATION WHEN AN ENDPOINT IS CALLED IS NOT NEEDED????!!!
-					CHECK!!!
-				*/
 				pollResponse := model.InstanceOperationPollResponse{
 					State:       "failed",
 					Description: responseDescription,
 				}
 				return 200, &pollResponse, nil
 			}
-		} //removed else
+		}
 		return 404, nil, &model.ServiceBrokerError{
 			Error:       "NotFound",
 			Description: "given instance_id was not found",
 		}
-
 	}
 	if serviceID != nil && *serviceID != *deployment.ServiceID() {
-		log.Println("Service id of request: " + *serviceID)
-		log.Println("Service id of instance: " + *deployment.ServiceID())
 		return 400, nil, &model.ServiceBrokerError{
 			Error:       "ServiceIDMatch",
 			Description: "The given service_id does not match the service_id of the instance",
@@ -364,6 +361,11 @@ func (deploymentService *DeploymentService) PollOperationState(instanceID *strin
 	return statusCode, &pollResponse, nil
 }
 
+//deploymentService.Delete first checks if the request is valid. It is checked if the instance_id exists,
+//and if service and plan id match with the ones of the binding. If the request is valid the service instance will be
+//deleted from the map.
+//If AllowDeprovisionWithBindings is set to false, the instance can't be deleted, until all its bindings are removed.
+//Returns an int (http status), the actual response and an error if one occurs
 func (deploymentService *DeploymentService) Delete(deleteRequest *model.DeleteRequest, instanceID *string,
 	serviceID *string, planID *string) (int, *string, *model.ServiceBrokerError) {
 	var requestSettings *model.RequestSettings
@@ -378,8 +380,6 @@ func (deploymentService *DeploymentService) Delete(deleteRequest *model.DeleteRe
 		}
 	}
 	if serviceID != nil && *serviceID != *deployment.ServiceID() {
-		log.Println("Service id of request: " + *serviceID)
-		log.Println("Service id of instance: " + *deployment.ServiceID())
 		return 400, nil, &model.ServiceBrokerError{
 			Error:       "ServiceIDMatch",
 			Description: "The given service_id does not match the service_id of the instance",
@@ -406,7 +406,6 @@ func (deploymentService *DeploymentService) Delete(deleteRequest *model.DeleteRe
 	}
 	var response string
 	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint == true {
-
 		if deploymentService.settings.ProvisionSettings.ReturnOperationIfAsync {
 			response = *operationID
 		}

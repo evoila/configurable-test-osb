@@ -15,6 +15,8 @@ import (
 	"strings"
 )
 
+//Run starts the server.
+//Controllers, services and the catalog are initialized in this function, handlers bound to the endpoints and the server started.
 func Run() {
 	catalog, err := makeCatalog()
 	if err != nil {
@@ -37,10 +39,7 @@ func Run() {
 			bindingController := controller.NewBindingController(bindingService, settings)
 
 			middleware := controller.NewMiddleware(settings)
-			//PUT THIS TO A DIFFERENT PLACE
-			//Default router, should be changed?
 			r := gin.Default()
-			//check if requestid is ALWAYS required and therefore the first check can be omitted???!!!!
 			if settings.HeaderSettings.RequestIDRequired && settings.HeaderSettings.LogRequestID {
 				r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
 					return fmt.Sprintf("%s\n",
@@ -95,6 +94,8 @@ func Run() {
 	}
 }
 
+//makeCatalog() tries to generate the catalog struct from the catalog found in "config/catalog.json".
+//Returns *model.Catalog (the catalog used by this service broker) and error
 func makeCatalog() (*model.Catalog, error) {
 	var catalog model.Catalog
 	//FILEPATH
@@ -116,7 +117,6 @@ func makeCatalog() (*model.Catalog, error) {
 
 func makeSettings() (*model.Settings, error) {
 	var settings model.Settings
-	//FILEPATH???!!!
 	brokerSettingsJson, err := os.Open("config/brokerSettings.json")
 	if err != nil {
 		return nil, errors.New("error while opening settings file! error: " + err.Error())
@@ -129,7 +129,6 @@ func makeSettings() (*model.Settings, error) {
 	if err != nil {
 		return nil, errors.New("error unmarshalling the settings file to the catalog struct! error: " + err.Error())
 	}
-
 	version := strings.Split(settings.HeaderSettings.BrokerVersion, ".")
 	if len(version) != 2 {
 		return nil, errors.New("the format of the broker version must be \"MAJOR.MINOR\"")

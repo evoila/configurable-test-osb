@@ -28,9 +28,7 @@ func TestCatalog(t *testing.T) {
 				log.Println("Error unmarshalling the catalog file to the catalog struct! error: " + err.Error())
 				t.Error(err.Error())
 			} else {
-				//brokerController := controller.New()
 				var brokerCatalog model.Catalog
-				//brokerCatalog = *brokerController.ReturnCatalog()
 				marshalledJson, err := json.Marshal(brokerCatalog)
 				if err != nil {
 					t.Error(err.Error())
@@ -48,18 +46,4 @@ func TestCatalog(t *testing.T) {
 			}
 		}
 	}
-	//s1, _ := json.MarshalIndent(catalog, "", "\t")
-	//fmt.Print(string(s1))
-	//fmt.Println("HEEEEEEEEYYYYY ======================================")
-
-	//s, _ = json.MarshalIndent(brokerCatalog, "", "\t")
-	//fmt.Print(string(s))
-	//fmt.Println("ANOTHER ONE =====================================")
-
-	//s2, _ := json.MarshalIndent(unmarshalledAgain, "", "\t")
-	//fmt.Print(string(s2))
-
-	//fmt.Printf("Is the same? %v\n", strings.Compare(strings.TrimRight(string(s1), "\n"), strings.TrimRight(string(s2), "\n")))//, string(s1) == string(s2))
-
-	//compareRuneArrays(string(s1), string(s2))
 }

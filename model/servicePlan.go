@@ -6,31 +6,9 @@ import (
 )
 
 type ServicePlan struct {
-	//*
-	/*
-		An identifier used to correlate this Service Plan in future requests to the Service Broker. This MUST be globally
-		unique such that Platforms (and their users) MUST be able to assume that seeing the same value
-		(no matter what Service Broker uses it) will always refer to this Service Plan and for the same Service Offering.
-		MUST be a non-empty string. Using a GUID is RECOMMENDED.
-	*/
-	//REQUIRED
-	ID string `json:"id"`
-
-	//*
-	/*
-		The name of the Service Plan. MUST be unique within the Service Offering. MUST be a non-empty string.
-		Using a CLI-friendly name is RECOMMENDED.
-	*/
-	//REQUIRED
-	Name string `json:"name"`
-
-	//*
-	/*
-		A short description of the Service Plan. MUST be a non-empty string.
-	*/
-	//REQUIRED
-	Description string `json:"description"`
-
+	ID                     string           `json:"id"`
+	Name                   string           `json:"name"`
+	Description            string           `json:"description"`
 	Metadata               interface{}      `json:"metadata,omitempty"`
 	Free                   *bool            `json:"free,omitempty"`
 	Bindable               *bool            `json:"bindable,omitempty"`
@@ -56,25 +34,12 @@ type ServiceBindingSchema struct {
 }
 
 type InputParametersSchema struct {
-	//Parameters JSON schema object???
 	Parameters interface{} `json:"parameters,omitempty"`
 }
 
 type MaintenanceInfo struct {
-	//*
-	/*
-		This MUST be a string conforming to a semantic version 2.0. The Platform MAY use this field to determine
-		whether a maintenance update is available for a Service Instance.
-	*/
-	Version *string `json:"version,omitempty"`
-
-	//*
-	/*
-		This SHOULD be a string describing the impact of the maintenance update, for example, important version changes,
-		configuration changes, default value changes, etc. The Platform MAY present this information to the user before
-		they trigger the maintenance update.
-	*/
-	Description string `json:"description,omitempty"`
+	Version     *string `json:"version,omitempty"`
+	Description string  `json:"description,omitempty"`
 }
 
 func newServicePlan(catalogSettings *CatalogSettings, catalog *Catalog) *ServicePlan {
@@ -98,8 +63,6 @@ func newServicePlan(catalogSettings *CatalogSettings, catalog *Catalog) *Service
 	}
 	return &servicePlan
 }
-
-//TO DO
 
 func newSchema(catalogSettings *CatalogSettings) *Schemas {
 	if *generator.ReturnBoolean(catalogSettings.Schemas) {

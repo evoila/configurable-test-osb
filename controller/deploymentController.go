@@ -85,7 +85,7 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 }
 
 //deploymentController.FetchServiceInstance is the handler for the "GET /v2/service_instances/:instance_id" endpoint
-//The request is bound here, checked if required parameters are empty and. checked if async is required. The request
+//The request is bound here, checked if required parameters are empty and checked if async is required. The request
 //will then be passed to deploymentService.FetchServiceInstance(instanceID *string, serviceID *string, planID *string)
 //which deploys the service and returns a response, which is used by deploymentController.FetchServiceInstance
 func (deploymentController *DeploymentController) FetchServiceInstance(context *gin.Context) {
@@ -122,6 +122,10 @@ func (deploymentController *DeploymentController) FetchServiceInstance(context *
 	context.JSON(statusCode, response)
 }
 
+//deploymentController.UpdateServiceInstance is the handler for the "PATCH /v2/service_instances/:instance_id" endpoint
+//The request is bound here, checked if required parameters are empty and checked if async is required. The request
+//will then be passed to deploymentService.UpdateServiceInstance(updateRequest *model.UpdateServiceInstanceRequest, instanceID *string)
+//which updates the service and returns a response.
 func (deploymentController *DeploymentController) UpdateServiceInstance(context *gin.Context) {
 	instanceID := context.Param("instance_id")
 	var updateRequest model.UpdateServiceInstanceRequest
@@ -134,7 +138,6 @@ func (deploymentController *DeploymentController) UpdateServiceInstance(context 
 	}
 	var requestSettings *model.RequestSettings
 	requestSettings, _ = model.GetRequestSettings(updateRequest.Parameters)
-	//GROUP IN ITS OWN FUNCTION???
 	acceptsIncomplete := context.DefaultQuery("accepts_incomplete", "false")
 	if acceptsIncomplete != "false" && acceptsIncomplete != "true" {
 		context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
@@ -143,12 +146,7 @@ func (deploymentController *DeploymentController) UpdateServiceInstance(context 
 		})
 		return
 	}
-	//checking for nil not needed because asyncEndpoint gets default value = false
-	//if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint && acceptsIncomplete == "false" {
-	//fmt.Printf("accepts incomplete :%s\n", acceptsIncomplete)
-	//fmt.Printf("asyncendpoint: %v\n", *requestSettings.AsyncEndpoint)
 	if *requestSettings.AsyncEndpoint && acceptsIncomplete == "false" {
-		//fmt.Println("accepts incomplete false")
 		context.JSON(422, &model.ServiceBrokerError{
 			Error:       "AsyncRequired",
 			Description: model.AsyncRequired,
@@ -165,6 +163,11 @@ func (deploymentController *DeploymentController) UpdateServiceInstance(context 
 	context.JSON(statusCode, response)
 }
 
+//deploymentController.PollOperationState is the handler for the
+//"GET /v2/service_instances/:instance_id/last_operation" endpoint.
+//The request parameters are bound here which will then be passed to
+//deploymentService.PollOperationState(instanceID *string, serviceID *string, planID *string, operationName *string)
+//which polls the (last) operation of the service instance.
 func (deploymentController *DeploymentController) PollOperationState(context *gin.Context) {
 	instanceID := context.Param("instance_id")
 	var serviceID *string
@@ -178,7 +181,6 @@ func (deploymentController *DeploymentController) PollOperationState(context *gi
 			})
 		} else {
 			serviceID = &valueServiceID
-			log.Printf("service_id assigned valueServiceID: %v\n", *serviceID)
 		}
 	}
 	var planID *string
@@ -217,6 +219,10 @@ func (deploymentController *DeploymentController) PollOperationState(context *gi
 	context.JSON(statusCode, response)
 }
 
+//deploymentController.Delete is the handler for the "DELETE /v2/service_instances/:instance_id" endpoint.
+//The request parameters are bound here which will then be passed to
+//deploymentService.Delete(deleteRequest *model.DeleteRequest, instanceID *string, serviceID *string, planID *string)
+//which removes the binding.
 func (deploymentController *DeploymentController) Delete(context *gin.Context) {
 	instanceID := context.Param("instance_id")
 	serviceOfferingID, exists := context.GetQuery("service_id")

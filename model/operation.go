@@ -3,27 +3,16 @@ package model
 import "time"
 
 type Operation struct {
-	name       string
-	state      string
-	startTime  time.Time
-	duration   float64
-	shouldFail bool
-	/*
-		this should be a pointer because it is read from poll_last_operation which does not know if this field should not exist
-		in the fetchResponse in case the operation was not an update
-	*/
+	name                      string
+	state                     string
+	startTime                 time.Time
+	duration                  float64
+	shouldFail                bool
 	updateRepeatableAfterFail *bool
 	updateRepeatable          *bool
 	instanceUsableAfterFail   *bool
 	instanceUsable            *bool
-	/*
-		???
-		ADD INFORMATION IF OPERATION IS ASYNC IN CONSTRUCTOR????!
-		reason poll last operation service instance:
-		if !shouldFail and instanceUsable! -> instance is not usable as effect of this operation -> this is a delete operation
-		if async: return 410 Gone (this happens when polling the async delete operation for a service instance)
-	*/
-	async *bool
+	async                     *bool
 }
 
 func (operation *Operation) SupposedToFail() bool {
@@ -59,11 +48,6 @@ func (operation *Operation) State() *string {
 				operation.state = FAILED
 				operation.updateRepeatable = operation.updateRepeatableAfterFail
 				operation.instanceUsable = operation.instanceUsableAfterFail
-				/*if operation.updateRepeatableAfterFail != nil {
-
-				}
-
-				*/
 			} else {
 				operation.state = SUCCEEDED
 			}

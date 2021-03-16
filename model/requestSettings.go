@@ -3,7 +3,6 @@ package model
 import (
 	"encoding/json"
 	"errors"
-	"log"
 )
 
 type RequestSettings struct {
@@ -14,6 +13,10 @@ type RequestSettings struct {
 	UpdateRepeatableAfterFail *bool `json:"update_repeatable_after_fail,omitempty"`
 }
 
+//GetRequestSettings tries to get RequestSettings from the field "config_broker_settings" in params in the request body.
+//If values in the request are missing, they will be replaced by default values.
+//The requestSettings are responsible for the behaviour of and endpoint call (for example, if async)
+//Returns *RequestSettings, error
 func GetRequestSettings(params *interface{}) (*RequestSettings, error) {
 	var requestSettings RequestSettings
 	if params != nil {
@@ -43,6 +46,5 @@ func GetRequestSettings(params *interface{}) (*RequestSettings, error) {
 		val := 0
 		requestSettings.SecondsToComplete = &val
 	}
-	log.Println("now returning requestSettings...")
 	return &requestSettings, nil
 }

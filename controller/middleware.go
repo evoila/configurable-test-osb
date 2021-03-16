@@ -11,8 +11,6 @@ import (
 )
 
 type Middleware struct {
-	//Only needed if the header should be bound once and other functions/handlers are supposed to use the pointer
-	//header *model.Header
 	settings *model.Settings
 }
 
@@ -21,13 +19,11 @@ func NewMiddleware(settings *model.Settings) Middleware {
 }
 
 func (middleware *Middleware) BindAndCheckHeader(context *gin.Context) {
-	//is the bound header NEEDED by caller of this function? YES
 	var header model.Header
 	err := context.ShouldBindHeader(&header)
 	if err != nil {
 		context.AbortWithStatusJSON(http.StatusBadRequest, err.Error())
 		return
-
 	}
 	if header.APIVersionHeader == nil {
 		context.AbortWithStatusJSON(http.StatusBadRequest, "the header \"X-Broker-API-Version\" is required but missing")
@@ -88,21 +84,4 @@ func (middleware *Middleware) BindAndCheckHeader(context *gin.Context) {
 			context.AbortWithStatusJSON(http.StatusBadRequest, "the header \"X-Broker-API-Request-Identity\" is required but missing")
 		}
 	}
-
-	/*
-		TO DO
-		"origin_id_val_must_match_profile": true,
-		"log_request_id": true,
-		"request_id_in_response": true,
-		"etag_if_modified_since_in_response": false
-	*/
-
-	/*s, _ := json.MarshalIndent(header, "", "\t")
-	log.Println(string(s))
-	log.Println("Header Middleware.settings:")
-	s, _ = json.MarshalIndent(middleware.settings, "", "\t")
-	log.Println(string(s))
-
-	*/
-	//return &header, nil
 }

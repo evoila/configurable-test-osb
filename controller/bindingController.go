@@ -22,24 +22,14 @@ func NewBindingController(bindingService *service.BindingService, settings *mode
 	}
 }
 
-//deploymentController.CreateBinding is the handler for the "PUT /v2/service_instances/:instance_id/service_bindings/:binding_id" endpoint
+//bindingController.CreateBinding is the handler for the "PUT /v2/service_instances/:instance_id/service_bindings/:binding_id" endpoint
 //The request is bound here, checked if required parameters are empty and checked if async is required.
 //If the request can't be bound to the corresponding struct, the context will be passed to
 //bindingController.rotateBinding(context *gin.Context) which has the same endpoint.
 //The request will then be passed to bindingService.CreateBinding(bindingRequest *model.CreateBindingRequest, instanceID *string, bindingID *string)
-//which creates a binding and returns a response, which is used by deploymentController.FetchServiceInstance.
-
+//which creates a binding and returns a response, which is also used by deploymentController.FetchBinding.
 func (bindingController *BindingController) CreateBinding(context *gin.Context) {
 	instanceID := context.Param("instance_id")
-	/*if instanceID == "" {
-		context.JSON(http.StatusBadRequest, gin.H{
-			"message": "error while parsing url parameter \"instance_id\"",
-			"error":   "invalid value, value must not be \"\" and unique",
-		})
-		return
-	}
-
-	*/
 	bindingID := context.Param("binding_id")
 	if bindingID == "" {
 		context.JSON(http.StatusBadRequest, gin.H{
@@ -57,6 +47,7 @@ func (bindingController *BindingController) CreateBinding(context *gin.Context) 
 		return
 	}
 	var bindingRequest model.CreateBindingRequest
+	//ShouldBindBodyWith instead of ShouldBindJSON used because ShouldBindBodyWith does not consume the JSON body
 	if err := context.ShouldBindBodyWith(&bindingRequest, binding.JSON); err != nil {
 		//checking, if the request was a binding request and if so, rotate the bindings
 		bindingController.rotateBinding(context)
@@ -93,6 +84,11 @@ func (bindingController *BindingController) CreateBinding(context *gin.Context) 
 	context.JSON(statusCode, response)
 }
 
+//bindingController.rotateBinding is the handler for the "PUT /v2/service_instances/:instance_id/service_bindings/:binding_id"
+//endpoint in case it is a request to rotate a binding. If the request body can't be bound in CreateBinding, this function will be called
+//The request is bound here, checked if required parameters are empty and checked if async is required.
+//The request will then be passed to bindingService.RotateBinding(rotateBindingRequest *model.RotateBindingRequest, instanceID *string, bindingID *string)
+//which creates a binding from an existing one and returns a response, which is also used by deploymentController.FetchBinding.
 func (bindingController *BindingController) rotateBinding(context *gin.Context) {
 	log.Println("rotateBinding called")
 	instanceID := context.Param("instance_id")
@@ -113,11 +109,10 @@ func (bindingController *BindingController) rotateBinding(context *gin.Context) 
 		return
 	}
 	var rotateBindingRequest model.RotateBindingRequest
-	log.Println(context)
 	if err := context.ShouldBindBodyWith(&rotateBindingRequest, binding.JSON); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{
-			"message": "error while binding request body to struct, the body must either be the one specified for creating bindings or the one for rotating bindings",
-			"error":   err.Error(),
+		context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
+			Error:       "InvalidRequest",
+			Description: "Error while binding request body to struct, the body must either be the one specified for creating bindings or the one for rotating bindings",
 		})
 		return
 	}
@@ -138,6 +133,10 @@ func (bindingController *BindingController) rotateBinding(context *gin.Context) 
 	context.JSON(statusCode, response)
 }
 
+//bindingController.FetchBinding is the handler for the "GET /v2/service_instances/:instance_id/service_bindings/:binding_id" endpoint.
+//The request parameters are bound here which will then be passed to
+//bindingService.FetchBinding(instanceID *string, bindingID *string, serviceID *string, planID *string)
+//which fetches the requested binding.
 func (bindingController *BindingController) FetchBinding(context *gin.Context) {
 	instanceID := context.Param("instance_id")
 	bindingID := context.Param("binding_id")
@@ -151,6 +150,11 @@ func (bindingController *BindingController) FetchBinding(context *gin.Context) {
 	context.JSON(statusCode, response)
 }
 
+//bindingController.PollOperationState is the handler for the
+//"GET /v2/service_instances/:instance_id/service_bindings/:binding_id/last_operation" endpoint.
+//The request parameters are bound here which will then be passed to
+//bindingService.PollOperationState(instanceID *string, bindingID *string, serviceID *string, planID *string, operationName *string)
+//which polls the (last) operation of the binding.
 func (bindingController *BindingController) PollOperationState(context *gin.Context) {
 	instanceID := context.Param("instance_id")
 	bindingID := context.Param("binding_id")
@@ -204,6 +208,11 @@ func (bindingController *BindingController) PollOperationState(context *gin.Cont
 	context.JSON(statusCode, response)
 }
 
+//bindingController.Unbind is the handler for the
+//"DELETE /v2/service_instances/:instance_id/service_bindings/:binding_id" endpoint.
+//The request parameters are bound here which will then be passed to
+//bindingService.Unbind(deleteRequest *model.DeleteRequest, instanceID *string, bindingID *string, serviceID *string, planID *string)
+//which removes the binding.
 func (bindingController *BindingController) Unbind(context *gin.Context) {
 	instanceID := context.Param("instance_id")
 	bindingID := context.Param("binding_id")
@@ -251,6 +260,7 @@ func (bindingController *BindingController) Unbind(context *gin.Context) {
 	context.JSON(statusCode, response)
 }
 
+//BONUS
 func (bindingController *BindingController) CurrentBindings(context *gin.Context) {
 	resp := struct {
 		Bindings *map[string]*model.ServiceBinding `json:"service_bindings"`

@@ -11,8 +11,9 @@ type Catalog struct {
 	ServiceOfferings []ServiceOffering `json:"services" binding:"required"` //check if correct
 }
 
-//Used for generation of catalog
-func NewCatalog(catalogSettings *CatalogSettings) (*Catalog, error) {
+//NewCatalog generates a new randomized catalog regarding to the catalogSettings.
+//Returns *Catalog (the newly generated catalog)
+func NewCatalog(catalogSettings *CatalogSettings) *Catalog {
 	var catalog Catalog
 	rand.Seed(time.Now().UnixNano())
 	var tags []string
@@ -26,7 +27,7 @@ func NewCatalog(catalogSettings *CatalogSettings) (*Catalog, error) {
 	for i := 0; i < catalogSettings.Amount; i++ {
 		catalog.ServiceOfferings = append(catalog.ServiceOfferings, *newServiceOffering(catalogSettings, &catalog, tags))
 	}
-	return &catalog, nil
+	return &catalog
 }
 
 func (catalog *Catalog) GetServiceOfferingById(id string) (*ServiceOffering, bool) {

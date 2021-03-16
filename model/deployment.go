@@ -8,19 +8,18 @@ import (
 )
 
 type ServiceDeployment struct {
-	serviceID            *string
-	planID               *string
-	instanceID           string
-	parameters           *interface{}
-	dashboardURL         *string
-	metadata             *ServiceInstanceMetadata
-	bindings             map[string]*ServiceBinding
-	deletedBindings      []string
-	lastOperation        *Operation
-	operations           map[string]*Operation
-	requestIDToOperation map[string]*Operation
-	nextOperationNumber  int
-	//indicates if update(s) running
+	serviceID                *string
+	planID                   *string
+	instanceID               string
+	parameters               *interface{}
+	dashboardURL             *string
+	metadata                 *ServiceInstanceMetadata
+	bindings                 map[string]*ServiceBinding
+	deletedBindings          []string
+	lastOperation            *Operation
+	operations               map[string]*Operation
+	requestIDToOperation     map[string]*Operation
+	nextOperationNumber      int
 	updatingOperations       map[string]bool
 	async                    bool
 	secondsToFinishOperation int
@@ -74,12 +73,6 @@ func (serviceDeployment *ServiceDeployment) ServiceID() *string {
 	return serviceDeployment.serviceID
 }
 
-/*func (serviceDeployment *ServiceDeployment) State() string {
-	return serviceDeployment.state
-}
-
-*/
-
 func (serviceDeployment *ServiceDeployment) Metadata() *ServiceInstanceMetadata {
 	return serviceDeployment.metadata
 }
@@ -113,10 +106,9 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 		updatingOperations:  make(map[string]bool),
 		doOperationChan:     make(chan int, 1),
 		deploymentUsable:    true,
-		//fetchResponse:       &FetchingServiceInstanceResponse{},
-		settings:        settings,
-		catalog:         catalog,
-		deletedBindings: make([]string, 0),
+		settings:            settings,
+		catalog:             catalog,
+		deletedBindings:     make([]string, 0),
 	}
 	var requestSettings *RequestSettings
 	requestSettings, _ = GetRequestSettings(provisionRequest.Parameters)
@@ -141,10 +133,12 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 	return &serviceDeployment, operationID
 }
 
-//right now, updating while an update is running is allowed
+//serviceDeployment.Update replaces old values of the service instance with new ones (will not replace anything if the
+//operation is supposed to fail)
+//Right now, updating while an update is running is allowed
+//Returns *string (operationID) and *ServiceBrokerError
 func (serviceDeployment *ServiceDeployment) Update(updateServiceInstanceRequest *UpdateServiceInstanceRequest) (*string, *ServiceBrokerError) {
 	requestSettings, _ := GetRequestSettings(updateServiceInstanceRequest.Parameters)
-	//change ONLY parameters and planid???
 	if !*requestSettings.FailAtOperation {
 		if updateServiceInstanceRequest.PlanId != nil {
 			serviceDeployment.planID = updateServiceInstanceRequest.PlanId
@@ -157,12 +151,14 @@ func (serviceDeployment *ServiceDeployment) Update(updateServiceInstanceRequest 
 	return operationID, nil
 }
 
+func (serviceDeployment *ServiceDeployment) IsDeploying() bool {
+	if serviceDeployment.operations["task_0"] != nil && *serviceDeployment.operations["task_0"].State() == PROGRESSING {
+		return true
+	}
+	return false
+}
+
 func (serviceDeployment *ServiceDeployment) Blocked() bool {
-	/*
-		entry will now be removed if state != progressing
-		-> true false check not necessary? only look, if entry in slice (instead of a map)???
-		OR: change updatingoperations to map[string]*Operation???!!! this sounds good
-	*/
 	for operationName, running := range serviceDeployment.updatingOperations {
 		if running {
 			if serviceDeployment.operations[operationName] != nil && *serviceDeployment.operations[operationName].State() == PROGRESSING {

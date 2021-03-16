@@ -1,6 +1,5 @@
 package model
 
-//request (only request????)
 type ProvideServiceInstanceRequest struct {
 	ServiceID        string          `json:"service_id" binding:"required"`
 	PlanID           string          `json:"plan_id" binding:"required"`
@@ -9,19 +8,14 @@ type ProvideServiceInstanceRequest struct {
 	SpaceGUID        string          `json:"space_guid" binding:"required"`
 	Parameters       *interface{}    `json:"parameters"`
 	MaintenanceInfo  MaintenanceInfo `json:"maintenance_info"`
-
-	//RequestSettings RequestSettings `json:"request_settings"`
 }
 
-//Provision and Update have the same fetchResponse form
 type ProvideUpdateServiceInstanceResponse struct {
 	DashboardUrl *string                  `json:"dashboard_url,omitempty"`
 	Operation    *string                  `json:"operation,omitempty"`
 	Metadata     *ServiceInstanceMetadata `json:"metadata,omitempty"`
 }
 
-//replace usage of this function by setting the fields directly OR by creating builder functions for each field????!
-//atm provision uses this function and update sets the fields directly
 func NewProvideServiceInstanceResponse(dashboardUrl *string, operation *string,
 	metadata *ServiceInstanceMetadata, settings *Settings) *ProvideUpdateServiceInstanceResponse {
 	response := ProvideUpdateServiceInstanceResponse{}
@@ -36,12 +30,6 @@ func NewProvideServiceInstanceResponse(dashboardUrl *string, operation *string,
 	}
 	return &response
 }
-
-/*
-func NewUpdateServiceInstanceResponse() {
-
-}
-*/
 
 type FetchingServiceInstanceResponse struct {
 	ServiceId       *string                  `json:"service_id,omitempty"`
@@ -69,22 +57,8 @@ type PreviousValues struct {
 	MaintenanceInfo *MaintenanceInfo `json:"maintenance_info"`
 }
 
-//SAME AS PROVISION RESPONSE
-/*
-type UpdateInstanceResponse struct {
-	DashboardUrl string
-	LastOperationID string
-	CreateMetadata ServiceInstanceMetadata
-}
-*/
-
 type InstanceOperationPollResponse struct {
-	//*
-	//does binding:"required" count in both directions?
-	//NO, BUT I CAN CHECK BEFORE CONVERTING TO JSON
-	//REQUIRED
-	State string `json:"state"`
-
+	State            string  `json:"state"`
 	Description      *string `json:"description,omitempty"`
 	InstanceUsable   *bool   `json:"instance_usable,omitempty"`
 	UpdateRepeatable *bool   `json:"update_repeatable,omitempty"`

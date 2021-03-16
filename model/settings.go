@@ -10,16 +10,15 @@ type Settings struct {
 }
 
 type HeaderSettings struct {
-	BrokerVersion         string `json:"broker_version" binding:"required"`
-	RejectWrongAPIVersion bool   `json:"reject_wrong_api_version" binding:"required"`
-	RejectEmptyAPIVersion bool   `json:"reject_empty_api_version" binding:"required"`
-	//NO ITS NOT UP TO THE BROKER TO DECIDE. THE PLATFORM MAY USE THIS SO ITS UP TO THE PLATFORM CHANGE?!
-	OriginIDRequired              bool `json:"origin_id_required" binding:"required"`
-	OriginIDValMustMatchProfile   bool `json:"origin_id_val_must_match_profile" binding:"required"`
-	RequestIDRequired             bool `json:"request_id_required" binding:"required"`
-	LogRequestID                  bool `json:"log_request_id" binding:"required"`
-	RequestIDInResponse           bool `json:"request_id_in_response" binding:"required"`
-	EtagIfModifiedSinceInResponse bool `json:"etag_if_modified_since_in_response" binding:"required"`
+	BrokerVersion                 string `json:"broker_version" binding:"required"`
+	RejectWrongAPIVersion         bool   `json:"reject_wrong_api_version" binding:"required"`
+	RejectEmptyAPIVersion         bool   `json:"reject_empty_api_version" binding:"required"`
+	OriginIDRequired              bool   `json:"origin_id_required" binding:"required"`
+	OriginIDValMustMatchProfile   bool   `json:"origin_id_val_must_match_profile" binding:"required"`
+	RequestIDRequired             bool   `json:"request_id_required" binding:"required"`
+	LogRequestID                  bool   `json:"log_request_id" binding:"required"`
+	RequestIDInResponse           bool   `json:"request_id_in_response" binding:"required"`
+	EtagIfModifiedSinceInResponse bool   `json:"etag_if_modified_since_in_response" binding:"required"`
 }
 
 type GeneralSettings struct {
@@ -28,7 +27,7 @@ type GeneralSettings struct {
 type ProvisionSettings struct {
 	StatusCodeOKPossible         bool `json:"status_code_ok_possible" binding:"required"`
 	CreateDashboardURL           bool `json:"create_dashboard_url" binding:"required"`
-	ReturnOperationIfAsync       bool `json:"return_hoperation_if_async" binding:"required"`
+	ReturnOperationIfAsync       bool `json:"return_operation_if_async" binding:"required"`
 	CreateMetadata               bool `json:"create_metadata" binding:"required"`
 	ReturnDashboardURL           bool `json:"return_dashboard_url" binding:"required"`
 	ReturnOperation              bool `json:"return_operation" binding:"required"`
