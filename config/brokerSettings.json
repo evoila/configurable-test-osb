@@ -1,6 +1,4 @@
 {
-  "general_settings": {
-  },
   "header_settings": {
     "broker_version": "0.7",
     "reject_wrong_api_version": true,

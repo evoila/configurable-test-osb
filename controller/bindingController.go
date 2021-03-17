@@ -13,12 +13,14 @@ import (
 type BindingController struct {
 	settings       *model.Settings
 	bindingService *service.BindingService
+	platform       *string
 }
 
-func NewBindingController(bindingService *service.BindingService, settings *model.Settings) *BindingController {
+func NewBindingController(bindingService *service.BindingService, settings *model.Settings, platform *string) *BindingController {
 	return &BindingController{
 		settings:       settings,
 		bindingService: bindingService,
+		platform:       platform,
 	}
 }
 
@@ -52,6 +54,13 @@ func (bindingController *BindingController) CreateBinding(context *gin.Context) 
 		//checking, if the request was a binding request and if so, rotate the bindings
 		bindingController.rotateBinding(context)
 		return
+	}
+	if bindingRequest.Context != nil {
+		err := model.CorrectContext(bindingRequest.Context, &bindingController.settings.HeaderSettings.BrokerVersion, bindingController.platform, true)
+		if err != nil {
+			context.JSON(400, err)
+			return
+		}
 	}
 	var requestSettings *model.RequestSettings
 	requestSettings, _ = model.GetRequestSettings(bindingRequest.Parameters)

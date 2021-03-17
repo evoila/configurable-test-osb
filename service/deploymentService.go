@@ -344,16 +344,21 @@ func (deploymentService *DeploymentService) PollOperationState(instanceID *strin
 		description := "Default description"
 		responseDescription = &description
 	}
-	pollResponse := model.InstanceOperationPollResponse{
-		State:            *operation.State(),
-		Description:      responseDescription,
-		InstanceUsable:   operation.InstanceUsable(),
-		UpdateRepeatable: operation.UpdateRepeatable(),
+	var pollResponse model.InstanceOperationPollResponse
+	if deploymentService.settings.HeaderSettings.BrokerVersion > "2.15" {
+		pollResponse = model.InstanceOperationPollResponse{
+			State:            *operation.State(),
+			Description:      responseDescription,
+			InstanceUsable:   operation.InstanceUsable(),
+			UpdateRepeatable: operation.UpdateRepeatable(),
+		}
+	} else {
+		pollResponse = model.InstanceOperationPollResponse{
+			State:       *operation.State(),
+			Description: responseDescription,
+		}
 	}
 	statusCode := 200
-	if operation.InstanceUsable() != nil && !*operation.InstanceUsable() && operation.SupposedToFail() {
-		statusCode = 410
-	}
 	return statusCode, &pollResponse, nil
 }
 

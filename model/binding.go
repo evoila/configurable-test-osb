@@ -161,12 +161,12 @@ func (serviceBinding *ServiceBinding) setResponse() {
 		metadata := BindingMetadata{}
 		serviceBinding.response.Metadata = &metadata
 
-		if serviceBinding.settings.BindingSettings.BindingMetadataSettings.ReturnExpiresAt {
+		if serviceBinding.settings.HeaderSettings.BrokerVersion > "2.15" && serviceBinding.settings.BindingSettings.BindingMetadataSettings.ReturnExpiresAt {
 			var expiresAt string
 			expiresAt = time.Now().Add(240 * time.Hour).Format("2006-01-02T15:04:05-0700")
 			serviceBinding.response.Metadata.ExpiresAt = &expiresAt
 		}
-		if serviceBinding.settings.BindingSettings.BindingMetadataSettings.ReturnRenewBefore {
+		if serviceBinding.settings.HeaderSettings.BrokerVersion > "2.16" && serviceBinding.settings.BindingSettings.BindingMetadataSettings.ReturnRenewBefore {
 			var renewBefore string
 			renewBefore = time.Now().Add(240 * time.Hour).Format("2006-01-02T15:04:05-0700")
 			serviceBinding.response.Metadata.RenewBefore = &renewBefore

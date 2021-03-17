@@ -28,17 +28,17 @@ func Run() {
 		} else {
 			var serviceInstances map[string]*model.ServiceDeployment
 			serviceInstances = make(map[string]*model.ServiceDeployment)
+			var platform string
 			catalogService := service.NewCatalogService(catalog)
 			catalogController := controller.NewCatalogController(&catalogService, settings)
 			deploymentService := service.NewDeploymentService(catalog, &serviceInstances, settings)
-			deploymentController := controller.NewDeploymentController(deploymentService, settings)
+			deploymentController := controller.NewDeploymentController(deploymentService, settings, &platform)
 
 			var bindingInstances map[string]*model.ServiceBinding
 			bindingInstances = make(map[string]*model.ServiceBinding)
 			bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
-			bindingController := controller.NewBindingController(bindingService, settings)
-
-			middleware := controller.NewMiddleware(settings)
+			bindingController := controller.NewBindingController(bindingService, settings, &platform)
+			middleware := controller.NewMiddleware(settings, &platform)
 			r := gin.Default()
 			if settings.HeaderSettings.RequestIDRequired && settings.HeaderSettings.LogRequestID {
 				r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {

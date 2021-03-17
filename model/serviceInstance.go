@@ -3,7 +3,7 @@ package model
 type ProvideServiceInstanceRequest struct {
 	ServiceID        string          `json:"service_id" binding:"required"`
 	PlanID           string          `json:"plan_id" binding:"required"`
-	Context          interface{}     `json:"context"`
+	Context          *interface{}    `json:"context"`
 	OrganizationGUID string          `json:"organization_guid" binding:"required"`
 	SpaceGUID        string          `json:"space_guid" binding:"required"`
 	Parameters       *interface{}    `json:"parameters"`
@@ -27,6 +27,9 @@ func NewProvideServiceInstanceResponse(dashboardUrl *string, operation *string,
 	}
 	if settings.ProvisionSettings.ReturnMetadata {
 		response.Metadata = metadata
+		if settings.HeaderSettings.BrokerVersion < "2.16" {
+			response.Metadata.Labels = nil
+		}
 	}
 	return &response
 }

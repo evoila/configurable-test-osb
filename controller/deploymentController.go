@@ -13,14 +13,16 @@ import (
 type DeploymentController struct {
 	settings          *model.Settings
 	deploymentService *service.DeploymentService
+	platform          *string
 }
 
 //NewDeploymentController is the constructor for the struct DeploymentController which ensures, that the
 //DeploymentController has access to the settings and the DeploymentService
-func NewDeploymentController(deploymentService *service.DeploymentService, settings *model.Settings) *DeploymentController {
+func NewDeploymentController(deploymentService *service.DeploymentService, settings *model.Settings, platform *string) *DeploymentController {
 	return &DeploymentController{
 		settings:          settings,
 		deploymentService: deploymentService,
+		platform:          platform,
 	}
 }
 
@@ -53,6 +55,13 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 		})
 		return
 	}
+	if provisionRequest.Context != nil {
+		err := model.CorrectContext(provisionRequest.Context, &deploymentController.settings.HeaderSettings.BrokerVersion, deploymentController.platform, false)
+		if err != nil {
+			context.JSON(400, err)
+			return
+		}
+	}
 	var requestSettings *model.RequestSettings
 	requestSettings, _ = model.GetRequestSettings(provisionRequest.Parameters)
 	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint && acceptsIncomplete == "false" {
@@ -80,6 +89,9 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 	if err != nil {
 		context.JSON(statusCode, err)
 		return
+	}
+	if deploymentController.settings.HeaderSettings.BrokerVersion < "2.16" {
+
 	}
 	context.JSON(statusCode, response)
 }
@@ -135,6 +147,13 @@ func (deploymentController *DeploymentController) UpdateServiceInstance(context 
 			Description: "Error while binding request body to struct",
 		})
 		return
+	}
+	if updateRequest.Context != nil {
+		err := model.CorrectContext(updateRequest.Context, &deploymentController.settings.HeaderSettings.BrokerVersion, deploymentController.platform, false)
+		if err != nil {
+			context.JSON(400, err)
+			return
+		}
 	}
 	var requestSettings *model.RequestSettings
 	requestSettings, _ = model.GetRequestSettings(updateRequest.Parameters)
