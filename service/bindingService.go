@@ -116,7 +116,7 @@ func (bindingService *BindingService) RotateBinding(rotateBindingRequest *model.
 	if !exists {
 		return 404, nil, &model.ServiceBrokerError{
 			Error:       "NotFound",
-			Description: "given instance_id was not found",
+			Description: "Given instance_id was not found",
 		}
 	}
 	if _, exists := (*bindingService.bindingInstances)[*bindingID]; exists == true {
@@ -129,7 +129,7 @@ func (bindingService *BindingService) RotateBinding(rotateBindingRequest *model.
 	if !exists {
 		return 404, nil, &model.ServiceBrokerError{
 			Error:       "NotFound",
-			Description: "given predecessor_binding_id was not found",
+			Description: "Given predecessor_binding_id was not found",
 		}
 	}
 	newBinding, operationID := oldBinding.RotateBinding(rotateBindingRequest, deployment, bindingID)
@@ -159,14 +159,14 @@ func (bindingService *BindingService) FetchBinding(instanceID *string, bindingID
 	if !exists {
 		return 404, nil, &model.ServiceBrokerError{
 			Error:       "NotFound",
-			Description: "given instance_id was not found",
+			Description: "Given instance_id was not found",
 		}
 	}
 	binding, exists := deployment.GetBinding(bindingID)
 	if !exists {
 		return 404, nil, &model.ServiceBrokerError{
 			Error:       "NotFound",
-			Description: "this service instance does not use a binding with the given binding_id",
+			Description: "This service instance does not use a binding with the given binding_id",
 		}
 	}
 	if serviceID != nil && *serviceID != "" {
@@ -220,7 +220,7 @@ func (bindingService *BindingService) PollOperationState(instanceID *string, bin
 	if !exists {
 		return 404, nil, &model.ServiceBrokerError{
 			Error:       "NotFound",
-			Description: "given instance_id was not found",
+			Description: "Given instance_id was not found",
 		}
 	}
 	if serviceID != nil && *serviceID != *deployment.ServiceID() {
@@ -243,7 +243,7 @@ func (bindingService *BindingService) PollOperationState(instanceID *string, bin
 			if !deployment.BindingDeleted(bindingID) {
 				return 404, nil, &model.ServiceBrokerError{
 					Error:       "NotFound",
-					Description: "given binding_id was not found for this instance_id",
+					Description: "Given binding_id was not found for this instance_id",
 				}
 			}
 			var responseDescription *string
@@ -270,7 +270,7 @@ func (bindingService *BindingService) PollOperationState(instanceID *string, bin
 	if !exists {
 		return 404, nil, &model.ServiceBrokerError{
 			Error:       "NotFound",
-			Description: "given binding_id was not found for this instance_id",
+			Description: "Given binding_id was not found for this instance_id",
 		}
 	}
 	var operation *model.Operation
@@ -312,7 +312,7 @@ func (bindingService *BindingService) PollOperationState(instanceID *string, bin
 //deleted from the map and from the deployment by calling serviceDeployment.RemoveBinding(bindingID *string)
 //Returns an int (http status), the actual response and an error if one occurs
 func (bindingService *BindingService) Unbind(deleteRequest *model.DeleteRequest, instanceID *string, bindingID *string,
-	serviceID *string, planID *string) (int, *string, *model.ServiceBrokerError) {
+	serviceID *string, planID *string) (int, *model.OperationResponse, *model.ServiceBrokerError) {
 	var requestSettings *model.RequestSettings
 	requestSettings, _ = model.GetRequestSettings(deleteRequest.Parameters)
 	var deployment *model.ServiceDeployment
@@ -321,14 +321,14 @@ func (bindingService *BindingService) Unbind(deleteRequest *model.DeleteRequest,
 	if !exists {
 		return 410, nil, &model.ServiceBrokerError{
 			Error:       "NotFound",
-			Description: "given instance_id was not found",
+			Description: "Given instance_id was not found",
 		}
 	}
 	binding, exists := deployment.GetBinding(bindingID)
 	if !exists {
 		return 410, nil, &model.ServiceBrokerError{
 			Error:       "Gone",
-			Description: "given binding_id does not exist",
+			Description: "Given binding_id does not exist",
 		}
 	}
 	if serviceID != nil && *serviceID != *deployment.ServiceID() {
@@ -353,15 +353,14 @@ func (bindingService *BindingService) Unbind(deleteRequest *model.DeleteRequest,
 		operationID = binding.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, requestSettings.FailAtOperation, nil, nil)
 	}
 
-	var response string
+	var operationResponse model.OperationResponse
 	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint == true {
 		if bindingService.settings.BindingSettings.ReturnOperationIfAsync {
-			response = *operationID
+			operationResponse.Operation = operationID
 		}
-		return 202, &response, nil
+		return 202, &operationResponse, nil
 	}
-	response = "{}"
-	return 200, &response, nil
+	return 200, &operationResponse, nil
 }
 
 func (bindingService *BindingService) CurrentBindings() *map[string]*model.ServiceBinding {

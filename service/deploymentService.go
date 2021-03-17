@@ -85,10 +85,6 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 	response := model.NewProvideServiceInstanceResponse(deployment.DashboardURL(),
 		operationID, deployment.Metadata(), deploymentService.settings)
 	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint == true {
-		/*if *requestSettings.FailAtOperation {
-			remove deployment from map or leave it there (so that the platform has to deprovision it)?
-		}
-		*/
 		return 202, response, nil
 	}
 	return 201, response, nil
@@ -367,7 +363,7 @@ func (deploymentService *DeploymentService) PollOperationState(instanceID *strin
 //If AllowDeprovisionWithBindings is set to false, the instance can't be deleted, until all its bindings are removed.
 //Returns an int (http status), the actual response and an error if one occurs
 func (deploymentService *DeploymentService) Delete(deleteRequest *model.DeleteRequest, instanceID *string,
-	serviceID *string, planID *string) (int, *string, *model.ServiceBrokerError) {
+	serviceID *string, planID *string) (int, *model.OperationResponse, *model.ServiceBrokerError) {
 	var requestSettings *model.RequestSettings
 	requestSettings, _ = model.GetRequestSettings(deleteRequest.Parameters)
 	var deployment *model.ServiceDeployment
@@ -404,15 +400,14 @@ func (deploymentService *DeploymentService) Delete(deleteRequest *model.DeleteRe
 	} else {
 		operationID = deployment.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, requestSettings.FailAtOperation, nil, requestSettings.InstanceUsableAfterFail, nil, nil, false)
 	}
-	var response string
+	var operationResponse model.OperationResponse
 	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint == true {
 		if deploymentService.settings.ProvisionSettings.ReturnOperationIfAsync {
-			response = *operationID
+			operationResponse.Operation = operationID
 		}
-		return 202, &response, nil
+		return 202, &operationResponse, nil
 	}
-	response = "{}"
-	return 200, &response, nil
+	return 200, &operationResponse, nil
 }
 
 //BONUS

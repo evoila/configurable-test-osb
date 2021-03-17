@@ -68,3 +68,7 @@ func NewOperation(name string, duration float64, shouldFail bool, updateRepeatab
 		async:                     &async,
 	}
 }
+
+type OperationResponse struct {
+	Operation *string `json:"operation,omitempty"`
+}
