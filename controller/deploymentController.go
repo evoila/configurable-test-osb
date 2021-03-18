@@ -180,6 +180,10 @@ func (deploymentController *DeploymentController) UpdateServiceInstance(context 
 	_ = context.ShouldBindHeader(&header)
 	statusCode, response, err := deploymentController.deploymentService.UpdateServiceInstance(&updateRequest, &instanceID)
 	if err != nil {
+		if deploymentController.settings.HeaderSettings.BrokerVersion < "2.16" {
+			err.InstanceUsable = nil
+			err.UpdateRepeatable = nil
+		}
 		context.JSON(statusCode, err)
 		return
 	}
@@ -196,7 +200,7 @@ func (deploymentController *DeploymentController) PollOperationState(context *gi
 	var serviceID *string
 	valueServiceID, exists := context.GetQuery("service_id")
 	if exists {
-		log.Printf("service_id valueServiceID: %v\n", valueServiceID)
+		log.Println("service_id valueServiceID: %v\n", valueServiceID)
 		if valueServiceID == "" {
 			context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
 				Error:       "MalformedRequest",
@@ -286,6 +290,10 @@ func (deploymentController *DeploymentController) Delete(context *gin.Context) {
 	}
 	statusCode, response, err := deploymentController.deploymentService.Delete(&deleteRequest, &instanceID, &serviceOfferingID, &servicePlanID)
 	if err != nil {
+		if deploymentController.settings.HeaderSettings.BrokerVersion < "2.16" {
+			err.InstanceUsable = nil
+			err.UpdateRepeatable = nil
+		}
 		context.JSON(statusCode, err)
 		return
 	}

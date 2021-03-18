@@ -18,16 +18,15 @@ import (
 //Run starts the server.
 //Controllers, services and the catalog are initialized in this function, handlers bound to the endpoints and the server started.
 func Run() {
-	catalog, err := makeCatalog()
+	catalog, err := MakeCatalog()
 	if err != nil {
 		log.Println("There has been an error while creating the catalog!", err.Error())
 	} else {
-		settings, err := makeSettings()
+		settings, err := MakeSettings()
 		if err != nil {
 			log.Println("There has been an error while creating the settings!", err.Error())
 		} else {
 			if settings.HeaderSettings.BrokerVersion < "2.15" {
-				log.Println("converting catalog")
 				if !catalogToVersion(catalog) {
 					log.Println("Invalid catalog!")
 					return
@@ -101,9 +100,9 @@ func Run() {
 	}
 }
 
-//makeCatalog() tries to generate the catalog struct from the catalog found in "config/catalog.json".
+//MakeCatalog() tries to generate the catalog struct from the catalog found in "config/catalog.json".
 //Returns *model.Catalog (the catalog used by this service broker) and error
-func makeCatalog() (*model.Catalog, error) {
+func MakeCatalog() (*model.Catalog, error) {
 	var catalog model.Catalog
 	catalogJson, err := os.Open("config/catalog.json")
 	if err != nil {
@@ -121,7 +120,7 @@ func makeCatalog() (*model.Catalog, error) {
 	return &catalog, nil
 }
 
-func makeSettings() (*model.Settings, error) {
+func MakeSettings() (*model.Settings, error) {
 	var settings model.Settings
 	brokerSettingsJson, err := os.Open("config/brokerSettings.json")
 	if err != nil {

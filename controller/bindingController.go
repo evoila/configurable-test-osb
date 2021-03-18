@@ -51,8 +51,15 @@ func (bindingController *BindingController) CreateBinding(context *gin.Context) 
 	var bindingRequest model.CreateBindingRequest
 	//ShouldBindBodyWith instead of ShouldBindJSON used because ShouldBindBodyWith does not consume the JSON body
 	if err := context.ShouldBindBodyWith(&bindingRequest, binding.JSON); err != nil {
-		//checking, if the request was a binding request and if so, rotate the bindings
-		bindingController.rotateBinding(context)
+		if bindingController.settings.HeaderSettings.BrokerVersion > "2.16" {
+			//checking, if the request was a binding request and if so, rotate the bindings
+			bindingController.rotateBinding(context)
+			return
+		}
+		context.JSON(400, model.ServiceBrokerError{
+			Error:       "MalformedRequest",
+			Description: "Request has invalid fields",
+		})
 		return
 	}
 	if bindingRequest.Context != nil {

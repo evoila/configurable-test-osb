@@ -1,17 +1,6 @@
 package tests
 
-import (
-	"encoding/json"
-	"fmt"
-	"github.com/MaxFuhrich/serviceBrokerDummy/model"
-	"io/ioutil"
-	"log"
-	"os"
-	"reflect"
-	"testing"
-)
-
-func TestCatalog(t *testing.T) {
+/*func TestCatalog(t *testing.T) {
 	var catalog interface{}
 	catalogJson, err := os.Open("catalog.json")
 	if err != nil {
@@ -47,3 +36,7 @@ func TestCatalog(t *testing.T) {
 		}
 	}
 }
+
+
+*/
+//
