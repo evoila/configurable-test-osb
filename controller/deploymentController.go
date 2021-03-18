@@ -148,6 +148,10 @@ func (deploymentController *DeploymentController) UpdateServiceInstance(context 
 		})
 		return
 	}
+	if deploymentController.settings.HeaderSettings.BrokerVersion < "2.15" && updateRequest.Context != nil {
+		log.Println("broker version < 2.15, setting context in update request to nil")
+		updateRequest.Context = nil
+	}
 	if updateRequest.Context != nil {
 		err := model.CorrectContext(updateRequest.Context, &deploymentController.settings.HeaderSettings.BrokerVersion, deploymentController.platform, false)
 		if err != nil {
@@ -231,7 +235,8 @@ func (deploymentController *DeploymentController) PollOperationState(context *gi
 		context.JSON(statusCode, err)
 		return
 	}
-	if response.State == model.PROGRESSING && deploymentController.settings.PollInstanceOperationSettings.RetryPollInstanceOperationAfterSeconds > 0 {
+	if deploymentController.settings.HeaderSettings.BrokerVersion > "2.14" && response.State == model.PROGRESSING &&
+		deploymentController.settings.PollInstanceOperationSettings.RetryPollInstanceOperationAfterSeconds > 0 {
 		retryAfter := time.Second * time.Duration(deploymentController.settings.PollInstanceOperationSettings.RetryPollInstanceOperationAfterSeconds)
 		context.Header("Retry-After", retryAfter.String())
 	}

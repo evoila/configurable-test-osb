@@ -191,7 +191,7 @@ func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest 
 		if _, exists := serviceOffering.GetPlanByID(*updateRequest.PlanId); !exists {
 			return 404, nil, &model.ServiceBrokerError{
 				Error:       "NotFound",
-				Description: "plan_id was not found for given instance_id",
+				Description: "plan_id was not found for given service offering",
 			}
 		}
 	}
@@ -238,10 +238,12 @@ func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest 
 				Description: model.MaintenanceInfoConflict,
 			}
 		}
-
+	}
+	var updateServiceInstanceResponse model.ProvideUpdateServiceInstanceResponse
+	if deploymentService.settings.HeaderSettings.BrokerVersion > "2.14" && !deployment.DifferentUpdateValues(updateRequest) {
+		return 200, &updateServiceInstanceResponse, nil
 	}
 	operationID, _ := deployment.Update(updateRequest)
-	var updateServiceInstanceResponse model.ProvideUpdateServiceInstanceResponse
 	updateServiceInstanceResponse.DashboardUrl = deployment.DashboardURL()
 	requestSettings, err := model.GetRequestSettings(updateRequest.Parameters)
 	if err != nil {

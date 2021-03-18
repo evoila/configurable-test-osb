@@ -26,6 +26,13 @@ func Run() {
 		if err != nil {
 			log.Println("There has been an error while creating the settings!", err.Error())
 		} else {
+			if settings.HeaderSettings.BrokerVersion < "2.15" {
+				log.Println("converting catalog")
+				if !catalogToVersion(catalog) {
+					log.Println("Invalid catalog!")
+					return
+				}
+			}
 			var serviceInstances map[string]*model.ServiceDeployment
 			serviceInstances = make(map[string]*model.ServiceDeployment)
 			var platform string
@@ -98,7 +105,6 @@ func Run() {
 //Returns *model.Catalog (the catalog used by this service broker) and error
 func makeCatalog() (*model.Catalog, error) {
 	var catalog model.Catalog
-	//FILEPATH
 	catalogJson, err := os.Open("config/catalog.json")
 	if err != nil {
 		return nil, errors.New("error while opening catalog file! error: " + err.Error())
@@ -145,4 +151,39 @@ func makeSettings() (*model.Settings, error) {
 		return nil, errors.New("protocol_value must be either \"tct\", \"udp\", or \"all\"")
 	}
 	return &settings, nil
+}
+
+//catalogToVersion removes fields from catalogs if they do not exist at the given version and checks if values are valid
+//according to the version (e.g. offering and binding name have additional restrictions before 2.15)
+func catalogToVersion(catalog *model.Catalog) bool {
+	serviceOfferings := catalog.ServiceOfferings
+	for _, offering := range *serviceOfferings {
+		if !nameSatisfiesRestrictions(&offering.Name) {
+			return false
+		}
+		servicePlans := offering.Plans
+		for _, plan := range *servicePlans {
+			if !nameSatisfiesRestrictions(&plan.Name) {
+				return false
+			}
+			if plan.PlanUpdateable != nil {
+				plan.PlanUpdateable = nil
+			}
+			if plan.MaintenanceInfo != nil {
+				plan.MaintenanceInfo = nil
+			}
+		}
+	}
+	return true
+}
+
+//nameSatisfiesRestrictions checks, if the name satisfies the restrictions of the name before 2.15
+func nameSatisfiesRestrictions(name *string) bool {
+	const validCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-"
+	for _, char := range *name {
+		if !strings.Contains(validCharacters, string(char)) {
+			return false
+		}
+	}
+	return true
 }

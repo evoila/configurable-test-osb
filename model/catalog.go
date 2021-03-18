@@ -8,7 +8,7 @@ import (
 
 type Catalog struct {
 	//REQUIRED
-	ServiceOfferings []ServiceOffering `json:"services" binding:"required"` //check if correct
+	ServiceOfferings *[]*ServiceOffering `json:"services" binding:"required"` //check if correct
 }
 
 //NewCatalog generates a new randomized catalog regarding to the catalogSettings.
@@ -25,35 +25,35 @@ func NewCatalog(catalogSettings *CatalogSettings) *Catalog {
 		tags = append(tags, tag)
 	}
 	for i := 0; i < catalogSettings.Amount; i++ {
-		catalog.ServiceOfferings = append(catalog.ServiceOfferings, *newServiceOffering(catalogSettings, &catalog, tags))
+		*catalog.ServiceOfferings = append(*catalog.ServiceOfferings, newServiceOffering(catalogSettings, &catalog, tags))
 	}
 	return &catalog
 }
 
 func (catalog *Catalog) GetServiceOfferingById(id string) (*ServiceOffering, bool) {
-	for _, offering := range catalog.ServiceOfferings {
+	for _, offering := range *catalog.ServiceOfferings {
 		if id == offering.Id {
-			return &offering, true
+			return offering, true
 		}
 	}
 	return nil, false
 }
 
 func (catalog *Catalog) GetServiceOfferingByName(name string) *ServiceOffering {
-	for _, offering := range catalog.ServiceOfferings {
+	for _, offering := range *catalog.ServiceOfferings {
 		if name == offering.Name {
-			return &offering
+			return offering
 		}
 	}
 	return nil
 }
 
 func (catalog *Catalog) nameExists(name string) bool {
-	for _, offering := range catalog.ServiceOfferings {
+	for _, offering := range *catalog.ServiceOfferings {
 		if name == offering.Name {
 			return true
 		}
-		for _, plan := range offering.Plans {
+		for _, plan := range *offering.Plans {
 			if name == plan.Name {
 				return true
 			}

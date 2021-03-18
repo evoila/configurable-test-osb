@@ -3,6 +3,7 @@ package model
 import (
 	"github.com/MaxFuhrich/serviceBrokerDummy/generator"
 	"log"
+	"reflect"
 	"strconv"
 	"time"
 )
@@ -30,6 +31,8 @@ type ServiceDeployment struct {
 	fetchResponse            *FetchingServiceInstanceResponse
 	settings                 *Settings
 	catalog                  *Catalog
+	context                  *interface{}
+	maintenanceInfo          *MaintenanceInfo
 }
 
 func (serviceDeployment *ServiceDeployment) BindingDeleted(bindingToFind *string) bool {
@@ -146,6 +149,12 @@ func (serviceDeployment *ServiceDeployment) Update(updateServiceInstanceRequest 
 		if updateServiceInstanceRequest.Parameters != nil {
 			serviceDeployment.parameters = updateServiceInstanceRequest.Parameters
 		}
+		if updateServiceInstanceRequest.Context != nil {
+			serviceDeployment.context = updateServiceInstanceRequest.Context
+		}
+		if updateServiceInstanceRequest.MaintenanceInfo != nil {
+			serviceDeployment.maintenanceInfo = updateServiceInstanceRequest.MaintenanceInfo
+		}
 	}
 	operationID := serviceDeployment.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, requestSettings.FailAtOperation, requestSettings.UpdateRepeatableAfterFail, requestSettings.InstanceUsableAfterFail, nil, nil, true)
 	return operationID, nil
@@ -246,4 +255,28 @@ func (serviceDeployment *ServiceDeployment) setResponse() {
 	if serviceDeployment.settings.FetchServiceInstanceSettings.ReturnMetadata {
 		serviceDeployment.fetchResponse.Metadata = serviceDeployment.metadata
 	}
+}
+
+func (serviceDeployment *ServiceDeployment) DifferentUpdateValues(request *UpdateServiceInstanceRequest) bool {
+	if request.PlanId != nil {
+		if *request.PlanId != *serviceDeployment.planID {
+			return true
+		}
+	}
+	if request.Parameters != nil {
+		if !reflect.DeepEqual(request.Parameters, serviceDeployment.parameters) {
+			return true
+		}
+	}
+	if request.Context != nil {
+		if !reflect.DeepEqual(*request.Context, *serviceDeployment.context) {
+			return true
+		}
+	}
+	if request.MaintenanceInfo != nil {
+		if !reflect.DeepEqual(*request.MaintenanceInfo, *serviceDeployment.maintenanceInfo) {
+			return true
+		}
+	}
+	return false
 }

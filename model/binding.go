@@ -224,7 +224,7 @@ func (serviceBinding *ServiceBinding) setResponse() {
 		volumeMounts := []VolumeMount{volumeMount}
 		serviceBinding.response.VolumeMounts = &volumeMounts
 	}
-	if serviceBinding.settings.BindingSettings.BindingEndpointSettings.ReturnEndpoints {
+	if serviceBinding.settings.HeaderSettings.BrokerVersion > "2.14" && serviceBinding.settings.BindingSettings.BindingEndpointSettings.ReturnEndpoints {
 		endpoint := Endpoint{
 			Host:  "myHost",
 			Ports: []string{"1234", "5678"},

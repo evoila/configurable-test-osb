@@ -18,8 +18,8 @@ type ServiceOffering struct {
 	Metadata             interface{}      `json:"metadata,omitempty"`
 	DashboardClient      *DashboardClient `json:"dashboard_client,omitempty"`
 	//misspelling kept by osbapi
-	PlanUpdateable *bool         `json:"plan_updateable,omitempty"`
-	Plans          []ServicePlan `json:"plans"`
+	PlanUpdateable *bool           `json:"plan_updateable,omitempty"`
+	Plans          *[]*ServicePlan `json:"plans"`
 }
 
 func newServiceOffering(catalogSettings *CatalogSettings, catalog *Catalog, tags []string) *ServiceOffering {
@@ -60,19 +60,19 @@ func (catalog *Catalog) createUniqueId() string {
 	return id
 }
 
-func makePlans(catalogSettings *CatalogSettings, catalog *Catalog) []ServicePlan {
-	var servicePlans []ServicePlan
+func makePlans(catalogSettings *CatalogSettings, catalog *Catalog) *[]*ServicePlan {
+	var servicePlans []*ServicePlan
 	numberOfPlans := rand.Intn(catalogSettings.PlansMax-catalogSettings.PlansMin+1) + catalogSettings.PlansMin
 	for i := 0; i < numberOfPlans; i++ {
-		servicePlans = append(servicePlans, *newServicePlan(catalogSettings, catalog))
+		servicePlans = append(servicePlans, newServicePlan(catalogSettings, catalog))
 	}
-	return servicePlans
+	return &servicePlans
 }
 
 func (serviceOffering *ServiceOffering) GetPlanByID(planID string) (*ServicePlan, bool) {
-	for _, plan := range serviceOffering.Plans {
+	for _, plan := range *serviceOffering.Plans {
 		if planID == plan.ID {
-			return &plan, true
+			return plan, true
 		}
 	}
 	return nil, false

@@ -86,7 +86,7 @@ func (middleware *Middleware) BindAndCheckHeader(context *gin.Context) {
 	} else {
 		*middleware.platform = ""
 	}
-	if middleware.settings.HeaderSettings.RequestIDRequired {
+	if middleware.settings.HeaderSettings.BrokerVersion > "2.14" && middleware.settings.HeaderSettings.RequestIDRequired {
 		if header.RequestID == nil {
 			context.AbortWithStatusJSON(http.StatusBadRequest, "The header \"X-Broker-API-Request-Identity\" is required but missing")
 		}

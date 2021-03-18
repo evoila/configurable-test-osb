@@ -210,7 +210,7 @@ func (bindingController *BindingController) PollOperationState(context *gin.Cont
 		context.JSON(statusCode, err)
 		return
 	}
-	if response.State == model.PROGRESSING && bindingController.settings.BindingSettings.RetryPollBindingOperationAfterSeconds > 0 {
+	if bindingController.settings.HeaderSettings.BrokerVersion > "2.14" && response.State == model.PROGRESSING && bindingController.settings.BindingSettings.RetryPollBindingOperationAfterSeconds > 0 {
 		retryAfter := time.Second * time.Duration(bindingController.settings.BindingSettings.RetryPollBindingOperationAfterSeconds)
 		context.Header("Retry-After", retryAfter.String())
 	}
