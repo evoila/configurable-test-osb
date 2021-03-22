@@ -16,13 +16,12 @@ type ProvideUpdateServiceInstanceResponse struct {
 	Metadata     *ServiceInstanceMetadata `json:"metadata,omitempty"`
 }
 
-func NewProvideServiceInstanceResponse(dashboardUrl *string, operation *string,
-	metadata *ServiceInstanceMetadata, settings *Settings) *ProvideUpdateServiceInstanceResponse {
+func NewProvideServiceInstanceResponse(dashboardUrl *string, operation *string, metadata *ServiceInstanceMetadata, settings *Settings, requestSettings *RequestSettings) *ProvideUpdateServiceInstanceResponse {
 	response := ProvideUpdateServiceInstanceResponse{}
 	if settings.ProvisionSettings.ReturnDashboardURL {
 		response.DashboardUrl = dashboardUrl
 	}
-	if settings.ProvisionSettings.ReturnOperation {
+	if requestSettings != nil && *requestSettings.AsyncEndpoint && settings.ProvisionSettings.ReturnOperation {
 		response.Operation = operation
 	}
 	if settings.ProvisionSettings.ReturnMetadata {

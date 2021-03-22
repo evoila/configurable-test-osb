@@ -37,8 +37,7 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 				*deployment.ServiceID() == provisionRequest.ServiceID && *deployment.PlanID() == provisionRequest.PlanID &&
 				*deployment.SpaceID() == provisionRequest.SpaceGUID &&
 				*deployment.OrganizationID() == provisionRequest.OrganizationGUID {
-				response := model.NewProvideServiceInstanceResponse(deployment.DashboardURL(),
-					deployment.LastOperationID(), deployment.Metadata(), deploymentService.settings)
+				response := model.NewProvideServiceInstanceResponse(deployment.DashboardURL(), deployment.LastOperationID(), deployment.Metadata(), deploymentService.settings, nil)
 				return 200, response, nil
 			}
 		}
@@ -82,8 +81,7 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 	deployment, operationID := model.NewServiceDeployment(*instanceID, provisionRequest, deploymentService.settings,
 		deploymentService.catalog)
 	(*deploymentService.serviceInstances)[*instanceID] = deployment
-	response := model.NewProvideServiceInstanceResponse(deployment.DashboardURL(),
-		operationID, deployment.Metadata(), deploymentService.settings)
+	response := model.NewProvideServiceInstanceResponse(deployment.DashboardURL(), operationID, deployment.Metadata(), deploymentService.settings, requestSettings)
 	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint == true {
 		return 202, response, nil
 	}
