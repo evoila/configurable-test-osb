@@ -1,12 +1,12 @@
 package model
 
 type CreateBindingRequest struct {
-	Context      *interface{}  `json:"context"`
+	Context      interface{}   `json:"context"`
 	ServiceID    *string       `json:"service_id" binding:"required"`
 	PlanID       *string       `json:"plan_id" binding:"required"`
 	AppGUID      *string       `json:"app_guid"`
 	BindResource *BindResource `json:"bind_resource"`
-	Parameters   *interface{}  `json:"parameters"`
+	Parameters   interface{}   `json:"parameters"`
 }
 
 type CreateRotateBindingAcceptedResponse struct {
@@ -39,7 +39,7 @@ type CreateRotateFetchBindingResponse struct {
 	SyslogDrainUrl  *string          `json:"syslog_drain_url,omitempty"`
 	RouteServiceUrl *string          `json:"route_service_url,omitempty"`
 	VolumeMounts    *[]VolumeMount   `json:"volume_mounts,omitempty"`
-	Parameters      *interface{}     `json:"parameters,omitempty"`
+	Parameters      interface{}      `json:"parameters,omitempty"`
 	Endpoints       *[]Endpoint      `json:"endpoints,omitempty"`
 	Operation       *string          `json:"operation,omitempty"`
 }
@@ -74,5 +74,5 @@ type Endpoint struct {
 }
 
 type DeleteRequest struct {
-	Parameters *interface{} `json:"parameters"`
+	Parameters interface{} `json:"parameters"`
 }

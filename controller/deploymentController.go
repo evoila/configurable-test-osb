@@ -4,7 +4,6 @@ import (
 	"github.com/MaxFuhrich/serviceBrokerDummy/model"
 	"github.com/MaxFuhrich/serviceBrokerDummy/service"
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 	"log"
 	"net/http"
 	"time"
@@ -56,7 +55,7 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 		return
 	}
 	if provisionRequest.Context != nil {
-		err := model.CorrectContext(provisionRequest.Context, &deploymentController.settings.HeaderSettings.BrokerVersion, deploymentController.platform, false)
+		err := model.CorrectContext(&provisionRequest.Context, &deploymentController.settings.HeaderSettings.BrokerVersion, deploymentController.platform, false)
 		if err != nil {
 			context.JSON(400, err)
 			return
@@ -153,7 +152,7 @@ func (deploymentController *DeploymentController) UpdateServiceInstance(context 
 		updateRequest.Context = nil
 	}
 	if updateRequest.Context != nil {
-		err := model.CorrectContext(updateRequest.Context, &deploymentController.settings.HeaderSettings.BrokerVersion, deploymentController.platform, false)
+		err := model.CorrectContext(&updateRequest.Context, &deploymentController.settings.HeaderSettings.BrokerVersion, deploymentController.platform, false)
 		if err != nil {
 			context.JSON(400, err)
 			return
@@ -200,7 +199,6 @@ func (deploymentController *DeploymentController) PollOperationState(context *gi
 	var serviceID *string
 	valueServiceID, exists := context.GetQuery("service_id")
 	if exists {
-		log.Println("service_id valueServiceID: %v\n", valueServiceID)
 		if valueServiceID == "" {
 			context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
 				Error:       "MalformedRequest",
@@ -278,7 +276,7 @@ func (deploymentController *DeploymentController) Delete(context *gin.Context) {
 		return
 	}
 	var deleteRequest model.DeleteRequest
-	_ = context.ShouldBindBodyWith(&deleteRequest, binding.JSON)
+	_ = context.ShouldBindJSON(&deleteRequest)
 	var requestSettings *model.RequestSettings
 	requestSettings, _ = model.GetRequestSettings(deleteRequest.Parameters)
 	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint && acceptsIncomplete == "false" {

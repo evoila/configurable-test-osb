@@ -11,7 +11,7 @@
     "etag_if_modified_since_in_response": false
   },
   "provision_settings": {
-    "status_code_ok_possible": true,
+    "status_code_ok_possible_for_identical_provision": true,
     "create_dashboard_url": true,
     "return_operation_if_async": true,
     "create_metadata": true,

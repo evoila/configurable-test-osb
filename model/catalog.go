@@ -32,7 +32,7 @@ func NewCatalog(catalogSettings *CatalogSettings) *Catalog {
 
 func (catalog *Catalog) GetServiceOfferingById(id string) (*ServiceOffering, bool) {
 	for _, offering := range *catalog.ServiceOfferings {
-		if id == offering.Id {
+		if id == offering.ID {
 			return offering, true
 		}
 	}

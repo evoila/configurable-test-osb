@@ -7,7 +7,7 @@ import (
 
 type ServiceOffering struct {
 	Name                 string           `json:"name"`
-	Id                   string           `json:"id"`
+	ID                   string           `json:"id"`
 	Description          string           `json:"description"`
 	Tags                 []string         `json:"tags,omitempty"`
 	Requires             []string         `json:"requires,omitempty"`
@@ -25,7 +25,7 @@ type ServiceOffering struct {
 func newServiceOffering(catalogSettings *CatalogSettings, catalog *Catalog, tags []string) *ServiceOffering {
 	offering := ServiceOffering{
 		Name:        catalog.createUniqueName(5),
-		Id:          catalog.createUniqueId(),
+		ID:          catalog.createUniqueId(),
 		Description: generator.RandomString(6),
 		Tags:        generator.SelectRandomTags(tags, catalogSettings.TagsMin, catalogSettings.TagsMax),
 		Requires:    generator.RandomRequires(catalogSettings.Requires, catalogSettings.RequiresMin),

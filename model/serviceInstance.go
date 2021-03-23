@@ -3,10 +3,10 @@ package model
 type ProvideServiceInstanceRequest struct {
 	ServiceID        string          `json:"service_id" binding:"required"`
 	PlanID           string          `json:"plan_id" binding:"required"`
-	Context          *interface{}    `json:"context"`
+	Context          interface{}     `json:"context"`
 	OrganizationGUID string          `json:"organization_guid" binding:"required"`
 	SpaceGUID        string          `json:"space_guid" binding:"required"`
-	Parameters       *interface{}    `json:"parameters"`
+	Parameters       interface{}     `json:"parameters"`
 	MaintenanceInfo  MaintenanceInfo `json:"maintenance_info"`
 }
 
@@ -21,7 +21,7 @@ func NewProvideServiceInstanceResponse(dashboardUrl *string, operation *string, 
 	if settings.ProvisionSettings.ReturnDashboardURL {
 		response.DashboardUrl = dashboardUrl
 	}
-	if requestSettings != nil && *requestSettings.AsyncEndpoint && settings.ProvisionSettings.ReturnOperation {
+	if requestSettings != nil && *requestSettings.AsyncEndpoint && settings.ProvisionSettings.ReturnOperationIfAsync {
 		response.Operation = operation
 	}
 	if settings.ProvisionSettings.ReturnMetadata {
@@ -43,10 +43,10 @@ type FetchingServiceInstanceResponse struct {
 }
 
 type UpdateServiceInstanceRequest struct {
-	Context         *interface{}     `json:"context"`
+	Context         interface{}      `json:"context"`
 	ServiceId       *string          `json:"service_id" binding:"required"`
 	PlanId          *string          `json:"plan_id"`
-	Parameters      *interface{}     `json:"parameters"`
+	Parameters      interface{}      `json:"parameters"`
 	PreviousValues  *PreviousValues  `json:"previous_values"`
 	MaintenanceInfo *MaintenanceInfo `json:"maintenance_info"`
 }

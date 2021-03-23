@@ -9,12 +9,12 @@ import (
 
 type ServiceBinding struct {
 	bindingID           *string
-	context             *interface{}
+	context             interface{}
 	serviceID           *string
 	planID              *string
 	appGuid             *string
 	bindResource        *BindResource
-	parameters          *interface{}
+	parameters          interface{}
 	operations          map[string]*Operation
 	doOperationChan     chan int
 	nextOperationNumber int
@@ -42,11 +42,11 @@ func (serviceBinding *ServiceBinding) ServiceID() *string {
 	return serviceBinding.serviceID
 }
 
-func (serviceBinding *ServiceBinding) Context() *interface{} {
+func (serviceBinding *ServiceBinding) Context() interface{} {
 	return serviceBinding.context
 }
 
-func (serviceBinding *ServiceBinding) Parameters() *interface{} {
+func (serviceBinding *ServiceBinding) Parameters() interface{} {
 	return serviceBinding.parameters
 }
 

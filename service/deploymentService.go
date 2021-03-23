@@ -3,7 +3,6 @@ package service
 import (
 	"github.com/MaxFuhrich/serviceBrokerDummy/model"
 	"github.com/google/go-cmp/cmp"
-	"log"
 )
 
 type DeploymentService struct {
@@ -32,7 +31,7 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 	instanceID *string) (int, *model.ProvideUpdateServiceInstanceResponse,
 	*model.ServiceBrokerError) {
 	if deployment, exists := (*deploymentService.serviceInstances)[*instanceID]; exists == true {
-		if deploymentService.settings.ProvisionSettings.StatusCodeOKPossible {
+		if deploymentService.settings.ProvisionSettings.StatusCodeOKPossibleForIdenticalProvision {
 			if cmp.Equal(provisionRequest.Parameters, deployment.Parameters()) &&
 				*deployment.ServiceID() == provisionRequest.ServiceID && *deployment.PlanID() == provisionRequest.PlanID &&
 				*deployment.SpaceID() == provisionRequest.SpaceGUID &&
@@ -68,8 +67,6 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 			}
 		}
 		if *provisionRequest.MaintenanceInfo.Version != *servicePlan.MaintenanceInfo.Version {
-			log.Println(*provisionRequest.MaintenanceInfo.Version)
-			log.Println(*servicePlan.MaintenanceInfo.Version)
 			return 422, nil, &model.ServiceBrokerError{
 				Error:       "MaintenanceInfoConflict",
 				Description: model.MaintenanceInfoConflict,
@@ -178,6 +175,12 @@ func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest 
 	}
 
 	serviceOffering, _ := deploymentService.catalog.GetServiceOfferingById(*deployment.ServiceID())
+	if updateRequest.Context != nil && deploymentService.settings.HeaderSettings.BrokerVersion < "2.15" {
+		return 400, nil, &model.ServiceBrokerError{
+			Error:       "InvalidData",
+			Description: "Context of a deployment can be updated in broker version 2.15 and up, this is version " + deploymentService.settings.HeaderSettings.BrokerVersion,
+		}
+	}
 	if updateRequest.Context != nil && serviceOffering.AllowContextUpdates != nil && !*serviceOffering.AllowContextUpdates {
 		return 400, nil, &model.ServiceBrokerError{
 			Error:       "InvalidData",
@@ -223,8 +226,8 @@ func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest 
 		}
 	}
 	if updateRequest.MaintenanceInfo != nil && updateRequest.MaintenanceInfo.Version != nil {
-		servicePlan, _ := serviceOffering.GetPlanByID(*updateRequest.PlanId)
-		if servicePlan.MaintenanceInfo.Version == nil {
+		servicePlan, _ := serviceOffering.GetPlanByID(*deployment.PlanID())
+		if servicePlan.MaintenanceInfo == nil || servicePlan.MaintenanceInfo.Version == nil {
 			return 422, nil, &model.ServiceBrokerError{
 				Error:       "MaintenanceInfoConflict",
 				Description: model.MaintenanceInfoConflict,
@@ -250,7 +253,7 @@ func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest 
 			Description: "Error while binding request settings from request parameters.",
 		}
 	}
-	if requestSettings != nil && *requestSettings.AsyncEndpoint {
+	if requestSettings != nil && *requestSettings.AsyncEndpoint && deploymentService.settings.ProvisionSettings.ReturnOperationIfAsync {
 		updateServiceInstanceResponse.Operation = operationID
 	}
 	updateServiceInstanceResponse.Metadata = deployment.Metadata()
@@ -332,7 +335,7 @@ func (deploymentService *DeploymentService) PollOperationState(instanceID *strin
 		}
 	} else {
 		operation = deployment.GetLastOperation()
-		if deploymentService.settings.ProvisionSettings.ReturnOperation && *operation.Async() {
+		if deploymentService.settings.ProvisionSettings.ReturnOperationIfAsync && *operation.Async() {
 			return 400, nil, &model.ServiceBrokerError{
 				Error:       "MissingOperation",
 				Description: "The last operation requires an operation value!",

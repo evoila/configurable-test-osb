@@ -12,7 +12,7 @@ type ServiceDeployment struct {
 	serviceID                *string
 	planID                   *string
 	instanceID               string
-	parameters               *interface{}
+	parameters               interface{}
 	dashboardURL             *string
 	metadata                 *ServiceInstanceMetadata
 	bindings                 map[string]*ServiceBinding
@@ -31,7 +31,7 @@ type ServiceDeployment struct {
 	fetchResponse            *FetchingServiceInstanceResponse
 	settings                 *Settings
 	catalog                  *Catalog
-	context                  *interface{}
+	context                  interface{}
 	maintenanceInfo          *MaintenanceInfo
 }
 
@@ -88,11 +88,11 @@ func (serviceDeployment *ServiceDeployment) LastOperationID() *string {
 	return serviceDeployment.lastOperation.Name()
 }
 
-func (serviceDeployment *ServiceDeployment) Parameters() *interface{} {
+func (serviceDeployment *ServiceDeployment) Parameters() interface{} {
 	if serviceDeployment.parameters == nil {
 		return nil
 	}
-	return serviceDeployment.parameters
+	return &serviceDeployment.parameters
 }
 func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceInstanceRequest, settings *Settings,
 	catalog *Catalog) (*ServiceDeployment, *string) {
@@ -113,6 +113,7 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 		catalog:             catalog,
 		deletedBindings:     make([]string, 0),
 	}
+
 	var requestSettings *RequestSettings
 	requestSettings, _ = GetRequestSettings(provisionRequest.Parameters)
 	if settings.ProvisionSettings.CreateDashboardURL {
@@ -132,6 +133,8 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 	if *offering.InstancesRetrievable {
 		serviceDeployment.setResponse()
 	}
+	plan, _ := offering.GetPlanByID(provisionRequest.PlanID)
+	serviceDeployment.maintenanceInfo = plan.MaintenanceInfo
 	operationID := serviceDeployment.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, requestSettings.FailAtOperation, nil, nil, nil, nil, true)
 	return &serviceDeployment, operationID
 }
@@ -151,9 +154,6 @@ func (serviceDeployment *ServiceDeployment) Update(updateServiceInstanceRequest 
 		}
 		if updateServiceInstanceRequest.Context != nil {
 			serviceDeployment.context = updateServiceInstanceRequest.Context
-		}
-		if updateServiceInstanceRequest.MaintenanceInfo != nil {
-			serviceDeployment.maintenanceInfo = updateServiceInstanceRequest.MaintenanceInfo
 		}
 	}
 	operationID := serviceDeployment.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, requestSettings.FailAtOperation, requestSettings.UpdateRepeatableAfterFail, requestSettings.InstanceUsableAfterFail, nil, nil, true)
@@ -245,7 +245,7 @@ func (serviceDeployment *ServiceDeployment) setResponse() {
 		serviceDeployment.fetchResponse.DashboardUrl = serviceDeployment.dashboardURL
 	}
 	if serviceDeployment.settings.FetchServiceInstanceSettings.ReturnParameters {
-		serviceDeployment.fetchResponse.Parameters = serviceDeployment.parameters
+		serviceDeployment.fetchResponse.Parameters = &serviceDeployment.parameters
 	}
 	if serviceDeployment.settings.FetchServiceInstanceSettings.ReturnMaintenanceInfo {
 		serviceOffering, _ := serviceDeployment.catalog.GetServiceOfferingById(*serviceDeployment.serviceID)
@@ -269,14 +269,17 @@ func (serviceDeployment *ServiceDeployment) DifferentUpdateValues(request *Updat
 		}
 	}
 	if request.Context != nil {
-		if !reflect.DeepEqual(*request.Context, *serviceDeployment.context) {
+		if !reflect.DeepEqual(request.Context, serviceDeployment.context) {
 			return true
 		}
 	}
-	if request.MaintenanceInfo != nil {
+	/*if request.MaintenanceInfo != nil {
+		log.Printf("current maintenanceinfo: %v", serviceDeployment.maintenanceInfo)
 		if !reflect.DeepEqual(*request.MaintenanceInfo, *serviceDeployment.maintenanceInfo) {
 			return true
 		}
 	}
+
+	*/
 	return false
 }

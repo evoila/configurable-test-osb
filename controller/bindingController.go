@@ -63,7 +63,7 @@ func (bindingController *BindingController) CreateBinding(context *gin.Context) 
 		return
 	}
 	if bindingRequest.Context != nil {
-		err := model.CorrectContext(bindingRequest.Context, &bindingController.settings.HeaderSettings.BrokerVersion, bindingController.platform, true)
+		err := model.CorrectContext(&bindingRequest.Context, &bindingController.settings.HeaderSettings.BrokerVersion, bindingController.platform, true)
 		if err != nil {
 			context.JSON(400, err)
 			return
