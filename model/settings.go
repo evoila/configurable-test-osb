@@ -45,7 +45,6 @@ type PollInstanceOperationSettings struct {
 }
 
 type BindingSettings struct {
-	AppGUIDRequired                       bool                       `json:"app_guid_required" binding:"required"`
 	ReturnBindingInformationOnce          bool                       `json:"return_binding_information_once" binding:"required"`
 	ReturnOperationIfAsync                bool                       `json:"return_operation_if_async" binding:"required"`
 	BindingMetadataSettings               BindingMetadataSettings    `json:"binding_metadata_settings" binding:"required"`

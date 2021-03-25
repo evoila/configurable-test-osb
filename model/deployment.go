@@ -97,12 +97,12 @@ func (serviceDeployment *ServiceDeployment) Parameters() interface{} {
 func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceInstanceRequest, settings *Settings,
 	catalog *Catalog) (*ServiceDeployment, *string) {
 	serviceDeployment := ServiceDeployment{
-		serviceID:           &provisionRequest.ServiceID,
-		planID:              &provisionRequest.PlanID,
+		serviceID:           provisionRequest.ServiceID,
+		planID:              provisionRequest.PlanID,
 		instanceID:          instanceID,
 		parameters:          provisionRequest.Parameters,
-		organizationID:      &provisionRequest.OrganizationGUID,
-		spaceID:             &provisionRequest.SpaceGUID,
+		organizationID:      provisionRequest.OrganizationGUID,
+		spaceID:             provisionRequest.SpaceGUID,
 		bindings:            make(map[string]*ServiceBinding),
 		operations:          make(map[string]*Operation),
 		nextOperationNumber: 0,
@@ -129,11 +129,11 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 			},
 		}
 	}
-	offering, _ := catalog.GetServiceOfferingById(provisionRequest.ServiceID)
+	offering, _ := catalog.GetServiceOfferingById(*provisionRequest.ServiceID)
 	if *offering.InstancesRetrievable {
 		serviceDeployment.setResponse()
 	}
-	plan, _ := offering.GetPlanByID(provisionRequest.PlanID)
+	plan, _ := offering.GetPlanByID(*provisionRequest.PlanID)
 	serviceDeployment.maintenanceInfo = plan.MaintenanceInfo
 	operationID := serviceDeployment.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, requestSettings.FailAtOperation, nil, nil, nil, nil, true)
 	return &serviceDeployment, operationID

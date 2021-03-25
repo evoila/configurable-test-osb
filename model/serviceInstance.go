@@ -1,13 +1,13 @@
 package model
 
 type ProvideServiceInstanceRequest struct {
-	ServiceID        string          `json:"service_id" binding:"required"`
-	PlanID           string          `json:"plan_id" binding:"required"`
-	Context          interface{}     `json:"context"`
-	OrganizationGUID string          `json:"organization_guid" binding:"required"`
-	SpaceGUID        string          `json:"space_guid" binding:"required"`
-	Parameters       interface{}     `json:"parameters"`
-	MaintenanceInfo  MaintenanceInfo `json:"maintenance_info"`
+	ServiceID        *string          `json:"service_id" binding:"required"`
+	PlanID           *string          `json:"plan_id" binding:"required"`
+	Context          interface{}      `json:"context"`
+	OrganizationGUID *string          `json:"organization_guid" binding:"required"`
+	SpaceGUID        *string          `json:"space_guid" binding:"required"`
+	Parameters       interface{}      `json:"parameters"`
+	MaintenanceInfo  *MaintenanceInfo `json:"maintenance_info"`
 }
 
 type ProvideUpdateServiceInstanceResponse struct {

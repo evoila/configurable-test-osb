@@ -33,9 +33,9 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 	if deployment, exists := (*deploymentService.serviceInstances)[*instanceID]; exists == true {
 		if deploymentService.settings.ProvisionSettings.StatusCodeOKPossibleForIdenticalProvision {
 			if cmp.Equal(provisionRequest.Parameters, deployment.Parameters()) &&
-				*deployment.ServiceID() == provisionRequest.ServiceID && *deployment.PlanID() == provisionRequest.PlanID &&
-				*deployment.SpaceID() == provisionRequest.SpaceGUID &&
-				*deployment.OrganizationID() == provisionRequest.OrganizationGUID {
+				*deployment.ServiceID() == *provisionRequest.ServiceID && *deployment.PlanID() == *provisionRequest.PlanID &&
+				*deployment.SpaceID() == *provisionRequest.SpaceGUID &&
+				*deployment.OrganizationID() == *provisionRequest.OrganizationGUID {
 				response := model.NewProvideServiceInstanceResponse(deployment.DashboardURL(), deployment.LastOperationID(), deployment.Metadata(), deploymentService.settings, nil)
 				return 200, response, nil
 			}
@@ -45,22 +45,22 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 			Description: "The given instance_id is already in use",
 		}
 	}
-	serviceOffering, exists := deploymentService.catalog.GetServiceOfferingById(provisionRequest.ServiceID)
+	serviceOffering, exists := deploymentService.catalog.GetServiceOfferingById(*provisionRequest.ServiceID)
 	if !exists {
 		return 400, nil, &model.ServiceBrokerError{
 			Error:       "ServiceIDMissing",
 			Description: "The given service_id does not exist in the catalog",
 		}
 	}
-	servicePlan, exists := serviceOffering.GetPlanByID(provisionRequest.PlanID)
+	servicePlan, exists := serviceOffering.GetPlanByID(*provisionRequest.PlanID)
 	if !exists {
 		return 400, nil, &model.ServiceBrokerError{
 			Error:       "PlanIDMissing",
 			Description: "The given plan_id does not exist for this service_id in the catalog",
 		}
 	}
-	if provisionRequest.MaintenanceInfo.Version != nil {
-		if servicePlan.MaintenanceInfo.Version == nil {
+	if provisionRequest.MaintenanceInfo != nil && provisionRequest.MaintenanceInfo.Version != nil {
+		if servicePlan.MaintenanceInfo == nil || servicePlan.MaintenanceInfo.Version == nil {
 			return 422, nil, &model.ServiceBrokerError{
 				Error:       "MaintenanceInfoConflict",
 				Description: model.MaintenanceInfoConflict,

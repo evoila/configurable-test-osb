@@ -5,7 +5,6 @@ import (
 	"github.com/MaxFuhrich/serviceBrokerDummy/service"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
-	"log"
 	"net/http"
 	"time"
 )
@@ -78,13 +77,6 @@ func (bindingController *BindingController) CreateBinding(context *gin.Context) 
 		})
 		return
 	}
-	if bindingController.settings.BindingSettings.AppGUIDRequired && bindingRequest.AppGUID == nil {
-		context.JSON(422, model.ServiceBrokerError{
-			Error:       "RequiresApp",
-			Description: model.RequiresApp,
-		})
-		return
-	}
 	if bindingRequest.AppGUID != nil && *bindingRequest.AppGUID == "" {
 		context.JSON(http.StatusBadRequest, gin.H{
 			"message": "invalid app_guid in request, value must not be \"\"",
@@ -106,7 +98,6 @@ func (bindingController *BindingController) CreateBinding(context *gin.Context) 
 //The request will then be passed to bindingService.RotateBinding(rotateBindingRequest *model.RotateBindingRequest, instanceID *string, bindingID *string)
 //which creates a binding from an existing one and returns a response, which is also used by deploymentController.FetchBinding.
 func (bindingController *BindingController) rotateBinding(context *gin.Context) {
-	log.Println("rotateBinding called")
 	instanceID := context.Param("instance_id")
 	bindingID := context.Param("binding_id")
 	if bindingID == "" {
@@ -177,7 +168,6 @@ func (bindingController *BindingController) PollOperationState(context *gin.Cont
 	var serviceID *string
 	valueServiceID, exists := context.GetQuery("service_id")
 	if exists {
-		log.Printf("service_id valueServiceID: %v\n", valueServiceID)
 		if valueServiceID == "" {
 			context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
 				Error:       "MalformedRequest",
@@ -185,7 +175,6 @@ func (bindingController *BindingController) PollOperationState(context *gin.Cont
 			})
 		} else {
 			serviceID = &valueServiceID
-			log.Printf("service_id assigned valueServiceID: %v\n", *serviceID)
 		}
 	}
 	var planID *string
@@ -257,8 +246,11 @@ func (bindingController *BindingController) Unbind(context *gin.Context) {
 		})
 		return
 	}
-	var deleteRequest model.DeleteRequest
-	_ = context.ShouldBindBodyWith(&deleteRequest, binding.JSON)
+	//var deleteRequest model.DeleteRequest
+	deleteRequest := model.DeleteRequest{}
+	if body := context.Request.GetBody; body != nil {
+		_ = context.ShouldBindBodyWith(&deleteRequest, binding.JSON)
+	}
 	var requestSettings *model.RequestSettings
 	requestSettings, _ = model.GetRequestSettings(deleteRequest.Parameters)
 	if requestSettings.AsyncEndpoint != nil && *requestSettings.AsyncEndpoint && acceptsIncomplete == "false" {

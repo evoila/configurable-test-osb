@@ -24,8 +24,8 @@ type CreateRotateBindingResponse struct {
 }
 
 type BindingOperationPollResponse struct {
-	State       string `json:"state"`
-	Description string `json:"description,omitempty"`
+	State       string  `json:"state"`
+	Description *string `json:"description,omitempty"`
 }
 
 type RotateBindingRequest struct {
@@ -35,7 +35,7 @@ type RotateBindingRequest struct {
 
 type CreateRotateFetchBindingResponse struct {
 	Metadata        *BindingMetadata `json:"metadata,omitempty"`
-	Credentials     *interface{}     `json:"credentials,omitempty"`
+	Credentials     interface{}      `json:"credentials,omitempty"`
 	SyslogDrainUrl  *string          `json:"syslog_drain_url,omitempty"`
 	RouteServiceUrl *string          `json:"route_service_url,omitempty"`
 	VolumeMounts    *[]VolumeMount   `json:"volume_mounts,omitempty"`

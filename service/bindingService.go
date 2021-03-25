@@ -3,7 +3,6 @@ package service
 import (
 	"github.com/MaxFuhrich/serviceBrokerDummy/model"
 	"github.com/google/go-cmp/cmp"
-	"log"
 )
 
 type BindingService struct {
@@ -51,7 +50,6 @@ func (bindingService *BindingService) CreateBinding(bindingRequest *model.Create
 	requestSettings, _ = model.GetRequestSettings(bindingRequest.Parameters)
 	if binding, exists := (*bindingService.bindingInstances)[*bindingID]; exists == true {
 		if bindingService.settings.BindingSettings.StatusCodeOKPossible && !*requestSettings.AsyncEndpoint {
-			log.Println("binding with given id exists. now comparing equality of requested binding and existing binding")
 			if cmp.Equal(bindingRequest.Parameters, binding.Parameters()) &&
 				cmp.Equal(bindingRequest.Context, binding.Context()) &&
 				*bindingRequest.ServiceID == *binding.ServiceID() &&
@@ -119,12 +117,6 @@ func (bindingService *BindingService) RotateBinding(rotateBindingRequest *model.
 			Description: "Given instance_id was not found",
 		}
 	}
-	if _, exists := (*bindingService.bindingInstances)[*bindingID]; exists == true {
-		return 409, nil, &model.ServiceBrokerError{
-			Error:       "InstanceIDConflict",
-			Description: "The given binding_id is already in use",
-		}
-	}
 	oldBinding, exists := deployment.GetBinding(rotateBindingRequest.PredecessorBindingId)
 	if !exists {
 		return 404, nil, &model.ServiceBrokerError{
@@ -132,6 +124,31 @@ func (bindingService *BindingService) RotateBinding(rotateBindingRequest *model.
 			Description: "Given predecessor_binding_id was not found",
 		}
 	}
+	if existingBinding, exists := (*bindingService.bindingInstances)[*bindingID]; exists == true {
+		var requestSettings *model.RequestSettings
+		requestSettings, _ = model.GetRequestSettings(rotateBindingRequest.Parameters)
+		if bindingService.settings.BindingSettings.StatusCodeOKPossible && !*requestSettings.AsyncEndpoint {
+			//predecessorBinding :=
+			if cmp.Equal(oldBinding.Parameters(), existingBinding.Parameters()) &&
+				cmp.Equal(oldBinding.Context(), existingBinding.Context()) &&
+				*oldBinding.ServiceID() == *existingBinding.ServiceID() &&
+				*oldBinding.PlanID() == *existingBinding.PlanID() &&
+				cmp.Equal(oldBinding.AppGuid(), existingBinding.AppGuid()) &&
+				cmp.Equal(oldBinding.BindResource(), existingBinding.BindResource()) {
+				if bindingService.settings.BindingSettings.ReturnBindingInformationOnce && existingBinding.InformationReturned() {
+					return 200, &model.CreateRotateFetchBindingResponse{}, nil
+				}
+				response := existingBinding.Response()
+				response.Parameters = nil
+				return 200, response, nil
+			}
+		}
+		return 409, nil, &model.ServiceBrokerError{
+			Error:       "InstanceIDConflict",
+			Description: "The given binding_id is already in use",
+		}
+	}
+
 	newBinding, operationID := oldBinding.RotateBinding(rotateBindingRequest, deployment, bindingID)
 	(*bindingService.bindingInstances)[*bindingID] = newBinding
 	var requestSettings *model.RequestSettings
@@ -186,7 +203,7 @@ func (bindingService *BindingService) FetchBinding(instanceID *string, bindingID
 		}
 	}
 	offering, _ := bindingService.catalog.GetServiceOfferingById(*deployment.ServiceID())
-	if offering.BindingsRetrievable != nil && *offering.BindingsRetrievable == false {
+	if offering.BindingsRetrievable == nil || offering.BindingsRetrievable != nil && !*offering.BindingsRetrievable {
 		return 400, nil, &model.ServiceBrokerError{
 			Error:       "BindingNotRetrievable",
 			Description: "Service bindings of this offering are not retrievable",
@@ -224,8 +241,6 @@ func (bindingService *BindingService) PollOperationState(instanceID *string, bin
 		}
 	}
 	if serviceID != nil && *serviceID != *deployment.ServiceID() {
-		log.Println("Service id of request: " + *serviceID)
-		log.Println("Service id of instance: " + *deployment.ServiceID())
 		return 400, nil, &model.ServiceBrokerError{
 			Error:       "ServiceIDMatch",
 			Description: "The given service_id does not match the service_id of the instance",

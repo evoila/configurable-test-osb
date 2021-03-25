@@ -70,14 +70,14 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 		})
 		return
 	}
-	if provisionRequest.OrganizationGUID == "" {
+	if provisionRequest.OrganizationGUID == nil || *provisionRequest.OrganizationGUID == "" {
 		context.JSON(http.StatusBadRequest, &model.ServiceBrokerError{
 			Error:       "EmptyOrganizationGUID",
 			Description: "organization_guid must be a non-empty string",
 		})
 		return
 	}
-	if provisionRequest.SpaceGUID == "" {
+	if provisionRequest.SpaceGUID == nil || *provisionRequest.SpaceGUID == "" {
 		context.JSON(http.StatusBadRequest, &model.ServiceBrokerError{
 			Error:       "EmptySpaceGUID",
 			Description: "space_guid must be a non-empty string",
