@@ -1709,52 +1709,52 @@ func TestFetchBinding(t *testing.T) {
 		t.Errorf("Expected metadata to be nil")
 	}
 	if settings.BindingSettings.ReturnCredentials && responseBody.Credentials == nil {
-		t.Errorf("Expected metadata to be not nil")
+		t.Errorf("Expected credentials to be not nil")
 	}
 
 	if !settings.BindingSettings.ReturnCredentials && responseBody.Credentials != nil {
-		t.Errorf("Expected metadata to be nil")
+		t.Errorf("Expected credentials to be nil")
 	}
 	if settings.BindingSettings.ReturnSyslogDrainURL && firstOffering.Requires != nil &&
 		sort.SearchStrings(firstOffering.Requires, "syslog_drain") < len(firstOffering.Requires) && responseBody.SyslogDrainUrl == nil {
-		t.Errorf("Expected metadata to be not nil")
+		t.Errorf("Expected syslogDrainURL to be not nil")
 	}
 
 	if (!settings.BindingSettings.ReturnSyslogDrainURL || firstOffering.Requires == nil || firstOffering.Requires != nil &&
 		sort.SearchStrings(firstOffering.Requires, "syslog_drain") >= len(firstOffering.Requires)) && responseBody.SyslogDrainUrl != nil {
-		t.Errorf("Expected metadata to be nil")
+		t.Errorf("Expected syslogDrainURL to be nil")
 	}
 	if settings.BindingSettings.ReturnRouteServiceURL && firstOffering.Requires != nil &&
 		sort.SearchStrings(firstOffering.Requires, "route_forwarding") < len(firstOffering.Requires) && responseBody.RouteServiceUrl == nil {
-		t.Errorf("Expected metadata to be not nil")
+		t.Errorf("Expected routeServiceURL to be not nil")
 	}
 
 	if (!settings.BindingSettings.ReturnRouteServiceURL || firstOffering.Requires == nil || firstOffering.Requires != nil &&
 		sort.SearchStrings(firstOffering.Requires, "route_forwarding") >= len(firstOffering.Requires)) && responseBody.RouteServiceUrl != nil {
-		t.Errorf("Expected metadata to be nil")
+		t.Errorf("Expected routeServiceURL to be nil")
 	}
 	if settings.BindingSettings.BindingVolumeMountSettings.ReturnVolumeMounts && firstOffering.Requires != nil &&
 		sort.SearchStrings(firstOffering.Requires, "volume_mount") < len(firstOffering.Requires) && responseBody.VolumeMounts == nil {
-		t.Errorf("Expected metadata to be not nil")
+		t.Errorf("Expected volumeMounts to be not nil")
 	}
 
 	if (!settings.BindingSettings.BindingVolumeMountSettings.ReturnVolumeMounts || firstOffering.Requires == nil || firstOffering.Requires != nil &&
 		sort.SearchStrings(firstOffering.Requires, "volume_mount") >= len(firstOffering.Requires)) && responseBody.VolumeMounts != nil {
-		t.Errorf("Expected metadata to be nil")
+		t.Errorf("Expected volumeMounts to be nil")
 	}
 	if settings.BindingSettings.ReturnParameters && responseBody.Parameters == nil {
-		t.Errorf("Expected metadata to be not nil")
+		t.Errorf("Expected parameters to be not nil")
 	}
 
 	if !settings.BindingSettings.ReturnParameters && responseBody.Parameters != nil {
-		t.Errorf("Expected metadata to be nil")
+		t.Errorf("Expected parameters to be nil")
 	}
-	if settings.BindingSettings.BindingEndpointSettings.ReturnEndpoints && responseBody.Endpoints == nil {
-		t.Errorf("Expected metadata to be not nil")
+	if settings.HeaderSettings.BrokerVersion > "2.14" && settings.BindingSettings.BindingEndpointSettings.ReturnEndpoints && responseBody.Endpoints == nil {
+		t.Errorf("Expected endpoints to be not nil")
 	}
 
 	if !settings.BindingSettings.BindingEndpointSettings.ReturnEndpoints && responseBody.Endpoints != nil {
-		t.Errorf("Expected metadata to be nil")
+		t.Errorf("Expected endpoints to be nil")
 	}
 }
 

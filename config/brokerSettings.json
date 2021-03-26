@@ -1,6 +1,6 @@
 {
   "header_settings": {
-    "broker_version": "2.17",
+    "broker_version": "2.13",
     "reject_wrong_api_version": true,
     "reject_empty_api_version": true,
     "origin_id_required": false,
