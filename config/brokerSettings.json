@@ -1,6 +1,6 @@
 {
   "header_settings": {
-    "broker_version": "2.16",
+    "broker_version": "2.15",
     "reject_wrong_api_version": true,
     "reject_empty_api_version": true,
     "origin_id_required": false,
@@ -8,7 +8,9 @@
     "request_id_required": false,
     "log_request_id": true,
     "request_id_in_response": true,
-    "etag_if_modified_since_in_response": false
+    "etag_if_modified_since_in_response": false,
+    "username": "user",
+    "password": "password"
   },
   "provision_settings": {
     "status_code_ok_possible_for_identical_provision": true,
@@ -48,7 +50,7 @@
       "return_mount_config": true
     },
     "binding_endpoint_settings": {
-      "return_endpoints": true,
+      "return_endpoints": false,
       "return_protocol": true,
       "protocol_value": "tcp"
     },

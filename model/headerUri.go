@@ -1,9 +1,6 @@
 package model
 
-//REQUEST AND RESPONSE???
 type Header struct {
-	//omitempty has no effect, probably because `header...` and not `json`is used
-	//SETTABLE
 	APIVersionHeader *string `header:"X-Broker-API-Version"`
 
 	OriginID *string `header:"X-Broker-API-Originating-Identity"`
@@ -13,6 +10,8 @@ type Header struct {
 	ETag *string `header:"ETag"`
 	//ifmodifiedsince time in format Mon, 02 Jan 2006 15:04:05 MST -> RFC 1123
 	IfModifiedSince *string `header:"If-Modified-Since"`
+
+	Authorization *string `header:"Authorization"`
 }
 
 type UriProperties struct {

@@ -24,11 +24,8 @@ func NewProvideServiceInstanceResponse(dashboardUrl *string, operation *string, 
 	if requestSettings != nil && *requestSettings.AsyncEndpoint && settings.ProvisionSettings.ReturnOperationIfAsync {
 		response.Operation = operation
 	}
-	if settings.ProvisionSettings.ReturnMetadata {
+	if settings.ProvisionSettings.ReturnMetadata && settings.HeaderSettings.BrokerVersion > "2.15" {
 		response.Metadata = metadata
-		if settings.HeaderSettings.BrokerVersion < "2.16" {
-			response.Metadata.Labels = nil
-		}
 	}
 	return &response
 }

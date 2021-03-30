@@ -32,7 +32,7 @@ func NewDeploymentController(deploymentService *service.DeploymentService, setti
 func (deploymentController *DeploymentController) Provision(context *gin.Context) {
 	instanceID := context.Param("instance_id")
 	if instanceID == "" {
-		context.JSON(http.StatusBadRequest, gin.H{
+		context.JSON(412, gin.H{
 			"message": "error while parsing url parameter \"instance_id\"",
 			"error":   "invalid value, value must not be \"\" and unique",
 		})
@@ -40,7 +40,7 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 	}
 	acceptsIncomplete := context.DefaultQuery("accepts_incomplete", "false")
 	if acceptsIncomplete != "false" && acceptsIncomplete != "true" {
-		context.JSON(http.StatusBadRequest, gin.H{
+		context.JSON(412, gin.H{
 			"message": "error while parsing query parameter \"accepts_incomplete\"",
 			"error":   "invalid value, value must be either \"true\", \"false\" or omitted which defaults to \"false\"",
 		})
@@ -57,7 +57,7 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 	if provisionRequest.Context != nil {
 		err := model.CorrectContext(&provisionRequest.Context, &deploymentController.settings.HeaderSettings.BrokerVersion, deploymentController.platform, false)
 		if err != nil {
-			context.JSON(400, err)
+			context.JSON(412, err)
 			return
 		}
 	}
@@ -71,14 +71,14 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 		return
 	}
 	if provisionRequest.OrganizationGUID == nil || *provisionRequest.OrganizationGUID == "" {
-		context.JSON(http.StatusBadRequest, &model.ServiceBrokerError{
+		context.JSON(412, &model.ServiceBrokerError{
 			Error:       "EmptyOrganizationGUID",
 			Description: "organization_guid must be a non-empty string",
 		})
 		return
 	}
 	if provisionRequest.SpaceGUID == nil || *provisionRequest.SpaceGUID == "" {
-		context.JSON(http.StatusBadRequest, &model.ServiceBrokerError{
+		context.JSON(412, &model.ServiceBrokerError{
 			Error:       "EmptySpaceGUID",
 			Description: "space_guid must be a non-empty string",
 		})

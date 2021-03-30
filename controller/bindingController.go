@@ -33,7 +33,7 @@ func (bindingController *BindingController) CreateBinding(context *gin.Context) 
 	instanceID := context.Param("instance_id")
 	bindingID := context.Param("binding_id")
 	if bindingID == "" {
-		context.JSON(http.StatusBadRequest, gin.H{
+		context.JSON(400, gin.H{
 			"message": "error while parsing url parameter \"binding_id\"",
 			"error":   "invalid value, value must not be \"\" and unique",
 		})
@@ -41,7 +41,7 @@ func (bindingController *BindingController) CreateBinding(context *gin.Context) 
 	}
 	acceptsIncomplete := context.DefaultQuery("accepts_incomplete", "false")
 	if acceptsIncomplete != "false" && acceptsIncomplete != "true" {
-		context.JSON(http.StatusBadRequest, gin.H{
+		context.JSON(412, gin.H{
 			"message": "error while parsing query parameter \"accepts_incomplete\"",
 			"error":   "invalid value, value must be either \"true\", \"false\" or omitted which defaults to \"false\"",
 		})
@@ -224,23 +224,23 @@ func (bindingController *BindingController) Unbind(context *gin.Context) {
 
 	serviceOfferingID, exists := context.GetQuery("service_id")
 	if !exists {
-		context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
-			Error:       "MalformedRequest",
-			Description: "service_id must be included as query parameter",
+		context.JSON(412, model.ServiceBrokerError{
+			Error:       "PreconditionFailed",
+			Description: "Valid service_id must be included as query parameter",
 		})
 		return
 	}
 	servicePlanID, exists := context.GetQuery("plan_id")
 	if !exists {
-		context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
-			Error:       "MalformedRequest",
-			Description: "plan_id must be included as query parameter",
+		context.JSON(412, model.ServiceBrokerError{
+			Error:       "PreconditionFailed",
+			Description: "Valid plan_id must be included as query parameter",
 		})
 		return
 	}
 	acceptsIncomplete := context.DefaultQuery("accepts_incomplete", "false")
 	if acceptsIncomplete != "false" && acceptsIncomplete != "true" {
-		context.JSON(http.StatusBadRequest, gin.H{
+		context.JSON(412, gin.H{
 			"message": "error while parsing query parameter \"accepts_incomplete\"",
 			"error":   "invalid value, value must be either \"true\", \"false\" or omitted which defaults to \"false\"",
 		})

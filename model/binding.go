@@ -97,12 +97,6 @@ func NewServiceBinding(bindingID *string, bindingRequest *CreateBindingRequest, 
 		informationReturned: false,
 		response:            &CreateRotateFetchBindingResponse{},
 	}
-	if serviceBinding.parameters == nil {
-		parameters := struct {
-			Value string `json:"value"`
-		}{Value: "parameterValue"}
-		serviceBinding.parameters = &parameters
-	}
 	deployment.AddBinding(&serviceBinding)
 	serviceBinding.serviceOffering, _ = catalog.GetServiceOfferingById(*bindingRequest.ServiceID)
 	serviceBinding.setResponse()
@@ -163,7 +157,7 @@ func (serviceBinding *ServiceBinding) DoOperation(async bool, duration int, shou
 
 func (serviceBinding *ServiceBinding) setResponse() {
 
-	if serviceBinding.settings.BindingSettings.BindingMetadataSettings.ReturnMetadata {
+	if serviceBinding.settings.HeaderSettings.BrokerVersion > "2.15" && serviceBinding.settings.BindingSettings.BindingMetadataSettings.ReturnMetadata {
 		metadata := BindingMetadata{}
 		serviceBinding.response.Metadata = &metadata
 

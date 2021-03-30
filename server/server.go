@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -104,7 +105,18 @@ func Run() {
 //Returns *model.Catalog (the catalog used by this service broker) and error
 func MakeCatalog() (*model.Catalog, error) {
 	var catalog model.Catalog
-	catalogJson, err := os.Open("config/catalog.json")
+	currentPath, _ := os.Getwd()
+	directories := strings.Split(currentPath, string(os.PathSeparator))
+	if directories[len(directories)-1] == "tests" {
+		directories = directories[:len(directories)-1]
+	}
+	var target string
+	target = directories[0] + string(os.PathSeparator)
+	directories = directories[1:]
+	var temp string
+	temp = filepath.Join(append(directories, temp)...)
+	target = filepath.Join(target, temp, "config", "catalog.json")
+	catalogJson, err := os.Open(target)
 	if err != nil {
 		return nil, errors.New("error while opening catalog file! error: " + err.Error())
 	}
@@ -122,7 +134,18 @@ func MakeCatalog() (*model.Catalog, error) {
 
 func MakeSettings() (*model.Settings, error) {
 	var settings model.Settings
-	brokerSettingsJson, err := os.Open("config/brokerSettings.json")
+	currentPath, _ := os.Getwd()
+	directories := strings.Split(currentPath, string(os.PathSeparator))
+	if directories[len(directories)-1] == "tests" {
+		directories = directories[:len(directories)-1]
+	}
+	var target string
+	target = directories[0] + string(os.PathSeparator)
+	directories = directories[1:]
+	var temp string
+	temp = filepath.Join(append(directories, temp)...)
+	target = filepath.Join(target, temp, "config", "brokerSettings.json")
+	brokerSettingsJson, err := os.Open(target)
 	if err != nil {
 		return nil, errors.New("error while opening settings file! error: " + err.Error())
 	}

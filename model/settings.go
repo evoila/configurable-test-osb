@@ -18,6 +18,8 @@ type HeaderSettings struct {
 	LogRequestID                  bool   `json:"log_request_id" binding:"required"`
 	RequestIDInResponse           bool   `json:"request_id_in_response" binding:"required"`
 	EtagIfModifiedSinceInResponse bool   `json:"etag_if_modified_since_in_response" binding:"required"`
+	Username                      string `json:"username" binding:"required"`
+	Password                      string `json:"password" binding:"required"`
 }
 
 type ProvisionSettings struct {

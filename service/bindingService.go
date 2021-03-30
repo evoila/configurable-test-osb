@@ -347,13 +347,13 @@ func (bindingService *BindingService) Unbind(deleteRequest *model.DeleteRequest,
 		}
 	}
 	if serviceID != nil && *serviceID != *deployment.ServiceID() {
-		return 400, nil, &model.ServiceBrokerError{
+		return 412, nil, &model.ServiceBrokerError{
 			Error:       "ServiceIDMatch",
 			Description: "The given service_id does not match the service_id of the instance",
 		}
 	}
 	if planID != nil && *planID != *deployment.PlanID() {
-		return 400, nil, &model.ServiceBrokerError{
+		return 412, nil, &model.ServiceBrokerError{
 			Error:       "PlanIDMatch",
 			Description: "The given plan_id does not match the plan_id of the instance",
 		}
