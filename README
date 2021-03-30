@@ -1,6 +1,0 @@
-TO DO
--function for wiping whole catalog/instances/bindings?
--rfc3986Validator logic
--pointer for interface{} necessary?
--move catalog.json somewhere else?
--generate catalog from catalogSettings.json
