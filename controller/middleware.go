@@ -3,8 +3,8 @@ package controller
 import (
 	"encoding/base64"
 	"encoding/json"
-	"github.com/MaxFuhrich/serviceBrokerDummy/model"
-	"github.com/MaxFuhrich/serviceBrokerDummy/model/profiles"
+	"github.com/MaxFuhrich/configurable-test-osb/model"
+	"github.com/MaxFuhrich/configurable-test-osb/model/profiles"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"

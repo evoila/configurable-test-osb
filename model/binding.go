@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/MaxFuhrich/serviceBrokerDummy/generator"
+	"github.com/MaxFuhrich/configurable-test-osb/generator"
 	"sort"
 	"strconv"
 	"time"

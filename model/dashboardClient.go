@@ -1,6 +1,6 @@
 package model
 
-import "github.com/MaxFuhrich/serviceBrokerDummy/generator"
+import "github.com/MaxFuhrich/configurable-test-osb/generator"
 
 type DashboardClient struct {
 	Id          string  `json:"id"`

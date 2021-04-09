@@ -1,4 +1,4 @@
-module github.com/MaxFuhrich/serviceBrokerDummy
+module github.com/MaxFuhrich/configurable-test-osb
 
 go 1.15
 

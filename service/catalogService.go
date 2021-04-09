@@ -2,7 +2,7 @@ package service
 
 import (
 	"encoding/json"
-	"github.com/MaxFuhrich/serviceBrokerDummy/model"
+	"github.com/MaxFuhrich/configurable-test-osb/model"
 	"log"
 )
 

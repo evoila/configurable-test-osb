@@ -1,8 +1,8 @@
 package controller
 
 import (
-	"github.com/MaxFuhrich/serviceBrokerDummy/model"
-	"github.com/MaxFuhrich/serviceBrokerDummy/service"
+	"github.com/MaxFuhrich/configurable-test-osb/model"
+	"github.com/MaxFuhrich/configurable-test-osb/service"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
