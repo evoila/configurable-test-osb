@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/MaxFuhrich/configurable-test-osb/server"
+	"github.com/evoila/configurable-test-osb/server"
 )
 
 func main() {

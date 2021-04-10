@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/MaxFuhrich/configurable-test-osb/model"
+	"github.com/evoila/configurable-test-osb/model"
 	"github.com/google/go-cmp/cmp"
 )
 

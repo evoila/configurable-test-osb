@@ -1,9 +1,9 @@
 package tests
 
 import (
-	"github.com/MaxFuhrich/configurable-test-osb/controller"
-	"github.com/MaxFuhrich/configurable-test-osb/server"
-	"github.com/MaxFuhrich/configurable-test-osb/service"
+	"github.com/evoila/configurable-test-osb/controller"
+	"github.com/evoila/configurable-test-osb/server"
+	"github.com/evoila/configurable-test-osb/service"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	"io"

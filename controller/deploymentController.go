@@ -1,8 +1,8 @@
 package controller
 
 import (
-	"github.com/MaxFuhrich/configurable-test-osb/model"
-	"github.com/MaxFuhrich/configurable-test-osb/service"
+	"github.com/evoila/configurable-test-osb/model"
+	"github.com/evoila/configurable-test-osb/service"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"

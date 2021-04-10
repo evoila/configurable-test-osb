@@ -1,0 +1,63 @@
+{
+  "header_settings": {
+    "broker_version": "2.15",
+    "reject_wrong_api_version": true,
+    "reject_empty_api_version": true,
+    "origin_id_required": false,
+    "origin_id_val_must_match_profile": true,
+    "request_id_required": false,
+    "log_request_id": true,
+    "request_id_in_response": true,
+    "etag_if_modified_since_in_response": false,
+    "username": "user",
+    "password": "password"
+  },
+  "provision_settings": {
+    "status_code_ok_possible_for_identical_provision": true,
+    "create_dashboard_url": true,
+    "return_operation_if_async": true,
+    "create_metadata": true,
+    "return_dashboard_url": true,
+    "return_operation": true,
+    "return_metadata": true,
+    "allow_deprovision_with_bindings": false
+  },
+  "fetch_service_instance_settings": {
+    "return_service_id": false,
+    "return_plan_id": true,
+    "return_dashboard_url": true,
+    "return_parameters": true,
+    "return_maintenance_info": true,
+    "return_metadata": true
+  },
+  "poll_instance_operation_settings": {
+    "description_in_response": true,
+    "retry_poll_instance_operation_after_seconds": 0
+  },
+  "binding_settings":{
+    "return_binding_information_once": false,
+    "return_operation_if_async": true,
+    "binding_metadata_settings": {
+      "return_metadata": true,
+      "return_expires_at": true,
+      "return_renew_before": true
+    },
+    "return_credentials": true,
+    "return_syslog_drain_url": true,
+    "return_route_service_url": true,
+    "binding_volume_mount_settings": {
+      "return_volume_mounts": true,
+      "return_mount_config": true
+    },
+    "binding_endpoint_settings": {
+      "return_endpoints": false,
+      "return_protocol": true,
+      "protocol_value": "tcp"
+    },
+    "return_parameters": true,
+    "status_code_ok_possible": true,
+    "return_description_last_operation": true,
+    "retry_poll_binding_operation_after_seconds": 0
+  },
+  "milliseconds_to_update": 500
+}

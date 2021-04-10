@@ -53,7 +53,30 @@ type CatalogSettings struct {
 
 func NewCatalogSettings() (*CatalogSettings, error) {
 	var catalogSettings CatalogSettings
-	catalogSettingsJson, err := os.Open("config/catalogSettings.json")
+	var target string
+	var catalogSettingsJson *os.File
+	var err error
+	if target = os.Getenv("CATALOG_GENERATOR_FILE_PATH"); target == "" {
+		catalogSettingsJson, err = os.Open("catalogSettings.json")
+		if err != nil {
+			catalogSettingsJson, err = os.Open("config" + string(os.PathSeparator) + "catalogSettings.json")
+		}
+		/*
+			currentPath, _ := os.Getwd()
+				directories := strings.Split(currentPath, string(os.PathSeparator))
+				if directories[len(directories)-1] == "tests" {
+					directories = directories[:len(directories)-1]
+				}
+
+				target = directories[0] + string(os.PathSeparator)
+				directories = directories[1:]
+				var temp string
+				temp = filepath.Join(append(directories, temp)...)
+				target = filepath.Join(target, temp, "config", "brokerSettings.json")
+		*/
+	} else {
+		catalogSettingsJson, err = os.Open(target)
+	}
 	if err != nil {
 		log.Println("Error while opening config/catalogSettings.json! error: " + err.Error())
 		return nil, err

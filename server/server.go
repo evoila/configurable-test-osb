@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/MaxFuhrich/configurable-test-osb/controller"
-	"github.com/MaxFuhrich/configurable-test-osb/model"
-	"github.com/MaxFuhrich/configurable-test-osb/service"
+	"github.com/evoila/configurable-test-osb/controller"
+	"github.com/evoila/configurable-test-osb/model"
+	"github.com/evoila/configurable-test-osb/service"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -22,10 +21,16 @@ func Run() {
 	catalog, err := MakeCatalog()
 	if err != nil {
 		log.Println("There has been an error while creating the catalog!", err.Error())
+		log.Printf("In order to work a valid catalog file has to be provided. \nThe path to the catalog file can either " +
+			"be set \n- by setting the environment variable CATALOG_FILE_PATH=\"PathToCatalog\"+\"Filename\".json\n" +
+			"- by putting a catalog.json file in the directory from where this program is executed or in a subdirectory named \"config\".")
 	} else {
 		settings, err := MakeSettings()
 		if err != nil {
 			log.Println("There has been an error while creating the settings!", err.Error())
+			log.Printf("In order to work a valid settings file has to be provided. \nThe path to the settings file can either " +
+				"be set \n- by setting the environment variable SETTINGS_FILE_PATH=\"PathToSettings\"+\"Filename\".json\n" +
+				"- by putting a brokerSettings.json file in the directory from where this program is executed or in a subdirectory named \"config\".")
 		} else {
 			if settings.HeaderSettings.BrokerVersion < "2.15" {
 				if !catalogToVersion(catalog) {
@@ -105,18 +110,30 @@ func Run() {
 //Returns *model.Catalog (the catalog used by this service broker) and error
 func MakeCatalog() (*model.Catalog, error) {
 	var catalog model.Catalog
-	currentPath, _ := os.Getwd()
-	directories := strings.Split(currentPath, string(os.PathSeparator))
-	if directories[len(directories)-1] == "tests" {
-		directories = directories[:len(directories)-1]
-	}
 	var target string
-	target = directories[0] + string(os.PathSeparator)
-	directories = directories[1:]
-	var temp string
-	temp = filepath.Join(append(directories, temp)...)
-	target = filepath.Join(target, temp, "config", "catalog.json")
-	catalogJson, err := os.Open(target)
+	var catalogJson *os.File
+	var err error
+	if target = os.Getenv("CATALOG_FILE_PATH"); target == "" {
+		catalogJson, err = os.Open("catalog.json")
+		if err != nil {
+			catalogJson, err = os.Open("config" + string(os.PathSeparator) + "catalog.json")
+		}
+		/*
+			currentPath, _ := os.Getwd()
+			directories := strings.Split(currentPath, string(os.PathSeparator))
+			if directories[len(directories)-1] == "tests" {
+				directories = directories[:len(directories)-1]
+			}
+			target = directories[0] + string(os.PathSeparator)
+			directories = directories[1:]
+			var temp string
+			temp = filepath.Join(append(directories, temp)...)
+			target = filepath.Join(target, temp, "config", "catalog.json")
+
+		*/
+	} else {
+		catalogJson, err = os.Open(target)
+	}
 	if err != nil {
 		return nil, errors.New("error while opening catalog file! error: " + err.Error())
 	}
@@ -134,18 +151,30 @@ func MakeCatalog() (*model.Catalog, error) {
 
 func MakeSettings() (*model.Settings, error) {
 	var settings model.Settings
-	currentPath, _ := os.Getwd()
-	directories := strings.Split(currentPath, string(os.PathSeparator))
-	if directories[len(directories)-1] == "tests" {
-		directories = directories[:len(directories)-1]
-	}
 	var target string
-	target = directories[0] + string(os.PathSeparator)
-	directories = directories[1:]
-	var temp string
-	temp = filepath.Join(append(directories, temp)...)
-	target = filepath.Join(target, temp, "config", "brokerSettings.json")
-	brokerSettingsJson, err := os.Open(target)
+	var brokerSettingsJson *os.File
+	var err error
+	if target = os.Getenv("SETTINGS_FILE_PATH"); target == "" {
+		brokerSettingsJson, err = os.Open("brokerSettings.json")
+		if err != nil {
+			brokerSettingsJson, err = os.Open("config" + string(os.PathSeparator) + "brokerSettings.json")
+		}
+		/*
+			currentPath, _ := os.Getwd()
+				directories := strings.Split(currentPath, string(os.PathSeparator))
+				if directories[len(directories)-1] == "tests" {
+					directories = directories[:len(directories)-1]
+				}
+
+				target = directories[0] + string(os.PathSeparator)
+				directories = directories[1:]
+				var temp string
+				temp = filepath.Join(append(directories, temp)...)
+				target = filepath.Join(target, temp, "config", "brokerSettings.json")
+		*/
+	} else {
+		brokerSettingsJson, err = os.Open(target)
+	}
 	if err != nil {
 		return nil, errors.New("error while opening settings file! error: " + err.Error())
 	}

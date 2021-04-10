@@ -1,4 +1,4 @@
-module github.com/MaxFuhrich/configurable-test-osb
+module github.com/evoila/configurable-test-osb
 
 go 1.15
 

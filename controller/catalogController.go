@@ -1,9 +1,10 @@
 package controller
 
 import (
-	"github.com/MaxFuhrich/configurable-test-osb/model"
-	"github.com/MaxFuhrich/configurable-test-osb/service"
+	"github.com/evoila/configurable-test-osb/model"
+	"github.com/evoila/configurable-test-osb/service"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 )
 
@@ -33,6 +34,11 @@ func (catalogController *CatalogController) GenerateCatalog(context *gin.Context
 	settings, err := model.NewCatalogSettings()
 	if err != nil {
 		context.JSON(500, err)
+		log.Println("There has been an error while creating the catalog generator settings!", err.Error())
+		log.Printf("In order to work a valid catalog generator settings file has to be provided. \nThe path to " +
+			"the catalog generator settings file can either be set \n- by setting the environment variable " +
+			"CATALOG_GENERATOR_FILE_PATH=\"PathToSettings\"+\"Filename\".json\n" +
+			"- by putting a catalogSettings.json file in the directory from where this program is executed or in a subdirectory named \"config\".")
 		return
 	}
 	catalog := model.NewCatalog(settings)

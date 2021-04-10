@@ -13,11 +13,6 @@
             "provider": {
                 "name": "The name"
             },
-            "listing": {
-                "imageUrl": "http://example.com/cat.gif",
-                "blurb": "Add a blurb here",
-                "longDescription": "A long time ago, in a galaxy far far away..."
-            },
             "displayName": "The Fake Service Broker"
         },
         "plan_updateable": true,
