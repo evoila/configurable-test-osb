@@ -147,7 +147,12 @@ func (serviceDeployment *ServiceDeployment) Update(updateServiceInstanceRequest 
 	requestSettings, _ := GetRequestSettings(updateServiceInstanceRequest.Parameters)
 	if !*requestSettings.FailAtOperation {
 		if updateServiceInstanceRequest.PlanId != nil {
-			serviceDeployment.planID = updateServiceInstanceRequest.PlanId
+			offering, _ := serviceDeployment.catalog.GetServiceOfferingById(*serviceDeployment.serviceID)
+			plan, _ := offering.GetPlanByID(*serviceDeployment.planID)
+			if plan.PlanUpdateable != nil && *plan.PlanUpdateable ||
+				(offering.PlanUpdateable != nil && *offering.PlanUpdateable && (plan.PlanUpdateable == nil || *plan.PlanUpdateable == true)) {
+				serviceDeployment.planID = updateServiceInstanceRequest.PlanId
+			}
 		}
 		if updateServiceInstanceRequest.Parameters != nil {
 			serviceDeployment.parameters = updateServiceInstanceRequest.Parameters
