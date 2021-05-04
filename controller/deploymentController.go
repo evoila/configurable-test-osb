@@ -89,9 +89,6 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 		context.JSON(statusCode, err)
 		return
 	}
-	if deploymentController.settings.HeaderSettings.BrokerVersion < "2.16" {
-
-	}
 	context.JSON(statusCode, response)
 }
 
