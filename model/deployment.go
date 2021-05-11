@@ -143,7 +143,7 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 //operation is supposed to fail)
 //Right now, updating while an update is running is allowed
 //Returns *string (operationID) and *ServiceBrokerError
-func (serviceDeployment *ServiceDeployment) Update(updateServiceInstanceRequest *UpdateServiceInstanceRequest) (*string, *ServiceBrokerError) {
+func (serviceDeployment *ServiceDeployment) Update(updateServiceInstanceRequest *UpdateServiceInstanceRequest) *string {
 	requestSettings, _ := GetRequestSettings(updateServiceInstanceRequest.Parameters)
 	if !*requestSettings.FailAtOperation {
 		if updateServiceInstanceRequest.PlanId != nil {
@@ -162,7 +162,7 @@ func (serviceDeployment *ServiceDeployment) Update(updateServiceInstanceRequest 
 		}
 	}
 	operationID := serviceDeployment.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, requestSettings.FailAtOperation, requestSettings.UpdateRepeatableAfterFail, requestSettings.InstanceUsableAfterFail, nil, nil, true)
-	return operationID, nil
+	return operationID
 }
 
 func (serviceDeployment *ServiceDeployment) IsDeploying() bool {

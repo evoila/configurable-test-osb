@@ -244,7 +244,7 @@ func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest 
 	if deploymentService.settings.HeaderSettings.BrokerVersion > "2.14" && !deployment.DifferentUpdateValues(updateRequest) {
 		return 200, &updateServiceInstanceResponse, nil
 	}
-	operationID, _ := deployment.Update(updateRequest)
+	operationID := deployment.Update(updateRequest)
 	updateServiceInstanceResponse.DashboardUrl = deployment.DashboardURL()
 	requestSettings, err := model.GetRequestSettings(updateRequest.Parameters)
 	if err != nil {
