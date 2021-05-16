@@ -11,16 +11,20 @@ type BindingService struct {
 	lastOperationOfDeletedBinding map[string]*model.Operation
 	settings                      *model.Settings
 	catalog                       *model.Catalog
+	syncChannel                   chan int
 }
 
 func NewBindingService(serviceInstances *map[string]*model.ServiceDeployment,
 	bindingInstances *map[string]*model.ServiceBinding, settings *model.Settings, catalog *model.Catalog) *BindingService {
+	syncChannel := make(chan int, 1)
+	syncChannel <- 1
 	return &BindingService{
 		serviceInstances:              serviceInstances,
 		bindingInstances:              bindingInstances,
 		lastOperationOfDeletedBinding: make(map[string]*model.Operation),
 		settings:                      settings,
 		catalog:                       catalog,
+		syncChannel:                   syncChannel,
 	}
 }
 
@@ -48,6 +52,8 @@ func (bindingService *BindingService) CreateBinding(bindingRequest *model.Create
 	}
 	var requestSettings *model.RequestSettings
 	requestSettings, _ = model.GetRequestSettings(bindingRequest.Parameters)
+	<-bindingService.syncChannel
+	defer bindingService.writeToSyncChannel()
 	if binding, exists := (*bindingService.bindingInstances)[*bindingID]; exists == true {
 		if bindingService.settings.BindingSettings.StatusCodeOKPossible && !*requestSettings.AsyncEndpoint {
 			if cmp.Equal(bindingRequest.Parameters, binding.Parameters()) &&
@@ -339,6 +345,8 @@ func (bindingService *BindingService) Unbind(deleteRequest *model.DeleteRequest,
 			Description: "Given instance_id was not found",
 		}
 	}
+	<-bindingService.syncChannel
+	defer bindingService.writeToSyncChannel()
 	binding, exists := deployment.GetBinding(bindingID)
 	if !exists {
 		return 410, nil, &model.ServiceBrokerError{
@@ -380,4 +388,8 @@ func (bindingService *BindingService) Unbind(deleteRequest *model.DeleteRequest,
 
 func (bindingService *BindingService) CurrentBindings() *map[string]*model.ServiceBinding {
 	return bindingService.bindingInstances
+}
+
+func (bindingService *BindingService) writeToSyncChannel() {
+	bindingService.syncChannel <- 1
 }

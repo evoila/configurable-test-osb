@@ -10,15 +10,19 @@ type DeploymentService struct {
 	serviceInstances               *map[string]*model.ServiceDeployment
 	settings                       *model.Settings
 	lastOperationOfDeletedInstance map[string]*model.Operation
+	syncChannel                    chan int
 }
 
 func NewDeploymentService(catalog *model.Catalog, serviceInstances *map[string]*model.ServiceDeployment,
 	settings *model.Settings) *DeploymentService {
+	syncChannel := make(chan int, 1)
+	syncChannel <- 1
 	return &DeploymentService{
 		catalog:                        catalog,
 		serviceInstances:               serviceInstances,
 		settings:                       settings,
 		lastOperationOfDeletedInstance: make(map[string]*model.Operation),
+		syncChannel:                    syncChannel,
 	}
 }
 
@@ -30,6 +34,8 @@ func NewDeploymentService(catalog *model.Catalog, serviceInstances *map[string]*
 func (deploymentService *DeploymentService) ProvideService(provisionRequest *model.ProvideServiceInstanceRequest,
 	instanceID *string) (int, *model.ProvideUpdateServiceInstanceResponse,
 	*model.ServiceBrokerError) {
+	<-deploymentService.syncChannel
+	defer deploymentService.writeToSyncChannel()
 	if deployment, exists := (*deploymentService.serviceInstances)[*instanceID]; exists == true {
 		if deploymentService.settings.ProvisionSettings.StatusCodeOKPossibleForIdenticalProvision {
 			if cmp.Equal(provisionRequest.Parameters, deployment.Parameters()) &&
@@ -376,6 +382,8 @@ func (deploymentService *DeploymentService) Delete(deleteRequest *model.DeleteRe
 	requestSettings, _ = model.GetRequestSettings(deleteRequest.Parameters)
 	var deployment *model.ServiceDeployment
 	var exists bool
+	<-deploymentService.syncChannel
+	defer deploymentService.writeToSyncChannel()
 	deployment, exists = (*deploymentService.serviceInstances)[*instanceID]
 	if !exists {
 		return 410, nil, &model.ServiceBrokerError{
@@ -416,6 +424,10 @@ func (deploymentService *DeploymentService) Delete(deleteRequest *model.DeleteRe
 		return 202, &operationResponse, nil
 	}
 	return 200, &operationResponse, nil
+}
+
+func (deploymentService *DeploymentService) writeToSyncChannel() {
+	deploymentService.syncChannel <- 1
 }
 
 //BONUS
