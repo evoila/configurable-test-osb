@@ -14,10 +14,10 @@ type BindingService struct {
 	syncWriteChannel              chan int
 	syncReadChannel               chan int
 	blockingReaders               int
+	deploymentService             *DeploymentService
 }
 
-func NewBindingService(serviceInstances *map[string]*model.ServiceDeployment,
-	bindingInstances *map[string]*model.ServiceBinding, settings *model.Settings, catalog *model.Catalog) *BindingService {
+func NewBindingService(serviceInstances *map[string]*model.ServiceDeployment, bindingInstances *map[string]*model.ServiceBinding, settings *model.Settings, catalog *model.Catalog, deploymentService *DeploymentService) *BindingService {
 	syncWriteChannel := make(chan int, 1)
 	syncWriteChannel <- 1
 	syncReadChannel := make(chan int, 1)
@@ -31,6 +31,7 @@ func NewBindingService(serviceInstances *map[string]*model.ServiceDeployment,
 		syncWriteChannel:              syncWriteChannel,
 		syncReadChannel:               syncReadChannel,
 		blockingReaders:               0,
+		deploymentService:             deploymentService,
 	}
 }
 
@@ -43,7 +44,9 @@ func NewBindingService(serviceInstances *map[string]*model.ServiceDeployment,
 //Returns an int (http status), the actual response and an error if one occurs
 func (bindingService *BindingService) CreateBinding(bindingRequest *model.CreateBindingRequest, instanceID *string,
 	bindingID *string) (int, *model.CreateRotateFetchBindingResponse, *model.ServiceBrokerError) {
+	bindingService.deploymentService.beginRead()
 	deployment, exists := (*bindingService.serviceInstances)[*instanceID]
+	bindingService.deploymentService.endRead()
 	if !exists {
 		return 404, nil, &model.ServiceBrokerError{
 			Error:       "NotFound",
@@ -122,7 +125,9 @@ func (bindingService *BindingService) CreateBinding(bindingRequest *model.Create
 //Returns an int (http status), the actual response and an error if one occurs
 func (bindingService *BindingService) RotateBinding(rotateBindingRequest *model.RotateBindingRequest, instanceID *string,
 	bindingID *string) (int, *model.CreateRotateFetchBindingResponse, *model.ServiceBrokerError) {
+	bindingService.deploymentService.beginRead()
 	deployment, exists := (*bindingService.serviceInstances)[*instanceID]
+	bindingService.deploymentService.endRead()
 	if !exists {
 		return 404, nil, &model.ServiceBrokerError{
 			Error:       "NotFound",
@@ -186,7 +191,9 @@ func (bindingService *BindingService) RotateBinding(rotateBindingRequest *model.
 //Returns an int (http status), the actual response and an error if one occurs
 func (bindingService *BindingService) FetchBinding(instanceID *string, bindingID *string, serviceID *string,
 	planID *string) (int, *model.CreateRotateFetchBindingResponse, *model.ServiceBrokerError) {
+	bindingService.deploymentService.beginRead()
 	deployment, exists := (*bindingService.serviceInstances)[*instanceID]
+	bindingService.deploymentService.endRead()
 	if !exists {
 		return 404, nil, &model.ServiceBrokerError{
 			Error:       "NotFound",
@@ -249,7 +256,9 @@ func (bindingService *BindingService) PollOperationState(instanceID *string, bin
 	planID *string, operationName *string) (int, *model.InstanceOperationPollResponse, *model.ServiceBrokerError) {
 	var deployment *model.ServiceDeployment
 	var exists bool
+	bindingService.deploymentService.beginRead()
 	deployment, exists = (*bindingService.serviceInstances)[*instanceID]
+	bindingService.deploymentService.endRead()
 	if !exists {
 		return 404, nil, &model.ServiceBrokerError{
 			Error:       "NotFound",
@@ -351,7 +360,9 @@ func (bindingService *BindingService) Unbind(deleteRequest *model.DeleteRequest,
 	requestSettings, _ = model.GetRequestSettings(deleteRequest.Parameters)
 	var deployment *model.ServiceDeployment
 	var exists bool
+	bindingService.deploymentService.beginRead()
 	deployment, exists = (*bindingService.serviceInstances)[*instanceID]
+	bindingService.deploymentService.endRead()
 	if !exists {
 		return 410, nil, &model.ServiceBrokerError{
 			Error:       "NotFound",

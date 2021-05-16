@@ -29,7 +29,7 @@ func TestCreateBinding(t *testing.T) {
 	deploymentController := controller.NewDeploymentController(deploymentService, settings, &platform)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -181,7 +181,7 @@ func TestCreateBindingIDInUse(t *testing.T) {
 	deploymentController := controller.NewDeploymentController(deploymentService, settings, &platform)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -258,7 +258,7 @@ func TestCreateBindingIdentical(t *testing.T) {
 	deploymentController := controller.NewDeploymentController(deploymentService, settings, &platform)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -326,9 +326,10 @@ func TestCreateBindingMissingInstance(t *testing.T) {
 	var serviceInstances map[string]*model.ServiceDeployment
 	serviceInstances = make(map[string]*model.ServiceDeployment)
 	var platform string
+	deploymentService := service.NewDeploymentService(catalog, &serviceInstances, settings)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -370,7 +371,7 @@ func TestCreateBindingInvalid(t *testing.T) {
 	deploymentController := controller.NewDeploymentController(deploymentService, settings, &platform)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -463,7 +464,7 @@ func TestFetchBinding(t *testing.T) {
 	deploymentController := controller.NewDeploymentController(deploymentService, settings, &platform)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -593,7 +594,7 @@ func TestFetchBindingInvalid(t *testing.T) {
 	deploymentController := controller.NewDeploymentController(deploymentService, settings, &platform)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -670,9 +671,10 @@ func TestFetchBindingMissing(t *testing.T) {
 	var serviceInstances map[string]*model.ServiceDeployment
 	serviceInstances = make(map[string]*model.ServiceDeployment)
 	var platform string
+	deploymentService := service.NewDeploymentService(catalog, &serviceInstances, settings)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -701,7 +703,7 @@ func TestUnbind(t *testing.T) {
 	deploymentController := controller.NewDeploymentController(deploymentService, settings, &platform)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -814,7 +816,7 @@ func TestUnbindMissing(t *testing.T) {
 	deploymentController := controller.NewDeploymentController(deploymentService, settings, &platform)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -896,7 +898,7 @@ func TestUnbindInvalid(t *testing.T) {
 	deploymentController := controller.NewDeploymentController(deploymentService, settings, &platform)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -970,7 +972,7 @@ func TestTestFetchBindingDeleted(t *testing.T) {
 	deploymentController := controller.NewDeploymentController(deploymentService, settings, &platform)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -1047,7 +1049,7 @@ func TestPollLastOperationBinding(t *testing.T) {
 	deploymentController := controller.NewDeploymentController(deploymentService, settings, &platform)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -1135,7 +1137,7 @@ func TestPollLastOperationBindingMissing(t *testing.T) {
 	deploymentController := controller.NewDeploymentController(deploymentService, settings, &platform)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -1185,7 +1187,7 @@ func TestPollLastOperationBindingInvalid(t *testing.T) {
 	deploymentController := controller.NewDeploymentController(deploymentService, settings, &platform)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -1254,7 +1256,7 @@ func TestPollLastOperationBindingDeleted(t *testing.T) {
 	deploymentController := controller.NewDeploymentController(deploymentService, settings, &platform)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -1368,7 +1370,7 @@ func TestBindingRotation(t *testing.T) {
 	deploymentController := controller.NewDeploymentController(deploymentService, settings, &platform)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -1452,7 +1454,7 @@ func TestBindingRotationIDInUse(t *testing.T) {
 	deploymentController := controller.NewDeploymentController(deploymentService, settings, &platform)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -1545,7 +1547,7 @@ func TestBindingRotationIdentical(t *testing.T) {
 	deploymentController := controller.NewDeploymentController(deploymentService, settings, &platform)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -1626,7 +1628,7 @@ func TestBindingRotationMissing(t *testing.T) {
 	deploymentController := controller.NewDeploymentController(deploymentService, settings, &platform)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -1716,7 +1718,7 @@ func TestBindingRotationInvalid(t *testing.T) {
 	deploymentController := controller.NewDeploymentController(deploymentService, settings, &platform)
 	var bindingInstances map[string]*model.ServiceBinding
 	bindingInstances = make(map[string]*model.ServiceBinding)
-	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+	bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 	bindingController := controller.NewBindingController(bindingService, settings, &platform)
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()

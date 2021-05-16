@@ -48,7 +48,7 @@ func Run() {
 
 			var bindingInstances map[string]*model.ServiceBinding
 			bindingInstances = make(map[string]*model.ServiceBinding)
-			bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog)
+			bindingService := service.NewBindingService(&serviceInstances, &bindingInstances, settings, catalog, deploymentService)
 			bindingController := controller.NewBindingController(bindingService, settings, &platform)
 			middleware := controller.NewMiddleware(settings, &platform)
 			r := gin.Default()

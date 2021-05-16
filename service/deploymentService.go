@@ -40,8 +40,8 @@ func NewDeploymentService(catalog *model.Catalog, serviceInstances *map[string]*
 func (deploymentService *DeploymentService) ProvideService(provisionRequest *model.ProvideServiceInstanceRequest,
 	instanceID *string) (int, *model.ProvideUpdateServiceInstanceResponse,
 	*model.ServiceBrokerError) {
-	<-deploymentService.syncWriteChannel
-	defer deploymentService.writeToSyncWriteChannel()
+	deploymentService.beginWrite()
+	defer deploymentService.endWrite()
 	if deployment, exists := (*deploymentService.serviceInstances)[*instanceID]; exists == true {
 		if deploymentService.settings.ProvisionSettings.StatusCodeOKPossibleForIdenticalProvision {
 			if cmp.Equal(provisionRequest.Parameters, deployment.Parameters()) &&
@@ -394,8 +394,8 @@ func (deploymentService *DeploymentService) Delete(deleteRequest *model.DeleteRe
 	requestSettings, _ = model.GetRequestSettings(deleteRequest.Parameters)
 	var deployment *model.ServiceDeployment
 	var exists bool
-	<-deploymentService.syncWriteChannel
-	defer deploymentService.writeToSyncWriteChannel()
+	deploymentService.beginWrite()
+	defer deploymentService.endWrite()
 	deployment, exists = (*deploymentService.serviceInstances)[*instanceID]
 	if !exists {
 		return 410, nil, &model.ServiceBrokerError{
@@ -438,7 +438,11 @@ func (deploymentService *DeploymentService) Delete(deleteRequest *model.DeleteRe
 	return 200, &operationResponse, nil
 }
 
-func (deploymentService *DeploymentService) writeToSyncWriteChannel() {
+func (deploymentService *DeploymentService) beginWrite() {
+	<-deploymentService.syncWriteChannel
+}
+
+func (deploymentService *DeploymentService) endWrite() {
 	deploymentService.syncWriteChannel <- 1
 }
 
