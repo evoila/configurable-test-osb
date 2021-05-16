@@ -10,19 +10,25 @@ type DeploymentService struct {
 	serviceInstances               *map[string]*model.ServiceDeployment
 	settings                       *model.Settings
 	lastOperationOfDeletedInstance map[string]*model.Operation
-	syncChannel                    chan int
+	syncWriteChannel               chan int
+	syncReadChannel                chan int
+	blockingReaders                int
 }
 
 func NewDeploymentService(catalog *model.Catalog, serviceInstances *map[string]*model.ServiceDeployment,
 	settings *model.Settings) *DeploymentService {
-	syncChannel := make(chan int, 1)
-	syncChannel <- 1
+	syncWriteChannel := make(chan int, 1)
+	syncWriteChannel <- 1
+	syncReadChannel := make(chan int, 1)
+	syncReadChannel <- 1
 	return &DeploymentService{
 		catalog:                        catalog,
 		serviceInstances:               serviceInstances,
 		settings:                       settings,
 		lastOperationOfDeletedInstance: make(map[string]*model.Operation),
-		syncChannel:                    syncChannel,
+		syncWriteChannel:               syncWriteChannel,
+		syncReadChannel:                syncReadChannel,
+		blockingReaders:                0,
 	}
 }
 
@@ -34,8 +40,8 @@ func NewDeploymentService(catalog *model.Catalog, serviceInstances *map[string]*
 func (deploymentService *DeploymentService) ProvideService(provisionRequest *model.ProvideServiceInstanceRequest,
 	instanceID *string) (int, *model.ProvideUpdateServiceInstanceResponse,
 	*model.ServiceBrokerError) {
-	<-deploymentService.syncChannel
-	defer deploymentService.writeToSyncChannel()
+	<-deploymentService.syncWriteChannel
+	defer deploymentService.writeToSyncWriteChannel()
 	if deployment, exists := (*deploymentService.serviceInstances)[*instanceID]; exists == true {
 		if deploymentService.settings.ProvisionSettings.StatusCodeOKPossibleForIdenticalProvision {
 			if cmp.Equal(provisionRequest.Parameters, deployment.Parameters()) &&
@@ -97,7 +103,9 @@ func (deploymentService *DeploymentService) ProvideService(provisionRequest *mod
 //Returns an int (http status), the actual response and an error if one occurs
 func (deploymentService *DeploymentService) FetchServiceInstance(instanceID *string, serviceID *string, planID *string) (int,
 	*model.FetchingServiceInstanceResponse, *model.ServiceBrokerError) {
+	deploymentService.beginRead()
 	deployment, exists := (*deploymentService.serviceInstances)[*instanceID]
+	deploymentService.endRead()
 	if !exists {
 		return 404, nil, &model.ServiceBrokerError{
 			Error:       "NotFound",
@@ -166,7 +174,9 @@ func (deploymentService *DeploymentService) UpdateServiceInstance(updateRequest 
 	instanceID *string) (int, *model.ProvideUpdateServiceInstanceResponse, *model.ServiceBrokerError) {
 	var deployment *model.ServiceDeployment
 	var exists bool
+	deploymentService.beginRead()
 	deployment, exists = (*deploymentService.serviceInstances)[*instanceID]
+	deploymentService.endRead()
 	if !exists {
 		return 404, nil, &model.ServiceBrokerError{
 			Error:       "NotFound",
@@ -290,7 +300,9 @@ func (deploymentService *DeploymentService) PollOperationState(instanceID *strin
 	operationName *string) (int, *model.InstanceOperationPollResponse, *model.ServiceBrokerError) {
 	var deployment *model.ServiceDeployment
 	var exists bool
+	deploymentService.beginRead()
 	deployment, exists = (*deploymentService.serviceInstances)[*instanceID]
+	deploymentService.endRead()
 	if !exists {
 		operation, instanceDeleted := (*deploymentService).lastOperationOfDeletedInstance[*instanceID]
 		if instanceDeleted {
@@ -382,8 +394,8 @@ func (deploymentService *DeploymentService) Delete(deleteRequest *model.DeleteRe
 	requestSettings, _ = model.GetRequestSettings(deleteRequest.Parameters)
 	var deployment *model.ServiceDeployment
 	var exists bool
-	<-deploymentService.syncChannel
-	defer deploymentService.writeToSyncChannel()
+	<-deploymentService.syncWriteChannel
+	defer deploymentService.writeToSyncWriteChannel()
 	deployment, exists = (*deploymentService.serviceInstances)[*instanceID]
 	if !exists {
 		return 410, nil, &model.ServiceBrokerError{
@@ -426,8 +438,26 @@ func (deploymentService *DeploymentService) Delete(deleteRequest *model.DeleteRe
 	return 200, &operationResponse, nil
 }
 
-func (deploymentService *DeploymentService) writeToSyncChannel() {
-	deploymentService.syncChannel <- 1
+func (deploymentService *DeploymentService) writeToSyncWriteChannel() {
+	deploymentService.syncWriteChannel <- 1
+}
+
+func (deploymentService *DeploymentService) beginRead() {
+	<-deploymentService.syncReadChannel
+	deploymentService.blockingReaders++
+	if deploymentService.blockingReaders == 1 {
+		<-deploymentService.syncWriteChannel
+	}
+	deploymentService.syncReadChannel <- 1
+}
+
+func (deploymentService *DeploymentService) endRead() {
+	<-deploymentService.syncReadChannel
+	deploymentService.blockingReaders--
+	if deploymentService.blockingReaders == 0 {
+		deploymentService.syncWriteChannel <- 1
+	}
+	deploymentService.syncReadChannel <- 1
 }
 
 //BONUS

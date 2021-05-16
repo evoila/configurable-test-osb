@@ -11,20 +11,26 @@ type BindingService struct {
 	lastOperationOfDeletedBinding map[string]*model.Operation
 	settings                      *model.Settings
 	catalog                       *model.Catalog
-	syncChannel                   chan int
+	syncWriteChannel              chan int
+	syncReadChannel               chan int
+	blockingReaders               int
 }
 
 func NewBindingService(serviceInstances *map[string]*model.ServiceDeployment,
 	bindingInstances *map[string]*model.ServiceBinding, settings *model.Settings, catalog *model.Catalog) *BindingService {
-	syncChannel := make(chan int, 1)
-	syncChannel <- 1
+	syncWriteChannel := make(chan int, 1)
+	syncWriteChannel <- 1
+	syncReadChannel := make(chan int, 1)
+	syncReadChannel <- 1
 	return &BindingService{
 		serviceInstances:              serviceInstances,
 		bindingInstances:              bindingInstances,
 		lastOperationOfDeletedBinding: make(map[string]*model.Operation),
 		settings:                      settings,
 		catalog:                       catalog,
-		syncChannel:                   syncChannel,
+		syncWriteChannel:              syncWriteChannel,
+		syncReadChannel:               syncReadChannel,
+		blockingReaders:               0,
 	}
 }
 
@@ -52,7 +58,7 @@ func (bindingService *BindingService) CreateBinding(bindingRequest *model.Create
 	}
 	var requestSettings *model.RequestSettings
 	requestSettings, _ = model.GetRequestSettings(bindingRequest.Parameters)
-	<-bindingService.syncChannel
+	<-bindingService.syncWriteChannel
 	defer bindingService.writeToSyncChannel()
 	if binding, exists := (*bindingService.bindingInstances)[*bindingID]; exists == true {
 		if bindingService.settings.BindingSettings.StatusCodeOKPossible && !*requestSettings.AsyncEndpoint {
@@ -130,11 +136,13 @@ func (bindingService *BindingService) RotateBinding(rotateBindingRequest *model.
 			Description: "Given predecessor_binding_id was not found",
 		}
 	}
-	if existingBinding, exists := (*bindingService.bindingInstances)[*bindingID]; exists == true {
+	bindingService.beginRead()
+	existingBinding, exists := (*bindingService.bindingInstances)[*bindingID]
+	bindingService.endRead()
+	if exists {
 		var requestSettings *model.RequestSettings
 		requestSettings, _ = model.GetRequestSettings(rotateBindingRequest.Parameters)
 		if bindingService.settings.BindingSettings.StatusCodeOKPossible && !*requestSettings.AsyncEndpoint {
-			//predecessorBinding :=
 			if cmp.Equal(oldBinding.Parameters(), existingBinding.Parameters()) &&
 				cmp.Equal(oldBinding.Context(), existingBinding.Context()) &&
 				*oldBinding.ServiceID() == *existingBinding.ServiceID() &&
@@ -185,7 +193,9 @@ func (bindingService *BindingService) FetchBinding(instanceID *string, bindingID
 			Description: "Given instance_id was not found",
 		}
 	}
+	bindingService.beginRead()
 	binding, exists := deployment.GetBinding(bindingID)
+	bindingService.endRead()
 	if !exists {
 		return 404, nil, &model.ServiceBrokerError{
 			Error:       "NotFound",
@@ -258,7 +268,10 @@ func (bindingService *BindingService) PollOperationState(instanceID *string, bin
 			Description: "The given plan_id does not match the plan_id of the instance",
 		}
 	}
-	if _, bindingExists := (*bindingService.bindingInstances)[*bindingID]; !bindingExists {
+	bindingService.beginRead()
+	_, bindingExists := (*bindingService.bindingInstances)[*bindingID]
+	bindingService.endRead()
+	if !bindingExists {
 		operation, bindingDeleted := (*bindingService).lastOperationOfDeletedBinding[*bindingID]
 		if bindingDeleted {
 			if !deployment.BindingDeleted(bindingID) {
@@ -345,7 +358,7 @@ func (bindingService *BindingService) Unbind(deleteRequest *model.DeleteRequest,
 			Description: "Given instance_id was not found",
 		}
 	}
-	<-bindingService.syncChannel
+	<-bindingService.syncWriteChannel
 	defer bindingService.writeToSyncChannel()
 	binding, exists := deployment.GetBinding(bindingID)
 	if !exists {
@@ -391,5 +404,23 @@ func (bindingService *BindingService) CurrentBindings() *map[string]*model.Servi
 }
 
 func (bindingService *BindingService) writeToSyncChannel() {
-	bindingService.syncChannel <- 1
+	bindingService.syncWriteChannel <- 1
+}
+
+func (bindingService *BindingService) beginRead() {
+	<-bindingService.syncReadChannel
+	bindingService.blockingReaders++
+	if bindingService.blockingReaders == 1 {
+		<-bindingService.syncWriteChannel
+	}
+	bindingService.syncReadChannel <- 1
+}
+
+func (bindingService *BindingService) endRead() {
+	<-bindingService.syncReadChannel
+	bindingService.blockingReaders--
+	if bindingService.blockingReaders == 0 {
+		bindingService.syncWriteChannel <- 1
+	}
+	bindingService.syncReadChannel <- 1
 }
