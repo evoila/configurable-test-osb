@@ -6,9 +6,9 @@ import (
 )
 
 type ServicePlan struct {
-	ID                     string           `json:"id"`
-	Name                   string           `json:"name"`
-	Description            string           `json:"description"`
+	ID                     string           `json:"id" validate:"required"`
+	Name                   string           `json:"name" validate:"required"`
+	Description            string           `json:"description" validate:"required"`
 	Metadata               interface{}      `json:"metadata,omitempty"`
 	Free                   *bool            `json:"free,omitempty"`
 	Bindable               *bool            `json:"bindable,omitempty"`
@@ -38,7 +38,7 @@ type InputParametersSchema struct {
 }
 
 type MaintenanceInfo struct {
-	Version     *string `json:"version,omitempty"`
+	Version     *string `json:"version" validate:"required"`
 	Description string  `json:"description,omitempty"`
 }
 

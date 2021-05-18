@@ -8,6 +8,7 @@ import (
 	"github.com/evoila/configurable-test-osb/model"
 	"github.com/evoila/configurable-test-osb/service"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"io/ioutil"
 	"log"
 	"os"
@@ -145,7 +146,11 @@ func MakeCatalog() (*model.Catalog, error) {
 	if err != nil {
 		return nil, errors.New("error unmarshalling the catalog file to the catalog struct! error: " + err.Error())
 	}
-
+	validate := validator.New()
+	err = validate.Struct(catalog)
+	if err != nil {
+		return nil, err
+	}
 	return &catalog, nil
 }
 
@@ -199,7 +204,7 @@ func MakeSettings() (*model.Settings, error) {
 	if settings.BindingSettings.BindingEndpointSettings.ProtocolValue != "tcp" &&
 		settings.BindingSettings.BindingEndpointSettings.ProtocolValue != "udp" &&
 		settings.BindingSettings.BindingEndpointSettings.ProtocolValue != "all" {
-		return nil, errors.New("protocol_value must be either \"tct\", \"udp\", or \"all\"")
+		return nil, errors.New("protocol_value must be either \"tcp\", \"udp\", or \"all\"")
 	}
 	return &settings, nil
 }

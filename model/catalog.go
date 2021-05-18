@@ -8,7 +8,7 @@ import (
 
 type Catalog struct {
 	//REQUIRED
-	ServiceOfferings *[]*ServiceOffering `json:"services" binding:"required"` //check if correct
+	ServiceOfferings *[]*ServiceOffering `json:"services" validate:"required,dive"` //check if correct
 }
 
 //NewCatalog generates a new randomized catalog regarding to the catalogSettings.

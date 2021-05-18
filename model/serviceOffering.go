@@ -6,12 +6,12 @@ import (
 )
 
 type ServiceOffering struct {
-	Name                 string           `json:"name"`
-	ID                   string           `json:"id"`
-	Description          string           `json:"description"`
+	Name                 string           `json:"name" validate:"required"`
+	ID                   string           `json:"id" validate:"required"`
+	Description          string           `json:"description" validate:"required"`
 	Tags                 []string         `json:"tags,omitempty"`
 	Requires             []string         `json:"requires,omitempty"`
-	Bindable             *bool            `json:"bindable"`
+	Bindable             *bool            `json:"bindable" validate:"required"`
 	InstancesRetrievable *bool            `json:"instances_retrievable,omitempty"`
 	BindingsRetrievable  *bool            `json:"bindings_retrievable,omitempty"`
 	AllowContextUpdates  *bool            `json:"allow_context_updates,omitempty"`
@@ -19,7 +19,7 @@ type ServiceOffering struct {
 	DashboardClient      *DashboardClient `json:"dashboard_client,omitempty"`
 	//misspelling kept by osbapi
 	PlanUpdateable *bool           `json:"plan_updateable,omitempty"`
-	Plans          *[]*ServicePlan `json:"plans"`
+	Plans          *[]*ServicePlan `json:"plans" validate:"required,dive"`
 }
 
 func newServiceOffering(catalogSettings *CatalogSettings, catalog *Catalog, tags []string) *ServiceOffering {
