@@ -206,6 +206,9 @@ func MakeSettings() (*model.Settings, error) {
 		settings.BindingSettings.BindingEndpointSettings.ProtocolValue != "all" {
 		return nil, errors.New("protocol_value must be either \"tcp\", \"udp\", or \"all\"")
 	}
+	if settings.HeaderSettings.Username == "" || settings.HeaderSettings.Password == "" {
+		return nil, errors.New("username and password in headerSettings must be set and must not be \"\"")
+	}
 	return &settings, nil
 }
 
