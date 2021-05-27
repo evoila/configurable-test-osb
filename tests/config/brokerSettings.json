@@ -58,6 +58,5 @@
     "status_code_ok_possible": true,
     "return_description_last_operation": true,
     "retry_poll_binding_operation_after_seconds": 0
-  },
-  "milliseconds_to_update": 500
+  }
 }
