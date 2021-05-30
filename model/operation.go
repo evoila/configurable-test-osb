@@ -24,7 +24,7 @@ func (operation *Operation) Async() *bool {
 }
 
 const (
-	PROGRESSING = "in_progress"
+	PROGRESSING = "in progress"
 	SUCCEEDED   = "succeeded"
 	FAILED      = "failed"
 )
@@ -42,7 +42,7 @@ func (operation *Operation) Name() *string {
 }
 
 func (operation *Operation) State() *string {
-	if operation.state == "in_progress" {
+	if operation.state == PROGRESSING {
 		if time.Now().Sub(operation.startTime).Seconds() >= operation.duration {
 			if operation.shouldFail {
 				operation.state = FAILED
