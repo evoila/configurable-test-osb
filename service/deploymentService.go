@@ -3,7 +3,6 @@ package service
 import (
 	"github.com/evoila/configurable-test-osb/model"
 	"github.com/google/go-cmp/cmp"
-	"log"
 )
 
 type DeploymentService struct {
@@ -114,8 +113,6 @@ func (deploymentService *DeploymentService) FetchServiceInstance(instanceID *str
 		}
 	}
 	if serviceID != nil && *serviceID != *deployment.ServiceID() {
-		log.Println(*serviceID)
-		log.Println(*deployment.ServiceID())
 		return 400, nil, &model.ServiceBrokerError{
 			Error:       "ServiceIDMatch",
 			Description: "The given service_id does not match the service_id of the instance",
