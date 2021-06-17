@@ -146,8 +146,9 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 func (serviceDeployment *ServiceDeployment) Update(updateServiceInstanceRequest *UpdateServiceInstanceRequest) *string {
 	requestSettings, _ := GetRequestSettings(updateServiceInstanceRequest.Parameters)
 	if !*requestSettings.FailAtOperation {
+		var offering *ServiceOffering
 		if updateServiceInstanceRequest.PlanId != nil {
-			offering, _ := serviceDeployment.catalog.GetServiceOfferingById(*serviceDeployment.serviceID)
+			offering, _ = serviceDeployment.catalog.GetServiceOfferingById(*serviceDeployment.serviceID)
 			plan, _ := offering.GetPlanByID(*serviceDeployment.planID)
 			if plan.PlanUpdateable != nil && *plan.PlanUpdateable ||
 				(offering.PlanUpdateable != nil && *offering.PlanUpdateable && (plan.PlanUpdateable == nil || *plan.PlanUpdateable == true)) {
@@ -160,8 +161,12 @@ func (serviceDeployment *ServiceDeployment) Update(updateServiceInstanceRequest 
 		if updateServiceInstanceRequest.Context != nil {
 			serviceDeployment.context = updateServiceInstanceRequest.Context
 		}
+		if offering != nil && offering.InstancesRetrievable != nil && *offering.InstancesRetrievable {
+			serviceDeployment.setResponse()
+		}
 	}
 	operationID := serviceDeployment.DoOperation(*requestSettings.AsyncEndpoint, *requestSettings.SecondsToComplete, requestSettings.FailAtOperation, requestSettings.UpdateRepeatableAfterFail, requestSettings.InstanceUsableAfterFail, nil, nil, true)
+
 	return operationID
 }
 
