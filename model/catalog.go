@@ -14,7 +14,8 @@ type Catalog struct {
 //NewCatalog generates a new randomized catalog regarding to the catalogSettings.
 //Returns *Catalog (the newly generated catalog)
 func NewCatalog(catalogSettings *CatalogSettings) *Catalog {
-	var catalog Catalog
+	var offerings []*ServiceOffering
+	var catalog = Catalog{ServiceOfferings: &offerings}
 	rand.Seed(time.Now().UnixNano())
 	var tags []string
 	for i := 0; i < catalogSettings.TagsMax; i++ {
