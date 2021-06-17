@@ -88,7 +88,7 @@ func TestCreateBinding(t *testing.T) {
 		sort.SearchStrings(firstOffering.Requires, "volume_mount") >= len(firstOffering.Requires)) && responseBody.VolumeMounts != nil {
 		t.Errorf("Expected volumeMounts to be nil")
 	}
-	if settings.BindingSettings.ReturnRouteServiceURL && responseBody.RouteServiceUrl == nil {
+	if settings.BindingSettings.ReturnRouteServiceURL && responseBody.RouteServiceUrl == nil && firstOffering.Requires != nil && sort.SearchStrings(firstOffering.Requires, "route_forwarding") < len(firstOffering.Requires) {
 		t.Errorf("Expected routeServiceURL to be not nil")
 	}
 	if !settings.BindingSettings.ReturnRouteServiceURL && responseBody.RouteServiceUrl != nil {
