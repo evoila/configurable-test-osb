@@ -99,19 +99,19 @@ func (deploymentController *DeploymentController) Provision(context *gin.Context
 func (deploymentController *DeploymentController) FetchServiceInstance(context *gin.Context) {
 	instanceID := context.Param("instance_id")
 	var serviceID *string
-	value, exists := context.GetQuery("service_id")
+	valueOffering, exists := context.GetQuery("service_id")
 	if exists {
-		if value == "" {
+		if valueOffering == "" {
 			context.JSON(http.StatusBadRequest, model.ServiceBrokerError{
 				Error:       "MalformedRequest",
 				Description: "Query parameter \"service_id\" must not be an empty string (but can be omitted)",
 			})
 		} else {
-			serviceID = &value
+			serviceID = &valueOffering
 		}
 	}
 	var planID *string
-	value, exists = context.GetQuery("plan_id")
+	value, exists := context.GetQuery("plan_id")
 	if exists {
 		if value == "" {
 			context.JSON(http.StatusBadRequest, model.ServiceBrokerError{

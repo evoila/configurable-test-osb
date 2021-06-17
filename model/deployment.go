@@ -130,7 +130,7 @@ func NewServiceDeployment(instanceID string, provisionRequest *ProvideServiceIns
 		}
 	}
 	offering, _ := catalog.GetServiceOfferingById(*provisionRequest.ServiceID)
-	if *offering.InstancesRetrievable {
+	if offering.InstancesRetrievable != nil && *offering.InstancesRetrievable {
 		serviceDeployment.setResponse()
 	}
 	plan, _ := offering.GetPlanByID(*provisionRequest.PlanID)
